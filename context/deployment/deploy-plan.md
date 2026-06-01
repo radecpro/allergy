@@ -12,6 +12,12 @@ Deploy the existing React Router app to Google Cloud Run using the repo's curren
 
 Local readiness already checked: `npm run typecheck` and `npm run build` pass.
 
+Deployment completed on 2026-06-01:
+
+- Revision: `allergen-finder-00001-bg7`
+- Canonical URL: `https://allergen-finder-hwt4hd6s4a-lm.a.run.app`
+- Deploy output URL, also verified: `https://allergen-finder-1036435822734.europe-central2.run.app`
+
 ## Prerequisites
 
 - Install and initialize the Google Cloud CLI:
@@ -37,6 +43,13 @@ Local readiness already checked: `npm run typecheck` and `npm run build` pass.
   ```
 
 - The deploying account needs permission to enable APIs and deploy Cloud Run services. Minimum practical roles for this first deploy are Service Usage Admin, Cloud Run Admin, Cloud Build Editor, Artifact Registry Admin, or equivalent narrower permissions.
+- The Cloud Build service account used for source deploys needs Cloud Run Builder on the project. In this project, the first deploy used the Compute Engine default service account:
+
+  ```sh
+  gcloud projects add-iam-policy-binding gcp-10xdev-bara-lab-3t60 \
+    --member serviceAccount:1036435822734-compute@developer.gserviceaccount.com \
+    --role roles/run.builder
+  ```
 
 ## Required GCP APIs
 
