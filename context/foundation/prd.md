@@ -1,8 +1,8 @@
 ---
 project: "Allergen Finder"
-version: 1
+version: 2
 status: draft
-created: 2026-05-29
+created: 2026-06-03
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -45,6 +45,7 @@ This persona reaches for the product when symptoms appear, or before traveling t
 - The app must not present results as medical diagnosis.
 - The app must not recommend medication or treatment.
 - The app must not store location or symptom history without clear user intent.
+- The whole app is available in Polish language.
 
 ## User Stories
 
@@ -86,6 +87,7 @@ This persona reaches for the product when symptoms appear, or before traveling t
   > Socrates: Counter-argument considered: destination pollen activity may duplicate existing pollen apps unless explanation adds value. Resolution: kept as first-use fallback with brief explanation.
 - FR-012: User can manually enter their current city when device location is unavailable or skipped. Priority: must-have
   > Socrates: Counter-argument considered: manual location entry is essential because device location is optional. Resolution: kept as must-have.
+- FR-013: User can use the whole app in Polish language. Priority: must-have
 
 ## Non-Functional Requirements
 
@@ -93,6 +95,7 @@ This persona reaches for the product when symptoms appear, or before traveling t
 - Results are not framed as diagnosis, treatment, or medication advice.
 - Location and symptom history are stored only when the user clearly chooses to save them.
 - The app remains usable on current mainstream mobile and desktop browsers.
+- All user-facing product copy is available in Polish.
 
 ## Business Logic
 
