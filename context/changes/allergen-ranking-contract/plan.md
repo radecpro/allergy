@@ -78,7 +78,7 @@ Add the shared TypeScript contract and compact pollen-only catalog that both lau
 
 **Intent**: Provide the smallest useful MVP allergen and symptom catalog for pollen-focused launch flows.
 
-**Contract**: Include pollen-oriented allergens such as grass pollen, tree pollen, weed pollen, and ragweed pollen, plus a compact predefined symptom list for current-symptom matching. Do not include food, contact, animal, medication, broad mold, or indoor dust-mite scope in this change.
+**Contract**: Include exactly these MVP allergen IDs: `grass-pollen`, `tree-pollen`, `weed-pollen`, and `ragweed-pollen`, plus Polish display labels and a compact predefined symptom list for current-symptom matching. Treat `weed-pollen` as non-ragweed weed pollen so `ragweed-pollen` can be shown separately without double-counting. Do not include food, contact, animal, medication, broad mold, or indoor dust-mite scope in this change.
 
 #### 4. Polish display labels
 
@@ -119,7 +119,24 @@ Add the deterministic helpers that turn contract inputs into current-symptom ran
 
 **Intent**: Rank likely allergens for the current-symptom flow using a simple, transparent rule-based score.
 
-**Contract**: Accept selected symptom IDs, `low`/`high` intensity, and pollen activity by allergen ID. Return ranked results with internal likelihood (`high`, `medium`, `low`), pollen activity, Polish display labels, and short Polish explanations. `unknown` pollen activity must not block a result and must reduce confidence or omit pollen contribution from scoring.
+**Contract**: Accept selected symptom IDs, `low`/`high` intensity, and pollen activity by allergen ID. Return ranked results with internal likelihood (`high`, `medium`, `low`), pollen activity, Polish display labels, and short Polish explanations. `unknown` pollen activity must not block a result and must omit pollen contribution from scoring while using lower-confidence explanation copy.
+
+**Scoring Contract**:
+
+- Symptom match score: for each allergen, count selected symptoms that appear in that allergen's catalog symptom IDs.
+- Intensity multiplier: `low` keeps the symptom match score as-is; `high` doubles the symptom match score.
+- Pollen activity contribution: `unknown` = 0, `low` = 0, `moderate` = 1, `high` = 2, `very-high` = 3.
+- Total score: `(matchedSymptomCount * intensityMultiplier) + pollenActivityContribution`.
+- Likelihood thresholds: `high` for score `5+`, `medium` for score `3-4`, `low` for score `0-2`.
+- Sort order: total score descending, then pollen activity contribution descending, then catalog order for stable ties.
+- Include every pollen-focused MVP allergen in the ranked output so `unknown` activity or weak symptom matches still produce an explainable low-confidence result.
+
+**Representative Examples**:
+
+- Two matching symptoms, `high` intensity, and `high` pollen activity should produce `high` likelihood for that allergen.
+- One matching symptom, `low` intensity, and `moderate` pollen activity should produce `low` likelihood.
+- Two allergens with the same total score should keep catalog order after comparing pollen activity contribution.
+- An allergen with matching symptoms and `unknown` pollen activity should remain in the output with likelihood based only on symptom score and lower-confidence Polish explanation copy.
 
 #### 2. Destination activity helper
 
@@ -177,7 +194,7 @@ Add lightweight deterministic smoke checks so future changes can verify the cont
 
 **Intent**: Give implementers and CI a simple command for the smoke checks.
 
-**Contract**: Add a narrowly scoped script such as `verify:allergen-ranking` that runs the smoke-check TypeScript through the project toolchain without adding a full test runner dependency unless required.
+**Contract**: Add `"verify:allergen-ranking": "vite-node app/domain/allergen-ranking/smoke-check.ts"` so the smoke-check TypeScript runs without a full test runner. Add `vite-node` as an explicit dev dependency if this command relies on it; do not rely on a transitive React Router/Vite dependency for a committed npm script.
 
 #### 3. README or inline verification note
 
