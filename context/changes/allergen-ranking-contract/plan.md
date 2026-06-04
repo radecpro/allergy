@@ -269,14 +269,14 @@ No database or persisted data exists for this contract. There are no migrations.
 
 #### Automated
 
-- [x] 1.1 Domain exports compile through `npm run typecheck`
-- [x] 1.2 Catalog contains only pollen-focused MVP allergens and predefined symptoms
-- [x] 1.3 All likelihood and pollen activity display labels are available in Polish
+- [x] 1.1 Domain exports compile through `npm run typecheck` — dc052ab
+- [x] 1.2 Catalog contains only pollen-focused MVP allergens and predefined symptoms — dc052ab
+- [x] 1.3 All likelihood and pollen activity display labels are available in Polish — dc052ab
 
 #### Manual
 
-- [x] 1.4 Catalog is intentionally small enough for F-01 and excludes parked allergen categories
-- [x] 1.5 Polish labels are clear and consistent with a consumer-facing app
+- [x] 1.4 Catalog is intentionally small enough for F-01 and excludes parked allergen categories — dc052ab
+- [x] 1.5 Polish labels are clear and consistent with a consumer-facing app — dc052ab
 
 ### Phase 2: Ranking & Polish Result Framing
 
