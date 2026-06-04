@@ -282,15 +282,15 @@ No database or persisted data exists for this contract. There are no migrations.
 
 #### Automated
 
-- [ ] 2.1 Current-symptom ranking returns stable ordering for representative inputs
-- [ ] 2.2 Destination helper returns an unranked activity list without personal likelihood labels
-- [ ] 2.3 Unknown pollen activity produces a lower-confidence Polish explanation instead of blocking flow
-- [ ] 2.4 Domain exports compile through `npm run typecheck`
+- [x] 2.1 Current-symptom ranking returns stable ordering for representative inputs
+- [x] 2.2 Destination helper returns an unranked activity list without personal likelihood labels
+- [x] 2.3 Unknown pollen activity produces a lower-confidence Polish explanation instead of blocking flow
+- [x] 2.4 Domain exports compile through `npm run typecheck`
 
 #### Manual
 
-- [ ] 2.5 Current-symptom explanations read as likelihood/context rather than diagnosis
-- [ ] 2.6 Destination explanations describe environmental activity rather than personal symptom probability
+- [x] 2.5 Current-symptom explanations read as likelihood/context rather than diagnosis
+- [x] 2.6 Destination explanations describe environmental activity rather than personal symptom probability
 
 ### Phase 3: Verification Contract
 
