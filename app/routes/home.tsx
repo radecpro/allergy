@@ -438,17 +438,24 @@ export default function Home() {
                 <div className="grid gap-3">
                   {rankedResults.map((result, index) => {
                     const explanation = formatResultExplanation(result.explanation);
+                    const isTopResult = index === 0;
 
                     return (
                       <article
                         key={result.allergenId}
-                        className="rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+                        className={`rounded-md border p-4 shadow-sm ${
+                          isTopResult
+                            ? "border-emerald-500 bg-emerald-50 shadow-emerald-100"
+                            : "border-slate-200 bg-white"
+                        }`}
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
-                            <p className="text-sm font-medium text-slate-500">
-                              Pozycja {index + 1}
-                            </p>
+                            {isTopResult ? (
+                              <p className="text-sm font-semibold uppercase tracking-normal text-emerald-800">
+                                Najbardziej prawdopodobne
+                              </p>
+                            ) : null}
                             <h3 className="mt-1 text-lg font-semibold text-slate-950">
                               {result.allergenLabel}
                             </h3>
