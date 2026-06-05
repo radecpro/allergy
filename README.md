@@ -44,6 +44,20 @@ npm run dev
 
 Your application will be available at `http://localhost:5173`.
 
+### Google Maps Platform configuration
+
+Live city search and pollen lookup require a server-side environment variable:
+
+- `GOOGLE_MAPS_API_KEY` - Google Maps Platform key used only by server routes.
+
+Enable these APIs in the Google Cloud project before local or deployed live-provider checks:
+
+- Places API
+- Geocoding API
+- Pollen API
+
+Keep the key out of client code and do not commit it. Restrict the key to only the APIs above, use server/IP restrictions where the deployment platform makes that practical, and configure Google-side quota or billing alerts before exposing the public guest endpoints.
+
 ## Building for Production
 
 Create a production build:

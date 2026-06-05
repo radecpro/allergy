@@ -396,15 +396,15 @@ No database or persisted data exists. This change introduces a required local/se
 
 #### Automated
 
-- [ ] 1.1 Provider contracts compile through `npm run typecheck`
-- [ ] 1.2 Existing allergen contract smoke checks pass with `npm run verify:allergen-ranking`
-- [ ] 1.3 Google provider code has no client imports from `*.server.ts` files
-- [ ] 1.4 Missing `GOOGLE_MAPS_API_KEY` maps to a typed fallback/error result rather than crashing the route
+- [x] 1.1 Provider contracts compile through `npm run typecheck`
+- [x] 1.2 Existing allergen contract smoke checks pass with `npm run verify:allergen-ranking`
+- [x] 1.3 Google provider code has no client imports from `*.server.ts` files
+- [x] 1.4 Missing `GOOGLE_MAPS_API_KEY` maps to a typed fallback/error result rather than crashing the route
 
 #### Manual
 
-- [ ] 1.5 Provider adapter does not expose raw Google health recommendation copy to the UI
-- [ ] 1.6 README environment section is sufficient to configure a local GCP project
+- [x] 1.5 Provider adapter does not expose raw Google health recommendation copy to the UI
+- [x] 1.6 README environment section is sufficient to configure a local GCP project
 
 ### Phase 2: Resource Routes & Route Registration
 
