@@ -6,6 +6,7 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "verify:allergen-ranking": "vite-node app/domain/allergen-ranking/smoke-check.ts",
+    "verify:current-location": "vite-node app/domain/current-location/smoke-check.ts",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },

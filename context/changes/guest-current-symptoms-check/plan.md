@@ -443,15 +443,15 @@ No database or persisted data exists. This change introduces a required local/se
 
 #### Automated
 
-- [ ] 4.1 Current-location smoke checks pass with `npm run verify:current-location`
-- [ ] 4.2 Existing domain smoke checks pass with `npm run verify:allergen-ranking`
-- [ ] 4.3 Type checking passes with `npm run typecheck`
-- [ ] 4.4 `npm audit --json` runs and advisories are fixed or documented
+- [x] 4.1 Current-location smoke checks pass with `npm run verify:current-location`
+- [x] 4.2 Existing domain smoke checks pass with `npm run verify:allergen-ranking`
+- [x] 4.3 Type checking passes with `npm run typecheck`
+- [x] 4.4 `npm audit --json` runs and advisories are fixed or documented
 
 #### Manual
 
-- [ ] 4.5 Configured Google Maps API key and required APIs enable city autocomplete and pollen lookup for a Polish city
-- [ ] 4.6 Missing or invalid `GOOGLE_MAPS_API_KEY` falls back gracefully without exposing provider details
-- [ ] 4.7 Ambiguous city searches show enough country/admin context for selection
-- [ ] 4.8 Complete flow can be completed in under 30 seconds in normal network conditions
-- [ ] 4.9 No location or symptom history is stored after completing the guest check
+- [x] 4.5 Configured Google Maps API key and required APIs enable city autocomplete and pollen lookup for a Polish city
+- [x] 4.6 Missing or invalid `GOOGLE_MAPS_API_KEY` falls back gracefully without exposing provider details
+- [x] 4.7 Ambiguous city searches show enough country/admin context for selection
+- [x] 4.8 Complete flow can be completed in under 30 seconds in normal network conditions
+- [x] 4.9 No location or symptom history is stored after completing the guest check
