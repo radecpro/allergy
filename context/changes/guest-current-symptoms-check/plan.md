@@ -425,19 +425,19 @@ No database or persisted data exists. This change introduces a required local/se
 
 #### Automated
 
-- [ ] 3.1 Home route compiles through `npm run typecheck`
-- [ ] 3.2 Existing allergen smoke checks still pass with `npm run verify:allergen-ranking`
-- [ ] 3.3 Ranking is not computed until city, at least one symptom, and intensity are selected
-- [ ] 3.4 UI imports the F-01 domain through the public barrel rather than deep implementation files
+- [x] 3.1 Home route compiles through `npm run typecheck`
+- [x] 3.2 Existing allergen smoke checks still pass with `npm run verify:allergen-ranking`
+- [x] 3.3 Ranking is not computed until city, at least one symptom, and intensity are selected
+- [x] 3.4 UI imports the F-01 domain through the public barrel rather than deep implementation files
 
 #### Manual
 
-- [ ] 3.5 Guest can search and select a city, select symptoms, choose intensity, and see all four ranked allergen results without logging in
-- [ ] 3.6 Results update automatically when symptoms or intensity change
-- [ ] 3.7 Provider-unavailable fallback keeps the selected city and shows unknown pollen activity without blocking results
-- [ ] 3.8 Page is usable on narrow mobile and desktop viewports
-- [ ] 3.9 Visible product copy is Polish and avoids diagnosis, treatment, and medication advice
-- [ ] 3.10 Google attribution/logo treatment is visible when city predictions are displayed
+- [x] 3.5 Guest can search and select a city, select symptoms, choose intensity, and see all four ranked allergen results without logging in
+- [x] 3.6 Results update automatically when symptoms or intensity change
+- [x] 3.7 Provider-unavailable fallback keeps the selected city and shows unknown pollen activity without blocking results
+- [x] 3.8 Page is usable on narrow mobile and desktop viewports
+- [x] 3.9 Visible product copy is Polish and avoids diagnosis, treatment, and medication advice
+- [x] 3.10 Google attribution/logo treatment is visible when city predictions are displayed
 
 ### Phase 4: Verification & Handoff
 

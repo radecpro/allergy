@@ -46,7 +46,10 @@ function parseAdminArea(secondaryText: string | undefined): string | undefined {
   return parts.length > 1 ? parts.at(-2) : undefined;
 }
 
-function toSuggestion(prediction: NonNullable<GoogleAutocompleteResponse["suggestions"]>[number]): CitySuggestion | null {
+function toSuggestion(
+  prediction: NonNullable<GoogleAutocompleteResponse["suggestions"]>[number],
+  options: { forcePolandPriority?: boolean } = {},
+): CitySuggestion | null {
   const placePrediction = prediction.placePrediction;
   const placeId = placePrediction?.placeId?.trim();
   const label = placePrediction?.text?.text?.trim();
@@ -64,17 +67,74 @@ function toSuggestion(prediction: NonNullable<GoogleAutocompleteResponse["sugges
     secondaryText,
     country: parseCountry(secondaryText),
     adminArea: parseAdminArea(secondaryText),
-    isPolandPriority: isPolandText(`${label} ${secondaryText ?? ""}`),
+    isPolandPriority:
+      options.forcePolandPriority || isPolandText(`${label} ${secondaryText ?? ""}`),
   };
 }
 
 function sortPolandFirst(suggestions: CitySuggestion[]): CitySuggestion[] {
-  return [...suggestions].sort((left: CitySuggestion, right: CitySuggestion) => {
+  return [...suggestions].sort((left, right) => {
     if (left.isPolandPriority !== right.isPolandPriority) {
       return left.isPolandPriority ? -1 : 1;
     }
 
     return left.label.localeCompare(right.label, "pl");
+  });
+}
+
+async function requestGoogleCitySuggestions({
+  apiKey,
+  input,
+  placesAutocompleteUrl,
+  signal,
+  onlyPoland,
+}: {
+  apiKey: string;
+  input: string;
+  placesAutocompleteUrl: string;
+  signal: AbortSignal;
+  onlyPoland: boolean;
+}): Promise<CitySuggestion[] | null> {
+  const response = await fetch(placesAutocompleteUrl, {
+    method: "POST",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": autocompleteFieldMask,
+    },
+    body: JSON.stringify({
+      input,
+      includedPrimaryTypes: ["(cities)"],
+      languageCode: "pl",
+      regionCode: "PL",
+      ...(onlyPoland ? { includedRegionCodes: ["pl"] } : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = (await response.json()) as GoogleAutocompleteResponse;
+
+  return (payload.suggestions ?? [])
+    .map((prediction) =>
+      toSuggestion(prediction, { forcePolandPriority: onlyPoland }),
+    )
+    .filter((suggestion): suggestion is CitySuggestion => suggestion !== null);
+}
+
+function deduplicateSuggestions(suggestions: CitySuggestion[]): CitySuggestion[] {
+  const seenPlaceIds = new Set<string>();
+
+  return suggestions.filter((suggestion) => {
+    if (seenPlaceIds.has(suggestion.placeId)) {
+      return false;
+    }
+
+    seenPlaceIds.add(suggestion.placeId);
+    return true;
   });
 }
 
@@ -102,23 +162,23 @@ export async function searchGoogleCities(input: string): Promise<CitySearchResul
   );
 
   try {
-    const response = await fetch(configResult.config.placesAutocompleteUrl, {
-      method: "POST",
+    const polishSuggestions = await requestGoogleCitySuggestions({
+      apiKey: configResult.config.apiKey,
+      input: query,
+      placesAutocompleteUrl: configResult.config.placesAutocompleteUrl,
       signal: abortController.signal,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": configResult.config.apiKey,
-        "X-Goog-FieldMask": autocompleteFieldMask,
-      },
-      body: JSON.stringify({
-        input: query,
-        includedPrimaryTypes: ["(cities)"],
-        languageCode: "pl",
-        regionCode: "PL",
-      }),
+      onlyPoland: true,
     });
 
-    if (!response.ok) {
+    const globalSuggestions = await requestGoogleCitySuggestions({
+      apiKey: configResult.config.apiKey,
+      input: query,
+      placesAutocompleteUrl: configResult.config.placesAutocompleteUrl,
+      signal: abortController.signal,
+      onlyPoland: false,
+    });
+
+    if (polishSuggestions === null && globalSuggestions === null) {
       return {
         status: "provider-unavailable",
         suggestions: [],
@@ -126,10 +186,10 @@ export async function searchGoogleCities(input: string): Promise<CitySearchResul
       };
     }
 
-    const payload = (await response.json()) as GoogleAutocompleteResponse;
-    const suggestions = (payload.suggestions ?? [])
-      .map(toSuggestion)
-      .filter((suggestion): suggestion is CitySuggestion => suggestion !== null);
+    const suggestions = deduplicateSuggestions([
+      ...(polishSuggestions ?? []),
+      ...(globalSuggestions ?? []),
+    ]);
 
     return {
       status: suggestions.length > 0 ? "ok" : "empty",
