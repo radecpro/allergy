@@ -296,11 +296,11 @@ No database or persisted data exists for this contract. There are no migrations.
 
 #### Automated
 
-- [x] 3.1 Smoke checks pass with `npm run verify:allergen-ranking`
-- [x] 3.2 Type checking passes with `npm run typecheck`
-- [x] 3.3 `npm audit --json` runs and advisories are fixed or documented
+- [x] 3.1 Smoke checks pass with `npm run verify:allergen-ranking` — 82196fc
+- [x] 3.2 Type checking passes with `npm run typecheck` — 82196fc
+- [x] 3.3 `npm audit --json` runs and advisories are fixed or documented — 82196fc
 
 #### Manual
 
-- [x] 3.4 Smoke-check scenarios cover the accepted planning decisions
-- [x] 3.5 No user-facing English strings remain in allergen ranking contract outputs
+- [x] 3.4 Smoke-check scenarios cover the accepted planning decisions — 82196fc
+- [x] 3.5 No user-facing English strings remain in allergen ranking contract outputs — 82196fc
