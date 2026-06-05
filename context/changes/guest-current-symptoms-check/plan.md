@@ -396,30 +396,30 @@ No database or persisted data exists. This change introduces a required local/se
 
 #### Automated
 
-- [x] 1.1 Provider contracts compile through `npm run typecheck`
-- [x] 1.2 Existing allergen contract smoke checks pass with `npm run verify:allergen-ranking`
-- [x] 1.3 Google provider code has no client imports from `*.server.ts` files
-- [x] 1.4 Missing `GOOGLE_MAPS_API_KEY` maps to a typed fallback/error result rather than crashing the route
+- [x] 1.1 Provider contracts compile through `npm run typecheck` — 8259c7e
+- [x] 1.2 Existing allergen contract smoke checks pass with `npm run verify:allergen-ranking` — 8259c7e
+- [x] 1.3 Google provider code has no client imports from `*.server.ts` files — 8259c7e
+- [x] 1.4 Missing `GOOGLE_MAPS_API_KEY` maps to a typed fallback/error result rather than crashing the route — 8259c7e
 
 #### Manual
 
-- [x] 1.5 Provider adapter does not expose raw Google health recommendation copy to the UI
-- [x] 1.6 README environment section is sufficient to configure a local GCP project
+- [x] 1.5 Provider adapter does not expose raw Google health recommendation copy to the UI — 8259c7e
+- [x] 1.6 README environment section is sufficient to configure a local GCP project — 8259c7e
 
 ### Phase 2: Resource Routes & Route Registration
 
 #### Automated
 
-- [ ] 2.1 Resource routes compile through `npm run typecheck`
-- [ ] 2.2 `/api/city-search` returns an empty suggestion list for short input
-- [ ] 2.3 `/api/current-pollen` returns normalized `unknown` activity when the API key is missing or the provider fails
-- [ ] 2.4 Route registration preserves the index route and adds both resource endpoints
-- [ ] 2.5 Resource routes enforce input bounds, provider timeouts, and non-cacheable missing-key fallbacks
+- [x] 2.1 Resource routes compile through `npm run typecheck`
+- [x] 2.2 `/api/city-search` returns an empty suggestion list for short input
+- [x] 2.3 `/api/current-pollen` returns normalized `unknown` activity when the API key is missing or the provider fails
+- [x] 2.4 Route registration preserves the index route and adds both resource endpoints
+- [x] 2.5 Resource routes enforce input bounds, provider timeouts, and non-cacheable missing-key fallbacks
 
 #### Manual
 
-- [ ] 2.6 `/api/city-search?q=War` returns app-owned suggestion JSON and no raw Google payload fields
-- [ ] 2.7 `/api/current-pollen?placeId=<selected-place-id>` returns normalized pollen activity or graceful fallback JSON
+- [x] 2.6 `/api/city-search?q=War` returns app-owned suggestion JSON and no raw Google payload fields
+- [x] 2.7 `/api/current-pollen?placeId=<selected-place-id>` returns normalized pollen activity or graceful fallback JSON
 
 ### Phase 3: Guest Check UI
 

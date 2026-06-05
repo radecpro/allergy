@@ -1,7 +1,6 @@
 import { getGoogleMapsProviderConfig } from "~/domain/google-maps/config.server";
+import { currentLocationRequestGuards } from "./http";
 import type { CityGeocodingResult } from "./types";
-
-const providerTimeoutMs = 4_000;
 
 type GoogleGeocodingResponse = {
   status?: string;
@@ -53,7 +52,10 @@ export async function geocodeGooglePlace(placeId: string): Promise<CityGeocoding
   url.searchParams.set("key", configResult.config.apiKey);
 
   const abortController = new AbortController();
-  const timeout = setTimeout(() => abortController.abort(), providerTimeoutMs);
+  const timeout = setTimeout(
+    () => abortController.abort(),
+    currentLocationRequestGuards.providerTimeoutMs,
+  );
 
   try {
     const response = await fetch(url, { signal: abortController.signal });

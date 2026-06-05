@@ -5,9 +5,8 @@ import type {
 } from "~/domain/allergen-ranking";
 import { allergenIds } from "~/domain/allergen-ranking";
 import { getGoogleMapsProviderConfig } from "~/domain/google-maps/config.server";
+import { currentLocationRequestGuards } from "./http";
 import type { PollenLookupResult, SelectedCity } from "./types";
-
-const providerTimeoutMs = 4_000;
 
 type GooglePollenIndexInfo = {
   value?: number;
@@ -110,7 +109,10 @@ export async function lookupGooglePollen(city: Pick<SelectedCity, "latitude" | "
   url.searchParams.set("languageCode", "pl");
 
   const abortController = new AbortController();
-  const timeout = setTimeout(() => abortController.abort(), providerTimeoutMs);
+  const timeout = setTimeout(
+    () => abortController.abort(),
+    currentLocationRequestGuards.providerTimeoutMs,
+  );
 
   try {
     const response = await fetch(url, { signal: abortController.signal });

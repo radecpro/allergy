@@ -1,8 +1,7 @@
 import { getGoogleMapsProviderConfig } from "~/domain/google-maps/config.server";
+import { currentLocationRequestGuards } from "./http";
 import type { CitySearchResult, CitySuggestion } from "./types";
 
-const minCitySearchLength = 2;
-const providerTimeoutMs = 4_000;
 const autocompleteFieldMask =
   "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat";
 
@@ -82,7 +81,7 @@ function sortPolandFirst(suggestions: CitySuggestion[]): CitySuggestion[] {
 export async function searchGoogleCities(input: string): Promise<CitySearchResult> {
   const query = input.trim();
 
-  if (query.length < minCitySearchLength) {
+  if (query.length < currentLocationRequestGuards.minCitySearchLength) {
     return { status: "empty", suggestions: [] };
   }
 
@@ -97,7 +96,10 @@ export async function searchGoogleCities(input: string): Promise<CitySearchResul
   }
 
   const abortController = new AbortController();
-  const timeout = setTimeout(() => abortController.abort(), providerTimeoutMs);
+  const timeout = setTimeout(
+    () => abortController.abort(),
+    currentLocationRequestGuards.providerTimeoutMs,
+  );
 
   try {
     const response = await fetch(configResult.config.placesAutocompleteUrl, {
