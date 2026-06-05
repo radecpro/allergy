@@ -410,16 +410,16 @@ No database or persisted data exists. This change introduces a required local/se
 
 #### Automated
 
-- [x] 2.1 Resource routes compile through `npm run typecheck`
-- [x] 2.2 `/api/city-search` returns an empty suggestion list for short input
-- [x] 2.3 `/api/current-pollen` returns normalized `unknown` activity when the API key is missing or the provider fails
-- [x] 2.4 Route registration preserves the index route and adds both resource endpoints
-- [x] 2.5 Resource routes enforce input bounds, provider timeouts, and non-cacheable missing-key fallbacks
+- [x] 2.1 Resource routes compile through `npm run typecheck` — 244d82a
+- [x] 2.2 `/api/city-search` returns an empty suggestion list for short input — 244d82a
+- [x] 2.3 `/api/current-pollen` returns normalized `unknown` activity when the API key is missing or the provider fails — 244d82a
+- [x] 2.4 Route registration preserves the index route and adds both resource endpoints — 244d82a
+- [x] 2.5 Resource routes enforce input bounds, provider timeouts, and non-cacheable missing-key fallbacks — 244d82a
 
 #### Manual
 
-- [x] 2.6 `/api/city-search?q=War` returns app-owned suggestion JSON and no raw Google payload fields
-- [x] 2.7 `/api/current-pollen?placeId=<selected-place-id>` returns normalized pollen activity or graceful fallback JSON
+- [x] 2.6 `/api/city-search?q=War` returns app-owned suggestion JSON and no raw Google payload fields — 244d82a
+- [x] 2.7 `/api/current-pollen?placeId=<selected-place-id>` returns normalized pollen activity or graceful fallback JSON — 244d82a
 
 ### Phase 3: Guest Check UI
 
