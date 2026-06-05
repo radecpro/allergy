@@ -282,25 +282,25 @@ No database or persisted data exists for this contract. There are no migrations.
 
 #### Automated
 
-- [x] 2.1 Current-symptom ranking returns stable ordering for representative inputs
-- [x] 2.2 Destination helper returns an unranked activity list without personal likelihood labels
-- [x] 2.3 Unknown pollen activity produces a lower-confidence Polish explanation instead of blocking flow
-- [x] 2.4 Domain exports compile through `npm run typecheck`
+- [x] 2.1 Current-symptom ranking returns stable ordering for representative inputs — d402abf
+- [x] 2.2 Destination helper returns an unranked activity list without personal likelihood labels — d402abf
+- [x] 2.3 Unknown pollen activity produces a lower-confidence Polish explanation instead of blocking flow — d402abf
+- [x] 2.4 Domain exports compile through `npm run typecheck` — d402abf
 
 #### Manual
 
-- [x] 2.5 Current-symptom explanations read as likelihood/context rather than diagnosis
-- [x] 2.6 Destination explanations describe environmental activity rather than personal symptom probability
+- [x] 2.5 Current-symptom explanations read as likelihood/context rather than diagnosis — d402abf
+- [x] 2.6 Destination explanations describe environmental activity rather than personal symptom probability — d402abf
 
 ### Phase 3: Verification Contract
 
 #### Automated
 
-- [ ] 3.1 Smoke checks pass with `npm run verify:allergen-ranking`
-- [ ] 3.2 Type checking passes with `npm run typecheck`
-- [ ] 3.3 `npm audit --json` runs and advisories are fixed or documented
+- [x] 3.1 Smoke checks pass with `npm run verify:allergen-ranking`
+- [x] 3.2 Type checking passes with `npm run typecheck`
+- [x] 3.3 `npm audit --json` runs and advisories are fixed or documented
 
 #### Manual
 
-- [ ] 3.4 Smoke-check scenarios cover the accepted planning decisions
-- [ ] 3.5 No user-facing English strings remain in allergen ranking contract outputs
+- [x] 3.4 Smoke-check scenarios cover the accepted planning decisions
+- [x] 3.5 No user-facing English strings remain in allergen ranking contract outputs

@@ -5,6 +5,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
+    "verify:allergen-ranking": "vite-node app/domain/allergen-ranking/smoke-check.ts",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
-    "vite": "^8.0.3"
+    "vite": "^8.0.3",
+    "vite-node": "^6.0.0"
   }
 }
