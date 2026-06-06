@@ -30,7 +30,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   return currentPollenResponse({
     status: pollenResult.status,
     pollenActivity: pollenResult.pollenActivity,
-    city: geocodingResult.city,
     message: pollenResult.message,
   });
 }

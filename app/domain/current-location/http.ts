@@ -23,7 +23,6 @@ export type CitySearchResponse = {
 export type CurrentPollenResponse = {
   status: CurrentLocationProviderStatus;
   pollenActivity: PollenActivityByAllergen;
-  city?: SelectedCity;
   message?: string;
 };
 

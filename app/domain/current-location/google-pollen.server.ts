@@ -90,6 +90,32 @@ export function normalizeGooglePollenForecast(
   return activity;
 }
 
+function hasUsableMappedPollenIndex(payload: GooglePollenResponse): boolean {
+  const today = payload.dailyInfo?.[0];
+
+  for (const pollenType of today?.pollenTypeInfo ?? []) {
+    if (
+      getAllergenForPollenType(pollenType.code) &&
+      typeof pollenType.indexInfo?.value === "number" &&
+      Number.isFinite(pollenType.indexInfo.value)
+    ) {
+      return true;
+    }
+  }
+
+  for (const plant of today?.plantInfo ?? []) {
+    if (
+      ragweedPlantCodes.has(plant.code ?? "") &&
+      typeof plant.indexInfo?.value === "number" &&
+      Number.isFinite(plant.indexInfo.value)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function lookupGooglePollen(city: Pick<SelectedCity, "latitude" | "longitude">): Promise<PollenLookupResult> {
   const configResult = getGoogleMapsProviderConfig();
 
@@ -126,10 +152,19 @@ export async function lookupGooglePollen(city: Pick<SelectedCity, "latitude" | "
     }
 
     const payload = (await response.json()) as GooglePollenResponse;
+    const pollenActivity = normalizeGooglePollenForecast(payload);
+
+    if (!hasUsableMappedPollenIndex(payload)) {
+      return {
+        status: "not-found",
+        pollenActivity,
+        message: "Brak aktualnych danych pylenia dla wybranej lokalizacji.",
+      };
+    }
 
     return {
       status: "ok",
-      pollenActivity: normalizeGooglePollenForecast(payload),
+      pollenActivity,
     };
   } catch {
     return {

@@ -4,6 +4,7 @@ import type { CitySearchResult, CitySuggestion } from "./types";
 
 const autocompleteFieldMask =
   "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat";
+const enoughPolishSuggestionsForAutocomplete = 5;
 
 type GoogleAutocompleteResponse = {
   suggestions?: Array<{
@@ -170,13 +171,17 @@ export async function searchGoogleCities(input: string): Promise<CitySearchResul
       onlyPoland: true,
     });
 
-    const globalSuggestions = await requestGoogleCitySuggestions({
-      apiKey: configResult.config.apiKey,
-      input: query,
-      placesAutocompleteUrl: configResult.config.placesAutocompleteUrl,
-      signal: abortController.signal,
-      onlyPoland: false,
-    });
+    const globalSuggestions =
+      polishSuggestions !== null &&
+      polishSuggestions.length >= enoughPolishSuggestionsForAutocomplete
+        ? []
+        : await requestGoogleCitySuggestions({
+            apiKey: configResult.config.apiKey,
+            input: query,
+            placesAutocompleteUrl: configResult.config.placesAutocompleteUrl,
+            signal: abortController.signal,
+            onlyPoland: false,
+          });
 
     if (polishSuggestions === null && globalSuggestions === null) {
       return {
