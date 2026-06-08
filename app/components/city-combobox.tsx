@@ -39,8 +39,14 @@ export function CityCombobox({
   const [citySearchStatus, setCitySearchStatus] = useState<AsyncStatus>("idle");
   const [citySearchMessage, setCitySearchMessage] = useState("");
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const blurTimeoutRef = useRef<number | null>(null);
   const canSearch = cityQuery.trim().length >= minimumSearchLength;
+  const activeSuggestion =
+    activeSuggestionIndex >= 0 ? suggestions[activeSuggestionIndex] : undefined;
+  const activeSuggestionId = activeSuggestion
+    ? `${listboxId}-option-${activeSuggestionIndex}`
+    : undefined;
 
   useEffect(() => {
     const trimmedQuery = cityQuery.trim();
@@ -49,6 +55,7 @@ export function CityCombobox({
       setSuggestions([]);
       setCitySearchStatus("idle");
       setCitySearchMessage("");
+      setActiveSuggestionIndex(-1);
       return;
     }
 
@@ -60,18 +67,23 @@ export function CityCombobox({
       setSuggestions([]);
       setCitySearchStatus("idle");
       setCitySearchMessage("");
+      setActiveSuggestionIndex(-1);
       return;
     }
 
+    setSuggestions([]);
+    setCitySearchStatus("loading");
+    setActiveSuggestionIndex(-1);
+
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
-      setCitySearchStatus("loading");
       fetch(`/api/city-search?q=${encodeURIComponent(trimmedQuery)}`, {
         signal: controller.signal,
       })
         .then(async (response) => {
           const payload = (await response.json()) as CitySearchResponse;
           setSuggestions(payload.suggestions);
+          setActiveSuggestionIndex(-1);
           setCitySearchStatus(
             payload.status === "ok" || payload.status === "empty"
               ? "idle"
@@ -83,6 +95,7 @@ export function CityCombobox({
         .catch((error: unknown) => {
           if (!isAbortError(error)) {
             setSuggestions([]);
+            setActiveSuggestionIndex(-1);
             setCitySearchStatus("unavailable");
             setCitySearchMessage("Wyszukiwanie miast jest chwilowo niedostępne.");
             setIsSuggestionsOpen(true);
@@ -116,8 +129,49 @@ export function CityCombobox({
     onSelect(suggestion);
     setCityQuery(suggestion.label);
     setSuggestions([]);
+    setActiveSuggestionIndex(-1);
     setIsSuggestionsOpen(false);
     setCitySearchMessage("");
+  }
+
+  function handleCityKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Escape" && isSuggestionsOpen) {
+      event.preventDefault();
+      setIsSuggestionsOpen(false);
+      setActiveSuggestionIndex(-1);
+      return;
+    }
+
+    if (!canSearch || suggestions.length === 0) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setIsSuggestionsOpen(true);
+      setActiveSuggestionIndex((current) =>
+        current < suggestions.length - 1 ? current + 1 : 0,
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setIsSuggestionsOpen(true);
+      setActiveSuggestionIndex((current) =>
+        current > 0 ? current - 1 : suggestions.length - 1,
+      );
+      return;
+    }
+
+    if (
+      event.key === "Enter" &&
+      isSuggestionsOpen &&
+      activeSuggestion !== undefined
+    ) {
+      event.preventDefault();
+      handleCitySelect(activeSuggestion);
+    }
   }
 
   return (
@@ -132,13 +186,18 @@ export function CityCombobox({
           aria-autocomplete="list"
           aria-expanded={isSuggestionsOpen}
           aria-controls={listboxId}
+          aria-activedescendant={
+            isSuggestionsOpen ? activeSuggestionId : undefined
+          }
           value={cityQuery}
           onBlur={handleCityBlur}
           onChange={(event) => {
             setCityQuery(event.target.value);
+            setActiveSuggestionIndex(-1);
             setIsSuggestionsOpen(true);
           }}
           onFocus={handleCityFocus}
+          onKeyDown={handleCityKeyDown}
           placeholder={placeholder}
           className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         />
@@ -165,17 +224,24 @@ export function CityCombobox({
                 </p>
               ) : null}
 
-              {suggestions.map((suggestion) => {
+              {suggestions.map((suggestion, index) => {
                 const meta = formatSuggestionMeta(suggestion);
+                const isActive = index === activeSuggestionIndex;
 
                 return (
                   <button
                     key={suggestion.placeId}
+                    id={`${listboxId}-option-${index}`}
                     type="button"
                     role="option"
+                    aria-selected={isActive}
+                    tabIndex={-1}
                     onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setActiveSuggestionIndex(index)}
                     onClick={() => handleCitySelect(suggestion)}
-                    className="grid w-full gap-0.5 px-3 py-2 text-left hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none"
+                    className={`grid w-full gap-0.5 px-3 py-2 text-left focus:outline-none ${
+                      isActive ? "bg-emerald-50" : "hover:bg-emerald-50"
+                    }`}
                   >
                     <span className="font-medium text-slate-950">
                       {suggestion.mainText}
