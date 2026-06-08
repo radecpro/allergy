@@ -301,33 +301,33 @@ No database migration or persisted data migration is required. This change adds 
 
 #### Automated
 
-- [x] 2.1 Destination route and route registration compile with `npm run typecheck`
-- [x] 2.2 Existing allergen smoke checks pass with `npm run verify:allergen-ranking`
-- [x] 2.3 Existing current-location smoke checks pass with `npm run verify:current-location`
-- [x] 2.4 Static review confirms destination route imports `summarizeDestinationPollenActivity` and not current-symptom ranking or likelihood helpers
+- [x] 2.1 Destination route and route registration compile with `npm run typecheck` — ddf9966
+- [x] 2.2 Existing allergen smoke checks pass with `npm run verify:allergen-ranking` — ddf9966
+- [x] 2.3 Existing current-location smoke checks pass with `npm run verify:current-location` — ddf9966
+- [x] 2.4 Static review confirms destination route imports `summarizeDestinationPollenActivity` and not current-symptom ranking or likelihood helpers — ddf9966
 
 #### Manual
 
-- [x] 2.5 Guest can open `/destination`, search for a destination city, select it, and see all four MVP allergen activity cards without selecting symptoms
-- [x] 2.6 Mode switch navigates between `/` and `/destination`
-- [x] 2.7 Unknown or unavailable pollen data shows an amber notice and keeps all activity cards visible
-- [x] 2.8 Destination cards use Polish environmental wording and avoid diagnosis, treatment, medication, and personal probability language
-- [x] 2.9 Destination page is usable on mobile and desktop without overlapping text or controls
+- [x] 2.5 Guest can open `/destination`, search for a destination city, select it, and see all four MVP allergen activity cards without selecting symptoms — ddf9966
+- [x] 2.6 Mode switch navigates between `/` and `/destination` — ddf9966
+- [x] 2.7 Unknown or unavailable pollen data shows an amber notice and keeps all activity cards visible — ddf9966
+- [x] 2.8 Destination cards use Polish environmental wording and avoid diagnosis, treatment, medication, and personal probability language — ddf9966
+- [x] 2.9 Destination page is usable on mobile and desktop without overlapping text or controls — ddf9966
 
 ### Phase 3: Guardrails, Release Blocker & Handoff Verification
 
 #### Automated
 
-- [ ] 3.1 `npm run verify:allergen-ranking` passes
-- [ ] 3.2 `npm run verify:current-location` passes
-- [ ] 3.3 `npm run typecheck` passes
-- [ ] 3.4 `npm audit --json` runs and advisories are fixed or documented
+- [x] 3.1 `npm run verify:allergen-ranking` passes
+- [x] 3.2 `npm run verify:current-location` passes
+- [x] 3.3 `npm run typecheck` passes
+- [x] 3.4 `npm audit --json` runs and advisories are fixed or documented
 
 #### Manual
 
-- [ ] 3.5 Current-symptoms flow still works after shared combobox extraction
-- [ ] 3.6 Destination flow works with a configured Google Maps API key for at least one real city
-- [ ] 3.7 Destination flow falls back gracefully when provider data or API key is unavailable
-- [ ] 3.8 Mode switch is visible and understandable at the top of both product routes
-- [ ] 3.9 Google attribution appears when suggestions are displayed in both flows
-- [ ] 3.10 Reviewer confirms `/api/current-pollen` abuse controls are tracked as a public-release blocker before exposing S-02
+- [x] 3.5 Current-symptoms flow still works after shared combobox extraction
+- [x] 3.6 Destination flow works with a configured Google Maps API key for at least one real city
+- [x] 3.7 Destination flow falls back gracefully when provider data or API key is unavailable
+- [x] 3.8 Mode switch is visible and understandable at the top of both product routes
+- [x] 3.9 Google attribution appears when suggestions are displayed in both flows
+- [x] 3.10 Reviewer confirms `/api/current-pollen` abuse controls are tracked as a public-release blocker before exposing S-02
