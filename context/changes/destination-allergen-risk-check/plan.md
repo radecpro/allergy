@@ -318,16 +318,16 @@ No database migration or persisted data migration is required. This change adds 
 
 #### Automated
 
-- [x] 3.1 `npm run verify:allergen-ranking` passes
-- [x] 3.2 `npm run verify:current-location` passes
-- [x] 3.3 `npm run typecheck` passes
-- [x] 3.4 `npm audit --json` runs and advisories are fixed or documented
+- [x] 3.1 `npm run verify:allergen-ranking` passes — 6b87293
+- [x] 3.2 `npm run verify:current-location` passes — 6b87293
+- [x] 3.3 `npm run typecheck` passes — 6b87293
+- [x] 3.4 `npm audit --json` runs and advisories are fixed or documented — 6b87293
 
 #### Manual
 
-- [x] 3.5 Current-symptoms flow still works after shared combobox extraction
-- [x] 3.6 Destination flow works with a configured Google Maps API key for at least one real city
-- [x] 3.7 Destination flow falls back gracefully when provider data or API key is unavailable
-- [x] 3.8 Mode switch is visible and understandable at the top of both product routes
-- [x] 3.9 Google attribution appears when suggestions are displayed in both flows
-- [x] 3.10 Reviewer confirms `/api/current-pollen` abuse controls are tracked as a public-release blocker before exposing S-02
+- [x] 3.5 Current-symptoms flow still works after shared combobox extraction — 6b87293
+- [x] 3.6 Destination flow works with a configured Google Maps API key for at least one real city — 6b87293
+- [x] 3.7 Destination flow falls back gracefully when provider data or API key is unavailable — 6b87293
+- [x] 3.8 Mode switch is visible and understandable at the top of both product routes — 6b87293
+- [x] 3.9 Google attribution appears when suggestions are displayed in both flows — 6b87293
+- [x] 3.10 Reviewer confirms `/api/current-pollen` abuse controls are tracked as a public-release blocker before exposing S-02 — 6b87293
