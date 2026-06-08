@@ -79,5 +79,6 @@ export type DestinationPollenActivitySummary = {
   allergenLabel: string;
   pollenActivity: PollenActivityLevel;
   pollenActivityLabel: string;
+  possibleSymptomLabels: readonly string[];
   explanation: string;
 };

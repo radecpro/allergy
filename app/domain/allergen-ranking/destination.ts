@@ -1,5 +1,5 @@
 import { allergenCatalog } from "./catalog";
-import { pollenActivityLabels } from "./labels";
+import { pollenActivityLabels, symptomLabels } from "./labels";
 import { createDestinationActivityExplanation } from "./explanations";
 import type {
   DestinationPollenActivityInput,
@@ -17,6 +17,9 @@ export function summarizeDestinationPollenActivity({
       allergenLabel: allergen.label,
       pollenActivity: activity,
       pollenActivityLabel: pollenActivityLabels[activity],
+      possibleSymptomLabels: allergen.symptomIds.map(
+        (symptomId) => symptomLabels[symptomId],
+      ),
       explanation: createDestinationActivityExplanation({
         allergenLabel: allergen.label,
         pollenActivity: activity,

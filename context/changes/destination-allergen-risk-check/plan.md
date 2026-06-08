@@ -285,34 +285,34 @@ No database migration or persisted data migration is required. This change adds 
 
 #### Automated
 
-- [x] 1.1 Shared components and home route compile with `npm run typecheck`
-- [x] 1.2 Existing current-location smoke checks pass with `npm run verify:current-location`
-- [x] 1.3 Existing allergen smoke checks pass with `npm run verify:allergen-ranking`
-- [x] 1.4 Home route still imports the allergen domain through `~/domain/allergen-ranking`
+- [x] 1.1 Shared components and home route compile with `npm run typecheck` — 1db040a
+- [x] 1.2 Existing current-location smoke checks pass with `npm run verify:current-location` — 1db040a
+- [x] 1.3 Existing allergen smoke checks pass with `npm run verify:allergen-ranking` — 1db040a
+- [x] 1.4 Home route still imports the allergen domain through `~/domain/allergen-ranking` — 1db040a
 
 #### Manual
 
-- [x] 1.5 Current-symptoms city search still debounces, displays suggestions, handles empty/unavailable states, and selects a city
-- [x] 1.6 Google attribution is still visible when city predictions are displayed
-- [x] 1.7 The top switch shows both modes and marks the current route as active
-- [x] 1.8 The current-symptoms flow still reaches ranked results after city, symptoms, and intensity are selected
+- [x] 1.5 Current-symptoms city search still debounces, displays suggestions, handles empty/unavailable states, and selects a city — 1db040a
+- [x] 1.6 Google attribution is still visible when city predictions are displayed — 1db040a
+- [x] 1.7 The top switch shows both modes and marks the current route as active — 1db040a
+- [x] 1.8 The current-symptoms flow still reaches ranked results after city, symptoms, and intensity are selected — 1db040a
 
 ### Phase 2: Destination Route & Activity Results
 
 #### Automated
 
-- [ ] 2.1 Destination route and route registration compile with `npm run typecheck`
-- [ ] 2.2 Existing allergen smoke checks pass with `npm run verify:allergen-ranking`
-- [ ] 2.3 Existing current-location smoke checks pass with `npm run verify:current-location`
-- [ ] 2.4 Static review confirms destination route imports `summarizeDestinationPollenActivity` and not current-symptom ranking or likelihood helpers
+- [x] 2.1 Destination route and route registration compile with `npm run typecheck`
+- [x] 2.2 Existing allergen smoke checks pass with `npm run verify:allergen-ranking`
+- [x] 2.3 Existing current-location smoke checks pass with `npm run verify:current-location`
+- [x] 2.4 Static review confirms destination route imports `summarizeDestinationPollenActivity` and not current-symptom ranking or likelihood helpers
 
 #### Manual
 
-- [ ] 2.5 Guest can open `/destination`, search for a destination city, select it, and see all four MVP allergen activity cards without selecting symptoms
-- [ ] 2.6 Mode switch navigates between `/` and `/destination`
-- [ ] 2.7 Unknown or unavailable pollen data shows an amber notice and keeps all activity cards visible
-- [ ] 2.8 Destination cards use Polish environmental wording and avoid diagnosis, treatment, medication, and personal probability language
-- [ ] 2.9 Destination page is usable on mobile and desktop without overlapping text or controls
+- [x] 2.5 Guest can open `/destination`, search for a destination city, select it, and see all four MVP allergen activity cards without selecting symptoms
+- [x] 2.6 Mode switch navigates between `/` and `/destination`
+- [x] 2.7 Unknown or unavailable pollen data shows an amber notice and keeps all activity cards visible
+- [x] 2.8 Destination cards use Polish environmental wording and avoid diagnosis, treatment, medication, and personal probability language
+- [x] 2.9 Destination page is usable on mobile and desktop without overlapping text or controls
 
 ### Phase 3: Guardrails, Release Blocker & Handoff Verification
 

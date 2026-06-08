@@ -61,6 +61,7 @@ function collectUserFacingStrings(): string[] {
     ...destinationResults.flatMap((result) => [
       result.allergenLabel,
       result.pollenActivityLabel,
+      ...result.possibleSymptomLabels,
       result.explanation,
     ]),
   ];
@@ -134,6 +135,10 @@ function verifyDestinationActivityOnly(): void {
   assertEqual(results.length, allergenCatalog.length, "Destination output includes every MVP allergen");
   assertEqual(results[0]?.allergenId, allergenCatalog[0]?.id, "Destination output keeps catalog order");
   assertEqual(results[0]?.pollenActivityLabel, "Bardzo wysoka", "Destination activity uses Polish display label");
+  assert(
+    results.every((result) => result.possibleSymptomLabels.length > 0),
+    "Destination output includes possible symptoms for every MVP allergen",
+  );
   assert(
     results.every((result) => !("likelihood" in result) && !("likelihoodLabel" in result)),
     "Destination output does not include personal likelihood fields",
