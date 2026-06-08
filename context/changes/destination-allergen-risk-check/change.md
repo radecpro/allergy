@@ -1,9 +1,9 @@
 ---
 change_id: destination-allergen-risk-check
 title: Destination allergen risk check
-status: planned
+status: implementing
 created: 2026-06-06
-updated: 2026-06-06
+updated: 2026-06-08
 archived_at: null
 ---
 

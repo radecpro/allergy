@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Route } from "./+types/home";
+import { CityCombobox } from "~/components/city-combobox";
+import { ModeSwitch } from "~/components/mode-switch";
 import {
   allergenIds,
   pollenActivityLabels,
@@ -13,13 +15,9 @@ import type {
   SymptomId,
   SymptomIntensity,
 } from "~/domain/allergen-ranking";
-import type {
-  CitySearchResponse,
-  CurrentPollenResponse,
-} from "~/domain/current-location/http";
+import type { CurrentPollenResponse } from "~/domain/current-location/http";
 import type { CitySuggestion } from "~/domain/current-location/types";
 
-const minimumSearchLength = 2;
 const emptyPollenActivity = Object.fromEntries(
   allergenIds.map((allergenId) => [allergenId, "unknown"]),
 ) as PollenActivityByAllergen;
@@ -37,10 +35,6 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-function formatSuggestionMeta(suggestion: CitySuggestion): string {
-  return [suggestion.adminArea, suggestion.country].filter(Boolean).join(", ");
-}
-
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
 }
@@ -54,38 +48,15 @@ function formatResultExplanation(explanation: string): string {
     .trim();
 }
 
-function GoogleAttribution() {
-  return (
-    <div className="flex items-center justify-end border-t border-slate-200 px-3 py-2 text-[11px] text-slate-500">
-      <span className="mr-1">powered by</span>
-      <span aria-label="Google" className="font-medium tracking-normal">
-        <span className="text-[#4285f4]">G</span>
-        <span className="text-[#db4437]">o</span>
-        <span className="text-[#f4b400]">o</span>
-        <span className="text-[#4285f4]">g</span>
-        <span className="text-[#0f9d58]">l</span>
-        <span className="text-[#db4437]">e</span>
-      </span>
-    </div>
-  );
-}
-
 export default function Home() {
-  const [cityQuery, setCityQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState<CitySuggestion | null>(null);
-  const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
-  const [citySearchStatus, setCitySearchStatus] = useState<AsyncStatus>("idle");
-  const [citySearchMessage, setCitySearchMessage] = useState("");
-  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const [selectedSymptomIds, setSelectedSymptomIds] = useState<SymptomId[]>([]);
   const [intensity, setIntensity] = useState<SymptomIntensity | null>(null);
   const [pollenActivity, setPollenActivity] =
     useState<PollenActivityByAllergen>(emptyPollenActivity);
   const [pollenStatus, setPollenStatus] = useState<AsyncStatus>("idle");
   const [pollenMessage, setPollenMessage] = useState("");
-  const blurTimeoutRef = useRef<number | null>(null);
 
-  const canSearch = cityQuery.trim().length >= minimumSearchLength;
   const resultsReady =
     selectedCity !== null && selectedSymptomIds.length > 0 && intensity !== null;
   const hasUnknownPollen = allergenIds.some(
@@ -103,61 +74,6 @@ export default function Home() {
       pollenActivity,
     });
   }, [intensity, pollenActivity, resultsReady, selectedSymptomIds]);
-
-  useEffect(() => {
-    const trimmedQuery = cityQuery.trim();
-
-    if (selectedCity?.label === cityQuery) {
-      setSuggestions([]);
-      setCitySearchStatus("idle");
-      setCitySearchMessage("");
-      return;
-    }
-
-    setSelectedCity(null);
-    setPollenActivity(emptyPollenActivity);
-    setPollenStatus("idle");
-    setPollenMessage("");
-
-    if (trimmedQuery.length < minimumSearchLength) {
-      setSuggestions([]);
-      setCitySearchStatus("idle");
-      setCitySearchMessage("");
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      setCitySearchStatus("loading");
-      fetch(`/api/city-search?q=${encodeURIComponent(trimmedQuery)}`, {
-        signal: controller.signal,
-      })
-        .then(async (response) => {
-          const payload = (await response.json()) as CitySearchResponse;
-          setSuggestions(payload.suggestions);
-          setCitySearchStatus(
-            payload.status === "ok" || payload.status === "empty"
-              ? "idle"
-              : "unavailable",
-          );
-          setCitySearchMessage(payload.message ?? "");
-          setIsSuggestionsOpen(true);
-        })
-        .catch((error: unknown) => {
-          if (!isAbortError(error)) {
-            setSuggestions([]);
-            setCitySearchStatus("unavailable");
-            setCitySearchMessage("Wyszukiwanie miast jest chwilowo niedostępne.");
-            setIsSuggestionsOpen(true);
-          }
-        });
-    }, 250);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [cityQuery, selectedCity?.label]);
 
   useEffect(() => {
     if (selectedCity === null) {
@@ -189,29 +105,15 @@ export default function Home() {
     return () => controller.abort();
   }, [selectedCity]);
 
-  function handleCityFocus() {
-    if (blurTimeoutRef.current !== null) {
-      window.clearTimeout(blurTimeoutRef.current);
+  const handleCitySelect = useCallback((city: CitySuggestion | null) => {
+    setSelectedCity(city);
+
+    if (city === null) {
+      setPollenActivity(emptyPollenActivity);
+      setPollenStatus("idle");
+      setPollenMessage("");
     }
-
-    if (canSearch) {
-      setIsSuggestionsOpen(true);
-    }
-  }
-
-  function handleCityBlur() {
-    blurTimeoutRef.current = window.setTimeout(() => {
-      setIsSuggestionsOpen(false);
-    }, 150);
-  }
-
-  function handleCitySelect(suggestion: CitySuggestion) {
-    setSelectedCity(suggestion);
-    setCityQuery(suggestion.label);
-    setSuggestions([]);
-    setIsSuggestionsOpen(false);
-    setCitySearchMessage("");
-  }
+  }, []);
 
   function toggleSymptom(symptomId: SymptomId) {
     setSelectedSymptomIds((current) =>
@@ -228,6 +130,7 @@ export default function Home() {
           <p className="text-sm font-semibold uppercase tracking-normal text-emerald-700">
             Allergen Finder
           </p>
+          <ModeSwitch />
           <div className="grid gap-3 lg:grid-cols-[1fr_22rem] lg:items-end">
             <div>
               <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
@@ -259,90 +162,15 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid gap-2">
-              <label htmlFor="city-search" className="text-sm font-medium">
-                Aktualne miasto
-              </label>
-              <div className="relative">
-                <input
-                  id="city-search"
-                  role="combobox"
-                  aria-autocomplete="list"
-                  aria-expanded={isSuggestionsOpen}
-                  aria-controls="city-suggestions"
-                  value={cityQuery}
-                  onBlur={handleCityBlur}
-                  onChange={(event) => {
-                    setCityQuery(event.target.value);
-                    setIsSuggestionsOpen(true);
-                  }}
-                  onFocus={handleCityFocus}
-                  placeholder="np. Warszawa"
-                  className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                />
-
-                {isSuggestionsOpen && canSearch ? (
-                  <div className="absolute z-20 mt-2 max-h-80 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg">
-                    <div
-                      id="city-suggestions"
-                      role="listbox"
-                      className="max-h-64 overflow-y-auto py-1"
-                    >
-                      {citySearchStatus === "loading" ? (
-                        <p className="px-3 py-3 text-sm text-slate-600">
-                          Szukam miast...
-                        </p>
-                      ) : null}
-
-                      {citySearchStatus !== "loading" &&
-                      citySearchStatus === "unavailable" ? (
-                        <p className="px-3 py-3 text-sm text-slate-600">
-                          {citySearchMessage ||
-                            "Sugestie miast są chwilowo niedostępne."}
-                        </p>
-                      ) : null}
-
-                      {citySearchStatus !== "loading" &&
-                      citySearchStatus !== "unavailable" &&
-                      suggestions.length === 0 ? (
-                        <p className="px-3 py-3 text-sm text-slate-600">
-                          Brak pasujących sugestii.
-                        </p>
-                      ) : null}
-
-                      {suggestions.map((suggestion) => {
-                        const meta = formatSuggestionMeta(suggestion);
-
-                        return (
-                          <button
-                            key={suggestion.placeId}
-                            type="button"
-                            role="option"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => handleCitySelect(suggestion)}
-                            className="grid w-full gap-0.5 px-3 py-2 text-left hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none"
-                          >
-                            <span className="font-medium text-slate-950">
-                              {suggestion.mainText}
-                            </span>
-                            <span className="text-sm text-slate-600">
-                              {meta || suggestion.secondaryText || suggestion.label}
-                              {suggestion.isPolandPriority ? " · Polska" : ""}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <GoogleAttribution />
-                  </div>
-                ) : null}
-              </div>
-              <p className="min-h-5 text-sm text-slate-600">
-                {selectedCity
-                  ? `Wybrane miasto: ${selectedCity.label}`
-                  : "Wpisz minimum 2 znaki, aby zobaczyć sugestie."}
-              </p>
-            </div>
+            <CityCombobox
+              selectedCity={selectedCity}
+              onSelect={handleCitySelect}
+              inputId="city-search"
+              listboxId="city-suggestions"
+              label="Aktualne miasto"
+              helperText="Wpisz minimum 2 znaki, aby zobaczyć sugestie."
+              placeholder="np. Warszawa"
+            />
 
             <fieldset className="grid gap-3">
               <legend className="text-sm font-medium">Aktualne objawy</legend>

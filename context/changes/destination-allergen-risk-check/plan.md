@@ -285,17 +285,17 @@ No database migration or persisted data migration is required. This change adds 
 
 #### Automated
 
-- [ ] 1.1 Shared components and home route compile with `npm run typecheck`
-- [ ] 1.2 Existing current-location smoke checks pass with `npm run verify:current-location`
-- [ ] 1.3 Existing allergen smoke checks pass with `npm run verify:allergen-ranking`
-- [ ] 1.4 Home route still imports the allergen domain through `~/domain/allergen-ranking`
+- [x] 1.1 Shared components and home route compile with `npm run typecheck`
+- [x] 1.2 Existing current-location smoke checks pass with `npm run verify:current-location`
+- [x] 1.3 Existing allergen smoke checks pass with `npm run verify:allergen-ranking`
+- [x] 1.4 Home route still imports the allergen domain through `~/domain/allergen-ranking`
 
 #### Manual
 
-- [ ] 1.5 Current-symptoms city search still debounces, displays suggestions, handles empty/unavailable states, and selects a city
-- [ ] 1.6 Google attribution is still visible when city predictions are displayed
-- [ ] 1.7 The top switch shows both modes and marks the current route as active
-- [ ] 1.8 The current-symptoms flow still reaches ranked results after city, symptoms, and intensity are selected
+- [x] 1.5 Current-symptoms city search still debounces, displays suggestions, handles empty/unavailable states, and selects a city
+- [x] 1.6 Google attribution is still visible when city predictions are displayed
+- [x] 1.7 The top switch shows both modes and marks the current route as active
+- [x] 1.8 The current-symptoms flow still reaches ranked results after city, symptoms, and intensity are selected
 
 ### Phase 2: Destination Route & Activity Results
 
