@@ -29,7 +29,7 @@ In this roadmap, the north star means the first end-to-end product slice that pr
 
 | ID | Change ID | Outcome (user can ...) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
-| F-01 | allergen-ranking-contract | (foundation) Minimal allergen, symptom, pollen-activity, and result-framing contract is in place for both launch flows | — | FR-004, FR-005, FR-007, FR-008, FR-009, FR-011, NFRs | ready |
+| F-01 | allergen-ranking-contract | (foundation) Minimal allergen, symptom, pollen-activity, and result-framing contract is in place for both launch flows | — | FR-004, FR-005, FR-007, FR-008, FR-009, FR-011, NFRs | done |
 | S-01 | guest-current-symptoms-check | Complete a guest current-symptoms allergen check with manual city entry and compact likelihood results | F-01 | US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012 | proposed |
 | S-02 | destination-allergen-risk-check | Search for a destination city and see destination allergen and pollen risk without reporting symptoms | F-01 | FR-003, FR-009, FR-011 | proposed |
 
@@ -59,7 +59,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Which pollen or environmental data source is acceptable for MVP implementation? — Owner: team. Block: no.
 - **Risk:** If this contract grows beyond the minimum needed for the two launch flows, the roadmap spends effort on data completeness before users can try the product.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -119,4 +119,4 @@ No open roadmap questions.
 
 ## Done
 
-(Empty. `/10x-archive` appends entries here when a roadmap item is archived.)
+- **F-01: (foundation) Minimal allergen, symptom, pollen-activity, probability-label, and non-diagnostic explanation contract is in place for the current and destination checks.** — Archived 2026-06-09 → `context/archive/2026-06-03-allergen-ranking-contract/`. Lesson: —.
