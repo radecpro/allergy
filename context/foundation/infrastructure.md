@@ -1,118 +1,152 @@
 ---
 project: Allergen Finder
-researched_at: 2026-06-01T00:00:00+02:00
+researched_at: 2026-06-09T23:51:55+02:00
 recommended_platform: Google Cloud Run
-runner_up: Cloudflare Workers Static Assets
+runner_up: Railway
 context_type: mvp
 tech_stack:
-  language: TypeScript
+  language: TypeScript 5.9
   framework: React Router 7.16.0
-  runtime: Node.js container on Cloud Run
+  runtime: Node.js 24 LTS container
+  database: PostgreSQL
 ---
 
 ## Recommendation
 
-**Deploy on Google Cloud Run.**
+**Continue deploying on Google Cloud Run, backed by Cloud SQL for PostgreSQL.**
 
-Cloud Run is the best MVP deployment target for this project because the current React Router app already builds as a normal Node server (`react-router build` plus `react-router-serve`), the tech-stack hand-off names GCP Cloud Run as the intended infrastructure shape, and the developer has GCP familiarity. It also fits the interview constraints: no persistent connections, single-region usage, balanced cost/DX, and preference for co-located managed services through Cloud SQL, Secret Manager, Cloud Storage, Cloud Logging, and IAM.
+The updated product shape can keep the existing TypeScript, React Router, Vite, Node container, and Cloud Run architecture. React Router officially supports Node.js Docker deployments, including a Node/Postgres reference template, and Cloud Run has a first-party Cloud SQL connection path. The revised MVP does not require an edge-runtime migration or a different application framework.
 
-Primary references checked on 2026-06-01: React Router deployment docs (https://reactrouter.com/start/framework/deploying), Cloud Run overview (https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run), Cloud Run deploy docs (https://docs.cloud.google.com/run/docs/deploying), Cloud Run rollback docs (https://docs.cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration), Cloud Run logging docs (https://docs.cloud.google.com/run/docs/logging), Cloud Run secrets docs (https://docs.cloud.google.com/run/docs/configuring/services/secrets), and Cloud Run pricing (https://cloud.google.com/run/pricing).
+The stack must be extended rather than replaced: add PostgreSQL persistence, server-side authentication and sessions, a typed database layer, migrations, and a standard automated test runner. The current `node:20-alpine` Docker base must be upgraded because Node.js 20 reached end of life on 2026-04-30; use Node.js 24 LTS and verify the complete build and smoke-check suite before redeploying.
+
+Primary references checked on 2026-06-09:
+
+- React Router deployment: https://reactrouter.com/start/framework/deploying
+- React Router sessions and cookies: https://reactrouter.com/explanation/sessions-and-cookies
+- Cloud Run container contract: https://cloud.google.com/run/docs/container-contract
+- Cloud Run to Cloud SQL for PostgreSQL: https://cloud.google.com/sql/docs/postgres/connect-run
+- Cloud Run pricing: https://cloud.google.com/run/pricing
+- Cloud SQL pricing: https://cloud.google.com/sql/pricing
+- Node.js release lifecycle: https://nodejs.org/en/about/previous-releases
+- Identity Platform email/password sign-in: https://cloud.google.com/identity-platform/docs/sign-in-user-email
+
+## Required Stack Changes
+
+| Area | Decision |
+|---|---|
+| Application framework | Keep React Router 7 framework mode and the current server-rendered route-module architecture. |
+| Runtime | Keep Node.js containers, but upgrade the Docker base from Node 20 to Node 24 LTS. |
+| Hosting | Keep the existing public Cloud Run service in `europe-central2`. |
+| Database | Add PostgreSQL. Prefer Cloud SQL in the same region as Cloud Run. |
+| Data access | Add a typed repository and migration layer. Drizzle is a low-friction option and appears in React Router's official Node/Postgres template, but the exact library remains an implementation-plan decision. |
+| Authentication | Add email/password authentication and secure server-side session handling. GCP Identity Platform is compatible and inexpensive at MVP scale; locally managed credentials are also viable if password hashing, enumeration resistance, and session invalidation are implemented correctly. |
+| Sessions | Store only a signed session identifier or minimal user identity in the cookie. Use database-backed session records when server-side revocation or multiple-session management is required. |
+| Tests | Add Vitest or an equivalent Vite-compatible test runner, an `npm test` script, and authorization tests that create two users and prove cross-user read, update, and delete attempts fail. |
+| Secrets | Store database credentials, cookie secrets, and provider keys in Secret Manager and expose them only to the Cloud Run runtime service account. |
 
 ## Platform Comparison
 
-| Platform | CLI-first | Managed/Serverless | Agent-readable docs | Stable deploy API | MCP / Integration | Total |
+| Platform | Runtime fit | Managed services | CLI / deploy API | Agent-readable docs | MVP fit | Total |
 |---|---|---|---|---|---|---|
-| Google Cloud Run | Pass | Pass | Partial | Pass | Partial | 4.0 / 5 |
-| Cloudflare Workers Static Assets | Pass | Pass | Pass | Pass | Pass | 5.0 / 5 |
-| Railway | Partial | Pass | Pass | Partial | Partial | 3.5 / 5 |
-| Vercel | Pass | Pass | Pass | Pass | Partial | 4.5 / 5 |
-| Netlify | Partial | Pass | Pass | Partial | Pass | 4.0 / 5 |
-| Fly.io | Pass | Partial | Pass | Partial | Partial | 3.5 / 5 |
-| Render | Partial | Pass | Pass | Partial | Partial | 3.5 / 5 |
+| Google Cloud Run + Cloud SQL | Pass | Pass | Pass | Partial | Pass | 4.5 / 5 |
+| Railway | Pass | Partial | Partial | Pass | Pass | 4.0 / 5 |
+| Cloudflare Workers + D1 | Partial | Pass | Pass | Pass | Partial | 4.0 / 5 |
+| Vercel | Pass | Partial | Pass | Pass | Partial | 4.0 / 5 |
+| Netlify | Pass | Partial | Partial | Pass | Partial | 3.5 / 5 |
+| Fly.io | Pass | Partial | Pass | Pass | Partial | 3.5 / 5 |
+| Render | Pass | Partial | Partial | Pass | Partial | 3.5 / 5 |
 
-Cloud Run scores lower than Cloudflare and Vercel on agent-readable docs and platform-native MCP, but wins for this project because it has the least runtime mismatch with the current Node server shape and matches the developer's GCP familiarity. It supports any language that can build a container, source deploys for Node.js, revision-based rollbacks, Cloud Logging, and first-party GitHub Actions. Cloud Run's main weakness is operational breadth: IAM, billing, region, Cloud SQL, Secret Manager, and container settings need an explicit contract.
+Google Cloud Run remains the strongest choice because it already runs the deployed application, preserves the Node Docker artifact, matches existing GCP familiarity, and supports co-located Cloud SQL, Secret Manager, Cloud Logging, IAM, and Artifact Registry. Its main weakness is that Cloud SQL introduces a fixed baseline cost and a larger operational surface than the Cloud Run service itself.
 
-Cloudflare Workers Static Assets has the strongest agent-friendly score: Wrangler is CLI-first, docs expose markdown and `llms.txt`, Workers have rollback and tailing logs, and the platform includes D1, R2, KV, Durable Objects, Queues, and official MCP/API server capabilities. It is the runner-up because the current app uses Node-oriented React Router packages and `@react-router/serve`; moving to Workers requires adopting Cloudflare's React Router/Vite integration and auditing Node compatibility.
+Railway moves to second place because the revised MVP now requires a database. It can use the repository Dockerfile and provision PostgreSQL with a directly consumable `DATABASE_URL`, reducing setup time. Its PostgreSQL template is described as unmanaged, however, so database maintenance and backup choices need deliberate ownership. Moving platforms would also discard the value of the existing Cloud Run deployment.
 
-Railway is fast for a solo MVP and provides a cohesive app plus Postgres/Redis/storage experience. It supports Node container services and PR environments, but true rollback is dashboard-oriented, pricing is usage-based after the Hobby allowance, and the platform is less aligned with the developer's existing GCP comfort.
+Cloudflare remains technically attractive and has excellent CLI, documentation, MCP, and integrated D1 capabilities. Current tooling can detect and deploy React Router projects with `nodejs_compat`, but adopting the Cloudflare Vite plugin and Workers runtime changes the production execution model and local fidelity contract. That migration is unnecessary for a four-week brownfield expansion.
 
-Vercel has excellent React Router support, CLI deploy/logs/rollback, and agent-readable docs, but it does not satisfy the co-location preference as well because Postgres is now marketplace/provider-backed rather than a first-party Vercel primitive. It also introduces Vercel-specific React Router preset assumptions.
-
-Netlify has first-class React Router support through `@netlify/vite-plugin-react-router`, strong agent docs, and an official MCP story. It is a good serverless target, but rollback is less CLI-first and persistent Node process hosting is not its model.
-
-Fly.io runs the Node/Docker shape well and supports persistent processes, but its managed Postgres starts at a much higher cost than the MVP likely needs. It is more infrastructure-like than Cloud Run for this specific single-region, low-QPS app.
-
-Render can run the current Node service and offers Postgres/Redis-like services, but CLI rollback is not first-class and free services sleep. It is viable but less compelling than Cloud Run or Railway for this project.
+Vercel and Netlify support React Router but would introduce platform adapters while still requiring an external or marketplace database. Fly.io and Render can run the current container, but neither gives this project enough benefit over the already operational GCP deployment to justify migration work.
 
 ## Shortlisted Platforms
 
-### 1. Google Cloud Run (Recommended)
+### 1. Google Cloud Run + Cloud SQL (Recommended)
 
-Cloud Run wins because it preserves the current React Router Node runtime instead of forcing a serverless/edge adapter, and it matches the intended infrastructure shape already recorded in `context/foundation/tech-stack.md`. It gives the solo developer a managed container target, low request-based cost at MVP traffic, GCP-native logs/secrets/IAM, and co-located managed services.
+Cloud Run wins on migration cost, runtime compatibility, GCP familiarity, and co-location. The deployed service already proves the core container path. Adding Cloud SQL changes the operational contract, but not the application architecture.
 
-### 2. Cloudflare Workers Static Assets
+### 2. Railway
 
-Cloudflare is the strongest alternative if cost and agent-readable platform docs become the dominant constraints. It should be chosen only if the project is intentionally moved to the Workers runtime and the app's auth/database dependencies are checked against Workers Node compatibility.
+Railway is the best fallback when deployment speed and a single project containing both app and PostgreSQL matter more than retaining GCP. It is simpler to provision but gives up the existing deployment and uses a less fully managed PostgreSQL service.
 
-### 3. Railway
+### 3. Cloudflare Workers + D1
 
-Railway is the best non-GCP full-stack PaaS fallback. It is attractive when the fastest possible app plus database setup matters more than GCP alignment, but its rollback and billing model are less clean for agent-driven maintenance.
+Cloudflare is the strongest cost- and agent-tooling-oriented alternative. It should be selected only as an intentional runtime migration, with the authentication, password hashing, database, and Node compatibility dependencies validated against Workers before implementation.
 
-## Anti-Bias Cross-Check: Google Cloud Run
+## Anti-Bias Cross-Check: Google Cloud Run + Cloud SQL
 
 ### Devil's Advocate - Weaknesses
 
-1. Cloud Run is not zero-config: the app still needs a Dockerfile or source-build-compatible start behavior, IAM, region, service account, and billing setup.
-2. Cloud SQL can dominate MVP cost compared with the nearly free Cloud Run service at low request volume.
-3. Cold starts may hurt the under-30-second result goal if the service scales to zero and the app has slow startup.
-4. Rollbacks only revert Cloud Run revisions, not database schema migrations or changed external APIs.
-5. GCP docs and IAM are broader than Vercel, Netlify, or Railway, so agent maintenance has more surface area to reason about.
+1. Cloud SQL is always-on infrastructure. At this traffic level its fixed database cost can materially exceed the request-based Cloud Run bill.
+2. Cloud Run can create multiple instances quickly. An unbounded connection pool in every instance can exhaust PostgreSQL connections even when request volume is modest.
+3. A Cloud Run revision rollback restores application code and configuration, not database schema or stored data. A backward-incompatible migration can make rollback ineffective.
+4. Authentication expands the security surface beyond hosting: password storage, session rotation, cookie configuration, account enumeration, brute-force resistance, and ownership checks all remain application responsibilities unless delegated to Identity Platform.
+5. The existing image uses end-of-life Node 20. Adding auth and persistence before upgrading the runtime would build security-sensitive behavior on an unsupported base.
 
 ### Pre-Mortem - How This Could Fail
 
-Six months after launch, Cloud Run turned out badly because the team treated "serverless container" as "no operations." The first deploy worked, but the service used default IAM, unreviewed billing, and no explicit region or cost limits. Auth and saved history introduced Cloud SQL, and the database became the real monthly bill. A schema migration shipped with a UI change; Cloud Run rollback restored the old container, but the database stayed migrated and broke older code paths. Cold starts were ignored during manual tests, then users on mobile saw slow first responses after idle periods. Logs existed in Cloud Logging, but there were no structured request IDs or alerts, so debugging relied on manual console searches. The failure was not Cloud Run itself; it was assuming GCP primitives would stay simple without writing a minimal operational contract.
+Six months after launch, the architecture failed operationally even though the application worked locally. The team added Cloud SQL quickly, left the Cloud Run service at its existing maximum instance count, and accepted the database library's default connection pool. A small traffic burst multiplied pools across instances and exhausted PostgreSQL connections, causing authentication and history requests to fail together. The first schema migration renamed a column in the same release that changed the application. When errors appeared, traffic was rolled back to the previous Cloud Run revision, but the old code could no longer read the migrated schema. Session secrets had been configured as plain environment values rather than Secret Manager references, and rotation invalidated every active user without a documented procedure. Cloud SQL backups and billing alerts were assumed rather than verified. Meanwhile, the container still used Node 20 after end of life. The platform choice was not the root cause; the failure came from treating the new database, authentication boundary, and migration process as ordinary feature code instead of a shared operational contract.
 
 ### Unknown Unknowns
 
-- Cloud Run sets `PORT`; the container must bind to that port, not a hard-coded development port.
-- Request-based billing is cheap at low traffic, but setting `min-instances` above zero changes the cost profile.
-- Secret Manager access requires IAM on the runtime service account, not only creating the secret.
-- Cloud Run revision rollback does not roll back database state or external API configuration.
-- Source deploys are convenient, but a pinned Dockerfile is usually more predictable for agents and CI.
-- `gcloud beta run services logs tail` is still marked Preview; use `gcloud run services logs read` or Cloud Logging queries for stable read-only log inspection.
+- Cloud Run injects `PORT`, and the ingress container must listen on `0.0.0.0`; the current React Router app server supports this contract.
+- Cloud SQL should be placed in the same region as Cloud Run to reduce latency, networking cost, and cross-region failure exposure.
+- Cloud Run scaling and PostgreSQL connection limits must be designed together. Configure a small explicit pool and retain a bounded `max-instances` value until measured traffic justifies changes.
+- React Router supports database-backed custom session storage. Cookie-only sessions are portable across Cloud Run instances, but they limit server-side revocation and must remain small.
+- Cloud Run revision rollback never reverses a migration. Database changes must be backward-compatible across at least the current and previous application revisions.
+- Node 24 is the current LTS line as of this review. Node 26 is Current, not LTS, and should not be the production default yet.
+- Cloud SQL's 30-day free trial is for evaluation and lacks production backups and an SLA; it is not a durable MVP hosting plan.
 
 ## Operational Story
 
-- **Preview deploys**: Use GitHub Actions with `google-github-actions/deploy-cloudrun@v3` to deploy PR or branch revisions to a separate preview Cloud Run service, or deploy tagged no-traffic revisions and expose only reviewed URLs. Fork PRs should not receive deploy credentials.
-- **Secrets**: Store production secrets in Secret Manager and bind them to Cloud Run with `--set-secrets`; the runtime service account needs `roles/secretmanager.secretAccessor` only for the specific secrets it reads.
-- **Rollback**: Repoint traffic to the previous healthy revision with `gcloud run services update-traffic allergen-finder --to-revisions <REVISION>=100 --region <REGION>`. This restores container code/config only; database migrations need their own rollback plan.
-- **Approval**: An agent may run typecheck, build, deploy preview revisions, and read logs. A human should approve production traffic changes, primary secret rotation, Cloud SQL destructive operations, and any migration that drops or rewrites data.
-- **Logs**: Read recent logs with `gcloud run services logs read allergen-finder --limit=50 --project <PROJECT_ID>` or query Cloud Logging with `gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="allergen-finder"' --limit=50 --project <PROJECT_ID>`. Use `gcloud beta run services logs tail allergen-finder --project <PROJECT_ID>` only when accepting the Preview status of CLI tailing.
+- **Preview deploys**: Deploy pull requests to a separate preview Cloud Run service or tagged no-traffic revision. Use a separate preview database/schema, and never expose production database credentials to fork pull requests.
+- **Secrets**: Keep `DATABASE_URL` or database connection fields, session/cookie secrets, auth-provider credentials, and Google API keys in Secret Manager. Grant the runtime service account access only to the secrets required by this service.
+- **Database connectivity**: Attach the Cloud SQL instance to Cloud Run with `--add-cloudsql-instances`, grant the runtime service account `roles/cloudsql.client`, and configure a deliberately small connection pool.
+- **Migrations**: Run migrations as an explicit approved release action before production traffic moves. Use expand-and-contract changes so the previous application revision remains compatible during rollback.
+- **Rollback**: Repoint traffic to the previous healthy Cloud Run revision. If a release includes a migration, follow its separately reviewed database recovery procedure; do not assume application rollback repairs data.
+- **Approval**: An agent may run tests, build images, deploy previews, and read logs. A human must approve production migrations, production traffic changes, primary secret rotation, destructive database operations, and backup restoration.
+- **Logs**: Read runtime logs with `gcloud run services logs read allergen-finder --project gcp-10xdev-bara-lab-3t60 --region europe-central2 --limit 50`. Add structured request and user-safe correlation IDs without logging passwords, session tokens, symptoms, or precise location data.
+- **Backups**: Enable and verify Cloud SQL automated backups before storing user symptom history. Record retention and restore-test expectations in the implementation plan.
 
 ## Risk Register
 
 | Risk | Source | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
-| Cloud SQL cost exceeds the app hosting cost | Devil's advocate / Research finding | M | M | Start without a database until saved history/auth persistence requires it, or choose the smallest acceptable Cloud SQL shape and set billing alerts before launch. |
-| Cold starts slow first requests | Devil's advocate / Pre-mortem | M | M | Measure startup after the Dockerfile is added; keep dependencies lean and only add `min-instances=1` if latency tests justify the cost. |
-| Rollback restores code but not database schema | Devil's advocate / Unknown unknowns | M | H | Treat migrations as forward-compatible; require a manual migration rollback note before production deploys that change stored data. |
-| Secret Manager bindings fail because IAM is incomplete | Unknown unknowns | M | H | Create a dedicated runtime service account and grant least-privilege secret access during setup; verify with a preview deploy. |
-| Agent gets stuck in GCP IAM/billing complexity | Devil's advocate | M | M | Keep one project, one region, one service account, and one Cloud Run service for MVP; document every required variable and role in the implementation plan. |
-| Source deploy differs from local build behavior | Unknown unknowns | M | M | Prefer a repo-owned Dockerfile that runs `npm ci`, `npm run build`, and `npm run start` so CI, local Docker, and Cloud Run share one artifact shape. |
-| Preview deploy exposes secrets to untrusted fork PRs | Operational story | L | H | Disable preview deploys for fork PRs or require maintainer approval before workflows with GCP credentials run. |
+| Cloud SQL fixed cost dominates MVP spend | Devil's advocate / Research finding | H | M | Price the smallest acceptable paid instance, set a monthly budget alert, and compare the result with Railway before provisioning. |
+| Cloud Run instances exhaust database connections | Devil's advocate / Unknown unknowns | M | H | Use a small explicit per-instance pool, retain bounded Cloud Run scaling, and load-test authentication/history requests. |
+| Application rollback is incompatible with migrated schema | Devil's advocate / Pre-mortem | M | H | Require backward-compatible expand-and-contract migrations and a rollback note for every schema change. |
+| Cross-user records are exposed | PRD / Research finding | M | H | Derive ownership from the authenticated session, scope every repository operation by owner, and automate two-user read/update/delete denial tests. |
+| Password or session implementation is weak | Devil's advocate | M | H | Prefer Identity Platform or use a reviewed password-hashing library, secure cookies, rotation, rate limits, and enumeration-safe responses. |
+| Unsupported Node runtime remains in production | Research finding | H | H | Upgrade every Docker stage to Node 24 LTS before adding auth or persistence and verify the image locally. |
+| Database credentials or session secrets leak | Pre-mortem | L | H | Use Secret Manager references, least-privilege IAM, log redaction, and a documented rotation procedure. |
+| Backups exist but cannot be restored | Unknown unknowns | M | H | Enable automated backups and perform a restore drill before treating saved history as durable. |
+| Preview environment accesses production user data | Operational story | L | H | Use separate preview storage and block secret-bearing workflows for untrusted fork pull requests. |
+| Cold starts delay first authenticated request | Prior research | M | M | Measure startup and first database connection latency; add a minimum instance only if observed latency justifies the cost. |
 
 ## Getting Started
 
-1. Add a Dockerfile for the current React Router Node server: install dependencies with `npm ci`, run `npm run build`, expose `8080`, and start with `npm run start`.
-2. Confirm the production server respects Cloud Run's `PORT` variable; `@react-router/serve` supports `PORT=<port> npx react-router-serve ...`, and the app's current `start` script uses `react-router-serve ./build/server/index.js`.
-3. Create a GCP project and region for MVP, preferably one single region near expected users, then deploy the first revision with `gcloud run deploy allergen-finder --source . --region <REGION> --allow-unauthenticated` or with an explicit container image after the Dockerfile is committed.
-4. Add required secrets in Secret Manager and bind them with `gcloud run deploy allergen-finder --image <IMAGE_URL> --region <REGION> --set-secrets <ENV_VAR>=<SECRET_NAME>:latest`.
-5. Add GitHub Actions using Workload Identity Federation and `google-github-actions/deploy-cloudrun@v3` after the manual deploy path is proven.
+1. Upgrade all Dockerfile stages from `node:20-alpine` to a pinned Node 24 LTS Alpine image, then run `npm ci`, `npm run typecheck`, `npm run build`, and the existing smoke checks.
+2. Choose the authentication implementation during the account-access plan. Prefer GCP Identity Platform if minimizing credential-handling risk outweighs the added SDK integration; otherwise document password hashing, session storage, and brute-force controls explicitly.
+3. Provision paid Cloud SQL for PostgreSQL in `europe-central2`, enable automated backups, create a least-privilege application database user, and attach the instance to Cloud Run.
+4. Add the typed schema, migrations, repository boundary, and server-only session/auth modules. Keep database and credential code in `.server.ts` modules.
+5. Add the test runner and `npm test` before implementing account or history behavior. Make the two-user authorization test part of the first persistent record slice.
+
+## Decision
+
+The original architectural stack remains suitable for the expanded MVP. Do not replatform.
+
+The stack contract is incomplete for the new scope until PostgreSQL, authentication/session handling, migrations, and automated tests are selected. The Node 20 runtime is no longer acceptable and must be upgraded independently of the feature work.
 
 ## Out of Scope
 
-The following were not evaluated in this research:
+The following were not designed in this research:
 
-- Docker image configuration
-- CI/CD pipeline setup
-- Production-scale architecture (multi-region, HA, DR)
+- Exact database schema and migration files
+- Exact authentication library or Identity Platform integration
+- CI/CD workflow implementation
+- Production-scale multi-region, high availability, or disaster recovery architecture
