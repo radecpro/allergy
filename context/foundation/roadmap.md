@@ -1,102 +1,157 @@
 ---
 project: Allergen Finder
-version: 1
-status: locked
-created: 2026-06-02
+version: 2
+status: draft
+created: 2026-06-09
 updated: 2026-06-09
-prd_version: 2
+prd_version: 3
 main_goal: speed
 top_blocker: time
 ---
 
-# Roadmap: Allergen Finder
+# Roadmap: Allergen Finder MVP Expansion
 
-> Derived from `context/foundation/prd.md` (v2) + auto-researched codebase baseline.
-> Edit-in-place; archive when superseded.
-> Slices below are listed in dependency order. The "At a glance" table is the index.
+> Derived from `context/foundation/prd.md` (v3) + auto-researched codebase baseline.
+> Edit in place; archive when superseded.
+> Items are listed in dependency order. The "At a glance" table is the index.
 
 ## Vision recap
 
-People with seasonal inhalant allergies often do not know which allergens are responsible for symptoms they are having now, or what they should expect before traveling. Allergen Finder exists because current workarounds require checking scattered pollen or environmental services and interpreting the connection to symptoms manually.
+Allergen Finder already provides guest current-symptoms and destination checks. This expansion adds authenticated, user-owned saved symptom checks with complete create, read, update, and delete behavior while preserving the fast guest experience and improving location, symptom-intensity, and missing-pollen-data handling.
 
 ## North star
 
-In this roadmap, the north star means the first end-to-end product slice that proves the main user promise works. It is placed as early as its prerequisites allow because later work only matters if this flow is useful.
+In this roadmap, the north star means the smallest end-to-end capability that proves the expanded product promise works.
 
-**S-01: Guest current-symptoms allergen check** — The first proof point is a guest user entering current symptoms and a current city, then seeing compact likely-allergen results with pollen activity and a non-diagnostic explanation.
+**S-02: Explicitly save and view a private symptom check** — This is the first point where authentication, ownership, persistence, existing ranking behavior, and explicit consent work together in one user-visible flow.
 
 ## At a glance
 
 | ID | Change ID | Outcome (user can ...) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
-| F-01 | allergen-ranking-contract | (foundation) Minimal allergen, symptom, pollen-activity, and result-framing contract is in place for both launch flows | — | FR-004, FR-005, FR-007, FR-008, FR-009, FR-011, NFRs | done |
-| S-01 | guest-current-symptoms-check | Complete a guest current-symptoms allergen check with manual city entry and compact likelihood results | F-01 | US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012, FR-013 | done |
-| S-02 | destination-allergen-risk-check | Search for a destination city and see destination allergen and pollen risk without reporting symptoms | F-01 | FR-003, FR-009, FR-011, FR-013 | done |
+| F-01 | risk-based-test-foundation | (foundation) Standard automated verification and a named risk plan are available for every expansion slice | — | Success Criteria, Guardrails, NFRs | ready |
+| S-01 | email-password-account-access | Register, sign in with email and password, and sign out while guest checks remain public | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005 | proposed |
+| S-02 | save-and-view-symptom-check | Explicitly save a completed current-symptoms check and view it in private history | F-01, S-01 | US-01, FR-005, FR-006, FR-007, FR-010 | proposed |
+| S-03 | manage-saved-symptom-check | Correct symptoms and per-symptom intensities in a saved check or delete the record | F-01, S-02 | US-02, FR-005, FR-008, FR-009, FR-010 | proposed |
+| S-04 | per-symptom-intensity-ranking | Assign low/high intensity to each selected symptom and receive the recalculated ranking | F-01 | US-04, FR-001, FR-003, FR-013 | proposed |
+| S-05 | device-location-current-check | Use current device location for a symptom check with manual city selection preserved as fallback | F-01 | US-03, FR-001, FR-003, FR-011, FR-012 | proposed |
+| S-06 | missing-pollen-warning-label | Identify at first glance which current-symptoms result cards lack provider pollen data | F-01 | US-04, FR-001, FR-003, FR-014 | proposed |
 
 ## Baseline
 
-What's already in place in the codebase as of `2026-06-02` (auto-researched + user-confirmed).
-Foundations below assume these are present and do NOT re-scaffold them.
+What's already in place in the codebase as of `2026-06-09` (auto-researched).
+Foundations below assume these are present and do not recreate them.
 
-- **Frontend:** present — full-stack TypeScript web scaffold, routing, styling pipeline, and starter home route exist (`package.json:6-17`, `app/routes.ts:1-3`, `app/root.tsx:44-45`).
-- **Backend / API:** partial — server and route scaffold exist, but no product loaders, actions, request handlers, or API behavior are wired (`package.json:6-13`, `app/routes/home.tsx:4-12`).
-- **Data:** absent — no database driver, query layer, schema, migrations, or seed data are present (`package.json:11-28`).
-- **Auth:** absent — no auth provider, session/token code, or route guards are present; only a public index route exists (`app/routes.ts:3`).
-- **Deploy / infra:** partial — container artifact and manual production deployment record exist, but CI/CD and infrastructure-as-code are absent (`Dockerfile:1-22`, `context/deployment/deploy-plan.md:5-19`).
-- **Observability:** partial — a local route error boundary exists, but structured logging, metrics, and external error tracking are absent (`app/root.tsx:48`, `react-router.config.ts:7`).
+- **Frontend:** present — Polish current-symptoms and destination route interfaces, shared city selection, mode navigation, and responsive styling are implemented (`app/routes/home.tsx`, `app/routes/destination-search.tsx`, `app/components/`).
+- **Backend / API:** present — product-owned city search and pollen lookup handlers are registered and used by both product flows (`app/routes.ts`, `app/routes/api.city-search.ts`, `app/routes/api.current-pollen.ts`).
+- **Data:** absent — no persistent application data store, schema, or repository layer exists (`package.json`, `app/`).
+- **Auth:** absent — no account, credential, session, or route-authorization behavior exists (`app/routes.ts`, `package.json`).
+- **Deploy / infra:** partial — a production container and deployment plan exist, but no automated delivery workflow is present (`Dockerfile`, `context/deployment/deploy-plan.md`).
+- **Observability:** partial — route error handling exists, but structured application logging, metrics, and external error reporting are absent (`app/root.tsx`).
 
 ## Foundations
 
-### F-01: Allergen Ranking Contract
+### F-01: Risk-Based Test Foundation
 
-- **Outcome:** (foundation) Minimal allergen, symptom, pollen-activity, probability-label, and non-diagnostic explanation contract is in place for the current and destination checks.
-- **Change ID:** allergen-ranking-contract
-- **PRD refs:** FR-004, FR-005, FR-007, FR-008, FR-009, FR-011, NFRs
-- **Unlocks:** S-01, S-02; verifies that result language avoids diagnosis, treatment, and medication advice before either user-facing flow ships.
+- **Outcome:** (foundation) A standard test command, focused test runner, and `test-plan.md` risk inventory are available before authentication or persistence behavior is added.
+- **Change ID:** risk-based-test-foundation
+- **PRD refs:** Success Criteria, Guardrails, NFRs
+- **Unlocks:** S-01 through S-06; provides the named cross-user authorization verification path required by S-02 and S-03.
 - **Prerequisites:** —
 - **Parallel with:** —
 - **Blockers:** —
-- **Unknowns:**
-  - Which pollen or environmental data source is acceptable for MVP implementation? — Owner: team. Block: no.
-- **Risk:** If this contract grows beyond the minimum needed for the two launch flows, the roadmap spends effort on data completeness before users can try the product.
-- **Status:** done
+- **Unknowns:** —
+- **Risk:** This foundation must stay limited to executable verification and the required risk plan; broad test-suite expansion would consume the fixed delivery window before user-visible work starts.
+- **Status:** ready
 
 ## Slices
 
-### S-01: Guest Current-Symptoms Allergen Check
+### S-01: Email And Password Account Access
 
-- **Outcome:** User can complete a guest current-symptoms allergen check with manual city entry, symptom selection, low/high intensity, automatic result updates, and compact likelihood results.
-- **Change ID:** guest-current-symptoms-check
-- **PRD refs:** US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012, FR-013
+- **Outcome:** User can register, sign in with email and password, and sign out while both existing allergen checks remain fully usable as a guest.
+- **Change ID:** email-password-account-access
+- **PRD refs:** FR-001, FR-002, FR-003, FR-004, FR-005
 - **Prerequisites:** F-01
-- **Parallel with:** S-02
+- **Parallel with:** S-04, S-05, S-06
 - **Blockers:** —
 - **Unknowns:**
-  - Which exact symptom options belong in the MVP predefined list? — Owner: team. Block: no.
-  - What fallback should appear when current pollen activity is unavailable for the entered city? — Owner: team. Block: no.
-- **Risk:** This is first because it proves the symptom-to-allergen value directly; if result language sounds too certain, the product violates its non-diagnosis guardrail.
-- **Status:** done
+  - Which minimum password policy and session lifetime fit the MVP safety boundary? — Owner: team. Block: no.
+- **Risk:** Authentication is sequenced before saved history because ownership cannot be retrofitted safely after records exist; overbuilding account lifecycle features would threaten the deadline.
+- **Status:** proposed
 
-### S-02: Destination Allergen Risk Check
+### S-02: Explicitly Save And View A Private Symptom Check
 
-- **Outcome:** User can search for a destination city and see current destination allergen and pollen risk with a brief explanation, without reporting symptoms or needing saved history.
-- **Change ID:** destination-allergen-risk-check
-- **PRD refs:** FR-003, FR-009, FR-011, FR-013
-- **Prerequisites:** F-01
-- **Parallel with:** S-01
+- **Outcome:** Authenticated user can explicitly save a completed current-symptoms check and view it in a history list and detail view that contains only their records.
+- **Change ID:** save-and-view-symptom-check
+- **PRD refs:** US-01, FR-005, FR-006, FR-007, FR-010
+- **Prerequisites:** F-01, S-01
+- **Parallel with:** S-04, S-05, S-06
 - **Blockers:** —
 - **Unknowns:**
-  - What destination search scope is acceptable for the MVP: city-only, city plus country, or another minimal disambiguation? — Owner: team. Block: no.
-- **Risk:** This follows the same contract as S-01 so travel preparation can ship without accounts or symptom history; over-personalizing the wording would conflict with first-use fallback requirements.
-- **Status:** done
+  - Which minimum snapshot fields are required to reproduce the saved check while preserving the PRD's explicit-consent boundary? — Owner: team. Block: no.
+- **Risk:** This slice combines account identity, persistence, ownership, and an existing completed check; ownership verification must be built into the first record path rather than added later.
+- **Status:** proposed
+
+### S-03: Manage A Saved Symptom Check
+
+- **Outcome:** Authenticated user can update symptoms and per-symptom intensities in a saved check or delete that check, without changing its saved location and pollen context.
+- **Change ID:** manage-saved-symptom-check
+- **PRD refs:** US-02, FR-005, FR-008, FR-009, FR-010
+- **Prerequisites:** F-01, S-02
+- **Parallel with:** S-04, S-05, S-06
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Update and delete complete the required CRUD lifecycle; every mutation must repeat ownership checks rather than trusting record identifiers supplied by the user interface.
+- **Status:** proposed
+
+### S-04: Per-Symptom Intensity Ranking
+
+- **Outcome:** User can assign low/high intensity to each selected symptom and receive an automatically updated allergen ranking that uses those individual intensities.
+- **Change ID:** per-symptom-intensity-ranking
+- **PRD refs:** US-04, FR-001, FR-003, FR-013
+- **Prerequisites:** F-01
+- **Parallel with:** S-01, S-02, S-03, S-05, S-06
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** The domain rule and current-check interface change together; preserving one overall-intensity assumption anywhere would make results inconsistent.
+- **Status:** proposed
+
+### S-05: Device Location For Current Check
+
+- **Outcome:** User can use current device location to select the current city and can still complete the check through manual city selection when permission or lookup fails.
+- **Change ID:** device-location-current-check
+- **PRD refs:** US-03, FR-001, FR-003, FR-011, FR-012
+- **Prerequisites:** F-01
+- **Parallel with:** S-01, S-02, S-03, S-04, S-06
+- **Blockers:** —
+- **Unknowns:**
+  - What user-facing city should be shown when the resolved location is ambiguous? — Owner: team. Block: no.
+- **Risk:** Permission denial and unavailable location are normal outcomes, so the manual path must remain equally complete rather than becoming an error-only fallback.
+- **Status:** proposed
+
+### S-06: Missing Pollen Data Warning Label
+
+- **Outcome:** User can identify at first glance which current-symptoms result cards lack provider pollen data while still seeing the available symptom-based context.
+- **Change ID:** missing-pollen-warning-label
+- **PRD refs:** US-04, FR-001, FR-003, FR-014
+- **Prerequisites:** F-01
+- **Parallel with:** S-01, S-02, S-03, S-04, S-05
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** The warning must distinguish unknown data from low activity without making the entire ranking appear invalid or diagnostic.
+- **Status:** proposed
 
 ## Backlog Handoff
 
 | Roadmap ID | Change ID | Suggested issue title | Ready for `/10x-plan` | Notes |
 |---|---|---|---|---|
-| F-01 | allergen-ranking-contract | Define minimal allergen ranking and result framing contract | no | Archived 2026-06-09 |
-| S-01 | guest-current-symptoms-check | Build guest current-symptoms allergen check | no | Archived 2026-06-09 |
-| S-02 | destination-allergen-risk-check | Build destination allergen risk check | no | Archived 2026-06-09 |
+| F-01 | risk-based-test-foundation | Establish risk-based automated test foundation | yes | Run `/10x-plan risk-based-test-foundation` |
+| S-01 | email-password-account-access | Add email and password account access | no | Depends on F-01 |
+| S-02 | save-and-view-symptom-check | Let users explicitly save and view private symptom checks | no | Depends on F-01 and S-01 |
+| S-03 | manage-saved-symptom-check | Let users update or delete saved symptom checks | no | Depends on F-01 and S-02 |
+| S-04 | per-symptom-intensity-ranking | Rank with intensity selected per symptom | no | Depends on F-01 |
+| S-05 | device-location-current-check | Add device location with manual fallback | no | Depends on F-01 |
+| S-06 | missing-pollen-warning-label | Add visible missing-pollen warning labels | no | Depends on F-01 |
 
 ## Open Roadmap Questions
 
@@ -104,21 +159,17 @@ No open roadmap questions.
 
 ## Parked
 
-- **Device location sharing** — Why parked: FR-002 is nice-to-have, and FR-012 keeps manual current-city entry as the launch fallback.
-- **Saved symptom history and history-based probability** — Why parked: FR-010 is nice-to-have, and FR-011 keeps destination pollen activity useful without history.
-- **Login and user accounts** — Why parked: PRD Access Control says guest use must not be blocked, and the MVP has no required account flow.
-- **Medical diagnosis** — Why parked: PRD Non-Goals exclude clinical conclusions; results describe likely allergens only.
-- **Medication or treatment recommendations** — Why parked: PRD Non-Goals exclude advice about what a user should take or do medically.
-- **Medical chatbot** — Why parked: PRD Non-Goals exclude conversational medical guidance.
-- **Image analysis** — Why parked: PRD Non-Goals exclude inferring allergens or symptoms from photos.
-- **Health-device integrations** — Why parked: PRD Non-Goals exclude wearables, sensors, and health-device connections.
-- **Family accounts** — Why parked: PRD Non-Goals scope the MVP to one person's allergy context at a time.
-- **Long-term health forecasts** — Why parked: PRD Non-Goals keep the product focused on current or destination allergen context.
-- **Required symptom-history personalization for first-time users** — Why parked: PRD Non-Goals preserve usefulness without prior history.
-- **Predictive AI model training** — Why parked: PRD Non-Goals exclude training a predictive model from user data.
+- **History-driven ranking personalization** — Why parked: PRD v3 keeps saved history display-only to avoid unvalidated ranking and medical complexity.
+- **Automatic check saving** — Why parked: explicit saving is the privacy boundary for location and symptom persistence.
+- **Anonymous or guest history** — Why parked: persistent records belong to authenticated users.
+- **Social or passwordless login** — Why parked: email and password is the selected MVP access method.
+- **Password recovery** — Why parked: account recovery is excluded from this delivery window.
+- **Role hierarchy and administration** — Why parked: the MVP has one flat authenticated-user role.
+- **Editing saved location or environmental context** — Why parked: only symptoms and their intensities are editable.
+- **Shared records, family accounts, and exports** — Why parked: the history workflow is private and single-user.
+- **Medical advice or diagnosis** — Why parked: existing non-diagnostic product boundaries remain unchanged.
+- **Offline-first and multi-region guarantees** — Why parked: they do not contribute to the required MVP foundations.
 
 ## Done
 
-- **F-01: (foundation) Minimal allergen, symptom, pollen-activity, probability-label, and non-diagnostic explanation contract is in place for the current and destination checks.** — Archived 2026-06-09 → `context/archive/2026-06-03-allergen-ranking-contract/`. Lesson: —.
-- **S-01: User can complete a guest current-symptoms allergen check with manual city entry, symptom selection, low/high intensity, automatic result updates, and compact likelihood results.** — Archived 2026-06-09 → `context/archive/2026-06-05-guest-current-symptoms-check/`. Lesson: —.
-- **S-02: User can search for a destination city and see current destination allergen and pollen risk with a brief explanation, without reporting symptoms or needing saved history.** — Archived 2026-06-09 → `context/archive/2026-06-06-destination-allergen-risk-check/`. Lesson: —.
+(Empty. `/10x-archive` appends entries here when roadmap items are archived.)

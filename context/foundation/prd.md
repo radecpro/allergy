@@ -1,129 +1,192 @@
 ---
 project: "Allergen Finder"
-version: 2
+version: 3
 status: draft
-created: 2026-06-03
-context_type: greenfield
+created: 2026-06-09
+context_type: brownfield
 product_type: web-app
 target_scale:
   users: small
   qps: low
   data_volume: small
 timeline_budget:
-  mvp_weeks: 3
+  delivery_weeks: 4
   hard_deadline: 2026-07-05
   after_hours_only: true
 ---
 
-# Allergen Finder PRD
+# Allergen Finder PRD: Authenticated Symptom History Expansion
 
-## Vision & Problem Statement
+## Current System Overview
 
-People with seasonal inhalant allergies often do not know which allergens are responsible for their current symptoms. The pain appears when symptoms occur, or when the person travels into a different place and wants to prepare for likely symptoms.
+Allergen Finder is a full-stack TypeScript web application that connects a user's symptoms and location with likely allergen and pollen context. It uses React Router with a Node server runtime and currently has no database or authentication layer.
 
-The current workaround is to check pollen or environmental information across multiple services and interpret it manually. Allergen Finder exists because existing tools may show pollen levels, but they do not clearly connect scattered environmental data to the symptoms a person is actually experiencing.
+The app serves a handful of initial users through two completed guest flows. The current-symptoms flow accepts a manually selected city, selected symptoms, one overall low/high intensity, and current pollen activity, then automatically ranks likely allergens. The destination flow presents current environmental pollen context without requiring symptoms. Both flows use Polish, non-diagnostic wording.
+
+## Problem Statement & Motivation
+
+The current product demonstrates its ranking value but does not provide authenticated ownership or persistent user records. Users cannot deliberately save a completed symptom check, review it later, correct its symptoms, or delete it.
+
+The expanded MVP must also satisfy four technical foundations by July 5, 2026: user-owned CRUD records, existing non-trivial business logic, automated tests tied to a documented risk, and authentication that limits each user to their own resources. The existing guest experience must remain intact while these capabilities are added.
 
 ## User & Persona
 
-Primary persona: an adult allergy sufferer, age 18-55, who already experiences seasonal allergy symptoms from pollen or mold spores and wants to understand the likely cause of current or expected symptoms.
+The primary persona remains an adult seasonal-allergy sufferer who wants to understand likely causes of current symptoms or environmental risks before travel.
 
-This persona reaches for the product when symptoms appear, or before traveling to a different place where allergen exposure may differ.
+This change additionally serves returning users who want a private record of checks they explicitly chose to save. They use history to review or correct a prior symptom record, not to personalize future rankings automatically.
 
 ## Success Criteria
 
 ### Primary
 
-- Current symptoms flow works end-to-end: a user shares current device location or manually enters the current city, selects current symptoms, sets intensity as low or high, and sees an automatically updated ranked list of likely current allergens with probability level, current pollen activity, and a short explanation.
-- Travel preparation flow works end-to-end: a user searches for and selects a destination city, checks likely allergens for that place, and sees allergen/pollen risks and current pollen activity for the destination without needing to report symptoms.
+- A guest can still complete both existing allergen checks without authentication.
+- A user can register or sign in with email and password, explicitly save a completed current-symptoms check, list and inspect only their saved checks, update saved symptoms and their individual intensities, and delete a saved check.
+- Automated tests tied to a documented risk demonstrate that one user cannot access another user's saved checks.
 
 ### Secondary
 
-- If the user has symptom history from previous app usage, the app can show a symptom probability level in both the current-symptoms flow and the travel-preparation flow; if there is no history, the travel-preparation flow only shows pollen activity for that destination.
+- A user can use current device location in the current-symptoms flow and fall back to manual city selection when permission is denied or location is unavailable.
+- Current-symptoms result cards make missing provider pollen data immediately visible through a warning label.
 
 ### Guardrails
 
-- The app must not present results as medical diagnosis.
-- The app must not recommend medication or treatment.
-- The app must not store location or symptom history without clear user intent.
-- The whole app is available in Polish language.
+- Existing guest current-symptoms and destination flows remain usable without login.
+- A signed-in user cannot view or change another user's saved checks.
+- Saving remains explicit; location and symptom history are not stored merely because a guest completed a check.
+- Results remain Polish, non-diagnostic, and free of medication or treatment recommendations.
+- The expanded MVP remains deliverable by July 5, 2026 as after-hours work.
 
 ## User Stories
 
-### US-01: Current symptoms allergen check
+### US-01: User explicitly saves a completed symptom check
 
-- **Given** an allergy sufferer with a selected current city and selected symptoms
-- **When** they set symptom intensity as low or high
-- **Then** they see a ranked list of likely current allergens with probability level, current pollen activity, and a short explanation for each allergen.
+- **Given** a guest or signed-in user has completed a current-symptoms check
+- **When** they choose to save it and complete authentication if required
+- **Then** the completed check is stored under their account and appears in their history
 
 #### Acceptance Criteria
 
-- The user can complete the check with either device location or a manually selected current city.
-- The result includes probability level, current pollen activity, and a short explanation for each listed allergen.
-- The result is not presented as medical diagnosis.
+- Saving requires an explicit user action.
+- Existing guest input is preserved through authentication.
+- The saved record belongs only to the authenticated user.
 
-## Functional Requirements
+### US-02: User manages private symptom-check history
 
-- FR-001: User can complete the first allergen check without logging in. Priority: must-have
-  > Socrates: Counter-argument considered: login slows down the 30-second success metric. Resolution: revised to guest-first access; login must not block the first check.
-- FR-002: User can share current device location. Priority: nice-to-have
-  > Socrates: Counter-argument considered: no counter-argument; it stands as written. Resolution: kept as optional nice-to-have because manual city entry is the fallback.
-- FR-003: User can search for and select a destination city. Priority: must-have
-  > Socrates: Counter-argument considered: the travel flow cannot work without destination selection. Resolution: kept as must-have.
-- FR-004: User can select current symptoms from a predefined list. Priority: must-have
-  > Socrates: Counter-argument considered: symptom selection is necessary for current-cause matching. Resolution: kept as must-have.
-- FR-005: User can set symptom intensity as low or high. Priority: must-have
-  > Socrates: Counter-argument considered: a 1-5 scale may create false precision. Resolution: revised to low/high intensity.
-- FR-006: User can receive an automatically updated current-symptoms allergen check after required inputs are selected. Priority: must-have
-  > Socrates: Counter-argument considered: a separate submit action adds friction. Resolution: revised to automatic result updates.
-- FR-007: User can view a ranked list of likely current allergens. Priority: must-have
-  > Socrates: Counter-argument considered: ranking may overstate certainty. Resolution: kept, but results must be framed as likelihood rather than certainty.
-- FR-008: User can view a compact probability level, current pollen activity, and short explanation for each allergen. Priority: must-have
-  > Socrates: Counter-argument considered: too much detail may slow the 30-second goal. Resolution: kept with compact presentation as part of the requirement.
-- FR-009: User can check allergen and pollen risks for a destination without reporting symptoms. Priority: must-have
-  > Socrates: Counter-argument considered: without user symptoms, "risk" may be too personalized. Resolution: revised to allergen and pollen risk rather than personal symptom risk.
-- FR-010: User can use symptom history for symptom probability in both current-symptoms and travel-preparation flows when history exists. Priority: nice-to-have
-  > Socrates: Counter-argument considered: history-based probability should be accessible for both user flows. Resolution: revised from travel-only to both flows, while remaining nice-to-have.
-- FR-011: User can see destination pollen activity with a brief explanation, without symptom probability, when no history exists. Priority: must-have
-  > Socrates: Counter-argument considered: destination pollen activity may duplicate existing pollen apps unless explanation adds value. Resolution: kept as first-use fallback with brief explanation.
-- FR-012: User can manually enter their current city when device location is unavailable or skipped. Priority: must-have
-  > Socrates: Counter-argument considered: manual location entry is essential because device location is optional. Resolution: kept as must-have.
-- FR-013: User can use the whole app in Polish language. Priority: must-have
+- **Given** a signed-in user has one or more saved symptom checks
+- **When** they open history
+- **Then** they can list, inspect, update symptoms and per-symptom intensities, or delete only their own records
 
-## Non-Functional Requirements
+#### Acceptance Criteria
 
-- A user can get from opening the app to a likely-allergen result in under 30 seconds.
-- Results are not framed as diagnosis, treatment, or medication advice.
-- Location and symptom history are stored only when the user clearly chooses to save them.
-- The app remains usable on current mainstream mobile and desktop browsers.
-- All user-facing product copy is available in Polish.
+- Updating symptoms recalculates the saved result against that record's saved location and pollen context.
+- Other saved context is not directly editable.
+- History does not influence new current-symptoms or destination rankings.
+- Another authenticated user cannot read, update, or delete the record.
 
-## Business Logic
+### US-03: User uses device location with a manual fallback
 
-Allergen Finder ranks likely allergens by comparing the user's location, reported symptoms, symptom intensity, and current pollen/environmental activity.
+- **Given** a user is starting a current-symptoms check
+- **When** they grant device-location permission
+- **Then** the app resolves a current city for the check while retaining manual city selection as a fallback
 
-The rule consumes user-facing inputs: current or destination location, selected symptoms, low/high symptom intensity where symptoms are provided, and current pollen or environmental activity for that place.
+#### Acceptance Criteria
 
-The output is a ranked set of likely allergens with probability level, current pollen activity, and a short explanation. The user encounters the output after entering symptoms for their current location, or after selecting a destination for travel preparation.
+- Denied, unavailable, or failed location lookup does not block the check.
+- Device location is not stored unless the user explicitly saves the completed check.
 
-## Access Control
+### US-04: User sets symptom-specific intensity and sees missing-data warnings
 
-Users can use the MVP as a guest for the first allergen check.
+- **Given** a user is completing a current-symptoms check
+- **When** they select symptoms
+- **Then** each selected symptom has its own low/high intensity and any result lacking provider pollen data has a warning visible at first glance
 
-The MVP has one flat user type. Login may exist to support saved history later, but it must not block the first current-symptoms or travel-preparation check. No admin, member, family, or other role separation is planned for the first version.
+#### Acceptance Criteria
+
+- The previous single overall intensity control is replaced.
+- Ranking consumes the intensity assigned to each selected symptom.
+- Missing provider pollen data remains distinguishable from low pollen activity.
+
+## Scope of Change
+
+### Preserved Guest Flows
+
+- [preserved] FR-001: Guest can complete the current-symptoms allergen check without logging in. Priority: must-have.
+  > Socrates: Requiring login would satisfy identity requirements but would regress the existing fast first-use flow. Resolution: preserve guest access and gate only saving/history.
+- [preserved] FR-002: Guest can complete the destination pollen-risk check without logging in. Priority: must-have.
+  > Socrates: Authentication could simplify one access model but adds no value to environmental destination context. Resolution: preserve the guest destination flow.
+- [preserved] FR-003: User sees Polish, non-diagnostic allergen results without medication or treatment advice. Priority: must-have.
+  > Socrates: More assertive wording may appear more useful but would violate the product's safety boundary. Resolution: preserve the existing framing.
+
+### Authentication
+
+- [new] FR-004: User can register and sign in with email and password, then sign out. Priority: must-have.
+  > Socrates: Authentication adds delivery and security cost. Resolution: keep it because user-linked access is an explicit MVP foundation.
+- [new] FR-005: Authenticated user can access only symptom-check records assigned to their account. Priority: must-have.
+  > Socrates: Interface-only filtering would be faster to build but would not provide real ownership isolation. Resolution: ownership must be enforced for every history operation.
+
+### Saved Symptom Checks
+
+- [new] FR-006: Authenticated user can explicitly save a completed current-symptoms check. Priority: must-have.
+  > Socrates: Automatic saving would create history faster but violates the explicit-intent privacy guardrail. Resolution: saving remains explicit.
+- [new] FR-007: Authenticated user can list and open their saved symptom checks. Priority: must-have.
+  > Socrates: A list without details could technically satisfy read access but would not make records useful. Resolution: include list and individual record viewing.
+- [new] FR-008: Authenticated user can update symptoms and low/high intensity for each symptom in a saved check. Priority: must-have.
+  > Socrates: Editing historical input can blur what originally happened. Resolution: allow only symptom changes and recalculate while preserving the record's original location and pollen context.
+- [new] FR-009: Authenticated user can delete one of their saved symptom checks. Priority: must-have.
+  > Socrates: Retaining records may simplify implementation but denies the user control over personal symptom data. Resolution: deletion is required.
+- [preserved] FR-010: New allergen rankings remain independent of saved history. Priority: must-have.
+  > Socrates: History personalization might increase relevance but adds unvalidated medical and ranking complexity. Resolution: history is display-only for this MVP.
+
+### Current-Symptoms Experience
+
+- [new] FR-011: User can use current device location for the current-symptoms check. Priority: must-have.
+  > Socrates: Browser location introduces permission and failure paths. Resolution: include it because manual city selection remains a complete fallback.
+- [preserved] FR-012: User can manually select a current city when device location is skipped, denied, unavailable, or fails. Priority: must-have.
+  > Socrates: Removing manual selection would simplify the interface but make the flow dependent on permission and device support. Resolution: preserve the fallback.
+- [modified] FR-013: User can set low/high intensity separately for every selected symptom. Priority: must-have.
+  > Socrates: Per-symptom intensity increases interaction cost and ranking complexity. Resolution: accept the cost because one overall intensity cannot represent mixed symptoms accurately.
+- [modified] FR-014: User can identify at first glance when a result card lacks provider pollen data. Priority: must-have.
+  > Socrates: Existing fallback copy already communicates uncertainty, but it is easy to miss. Resolution: add a prominent warning label without hiding the result.
+
+## Constraints & Compatibility
+
+- Existing URLs and guest current-symptoms and destination flows remain available.
+- Existing city search, pollen lookup, result framing, and provider attribution continue working.
+- Manual city selection remains the fallback for device-location failures.
+- Existing saved records remain readable if their representation evolves after initial release.
+- No user can access saved checks assigned to another account.
+- No location or symptom record is persisted without an explicit save action.
+- Deployment remains compatible with the existing containerized production target.
+- The accepted public pollen-endpoint cost-abuse risk remains unchanged for this deadline; provider-side API restrictions, quotas, and billing alerts remain required.
+
+## Business Logic Changes
+
+Allergen Finder ranks likely allergens by combining the selected location, each reported symptom with its own low/high intensity, and pollen or environmental activity available for that place.
+
+The current rule changes from one overall symptom intensity to an intensity attached to each selected symptom. Missing pollen data remains unknown rather than being treated as low activity, and the result must visibly communicate that distinction.
+
+Saving history does not alter future rankings. Updating a saved record's symptoms recalculates that record using its saved location and pollen context so it remains tied to the original check conditions.
+
+## Access Control Changes
+
+The current system has no identity or access separation. The change adds email-and-password registration, sign-in, and sign-out with one flat authenticated-user role.
+
+Guest users retain access to both existing checks. Authentication is required only to save or manage symptom-check history. Each saved check belongs to one user, and every read, update, and delete operation is limited to that owner.
+
+When a guest chooses to save a completed check, authentication must not discard the completed check that prompted the action.
 
 ## Non-Goals
 
-- No medical diagnosis — results describe likely allergens, not clinical conclusions.
-- No medication or treatment recommendations — the MVP does not advise what the user should take or do medically.
-- No medical chatbot — the MVP does not provide conversational medical guidance.
-- No image analysis — the MVP does not infer allergens or symptoms from photos.
-- No health-device integrations — the MVP does not connect to wearables, sensors, or health devices.
-- No family accounts — the MVP serves one person's allergy context at a time.
-- No long-term health forecasts — the MVP focuses on current or destination allergen context, not long-term health prediction.
-- No required symptom-history personalization for first-time users — first-time users can still get pollen and allergen context without prior history.
-- No user accounts required for MVP — the first version must allow useful checks without account creation.
-- No predictive AI model training — the MVP does not train a predictive model from user data.
+- No history-driven personalization of future allergen rankings; history is display-only.
+- No automatic saving of completed checks.
+- No guest-owned or anonymous history.
+- No social login, passwordless login, role hierarchy, or administration interface.
+- No password recovery flow in this MVP.
+- No editing of saved location, timestamp, or environmental context; only symptoms and their intensities are editable.
+- No medical diagnosis, medication recommendations, treatment recommendations, or medical chatbot.
+- No family accounts, shared records, exports, or collaborative history.
+- No offline-first behavior or multi-region availability target.
 
 ## Open Questions
 
-No open questions.
+No open product questions. Exact persistence fields, authentication implementation, session handling, and test tooling are downstream planning decisions constrained by this PRD.
