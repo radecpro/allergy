@@ -1,17 +1,17 @@
 ---
 project: Allergen Finder
 version: 1
-status: draft
+status: locked
 created: 2026-06-02
-updated: 2026-06-02
-prd_version: 1
+updated: 2026-06-09
+prd_version: 2
 main_goal: speed
 top_blocker: time
 ---
 
 # Roadmap: Allergen Finder
 
-> Derived from `context/foundation/prd.md` (v1) + auto-researched codebase baseline.
+> Derived from `context/foundation/prd.md` (v2) + auto-researched codebase baseline.
 > Edit-in-place; archive when superseded.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
 
@@ -30,8 +30,8 @@ In this roadmap, the north star means the first end-to-end product slice that pr
 | ID | Change ID | Outcome (user can ...) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
 | F-01 | allergen-ranking-contract | (foundation) Minimal allergen, symptom, pollen-activity, and result-framing contract is in place for both launch flows | — | FR-004, FR-005, FR-007, FR-008, FR-009, FR-011, NFRs | done |
-| S-01 | guest-current-symptoms-check | Complete a guest current-symptoms allergen check with manual city entry and compact likelihood results | F-01 | US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012 | done |
-| S-02 | destination-allergen-risk-check | Search for a destination city and see destination allergen and pollen risk without reporting symptoms | F-01 | FR-003, FR-009, FR-011 | done |
+| S-01 | guest-current-symptoms-check | Complete a guest current-symptoms allergen check with manual city entry and compact likelihood results | F-01 | US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012, FR-013 | done |
+| S-02 | destination-allergen-risk-check | Search for a destination city and see destination allergen and pollen risk without reporting symptoms | F-01 | FR-003, FR-009, FR-011, FR-013 | done |
 
 ## Baseline
 
@@ -67,7 +67,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 - **Outcome:** User can complete a guest current-symptoms allergen check with manual city entry, symptom selection, low/high intensity, automatic result updates, and compact likelihood results.
 - **Change ID:** guest-current-symptoms-check
-- **PRD refs:** US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012
+- **PRD refs:** US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012, FR-013
 - **Prerequisites:** F-01
 - **Parallel with:** S-02
 - **Blockers:** —
@@ -81,7 +81,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 - **Outcome:** User can search for a destination city and see current destination allergen and pollen risk with a brief explanation, without reporting symptoms or needing saved history.
 - **Change ID:** destination-allergen-risk-check
-- **PRD refs:** FR-003, FR-009, FR-011
+- **PRD refs:** FR-003, FR-009, FR-011, FR-013
 - **Prerequisites:** F-01
 - **Parallel with:** S-01
 - **Blockers:** —
@@ -94,9 +94,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 | Roadmap ID | Change ID | Suggested issue title | Ready for `/10x-plan` | Notes |
 |---|---|---|---|---|
-| F-01 | allergen-ranking-contract | Define minimal allergen ranking and result framing contract | yes | Run `/10x-plan allergen-ranking-contract` |
-| S-01 | guest-current-symptoms-check | Build guest current-symptoms allergen check | no | Depends on F-01 |
-| S-02 | destination-allergen-risk-check | Build destination allergen risk check | no | Depends on F-01 |
+| F-01 | allergen-ranking-contract | Define minimal allergen ranking and result framing contract | no | Archived 2026-06-09 |
+| S-01 | guest-current-symptoms-check | Build guest current-symptoms allergen check | no | Archived 2026-06-09 |
+| S-02 | destination-allergen-risk-check | Build destination allergen risk check | no | Archived 2026-06-09 |
 
 ## Open Roadmap Questions
 
