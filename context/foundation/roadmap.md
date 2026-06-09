@@ -31,7 +31,7 @@ In this roadmap, the north star means the first end-to-end product slice that pr
 |---|---|---|---|---|---|
 | F-01 | allergen-ranking-contract | (foundation) Minimal allergen, symptom, pollen-activity, and result-framing contract is in place for both launch flows | — | FR-004, FR-005, FR-007, FR-008, FR-009, FR-011, NFRs | done |
 | S-01 | guest-current-symptoms-check | Complete a guest current-symptoms allergen check with manual city entry and compact likelihood results | F-01 | US-01, FR-001, FR-004, FR-005, FR-006, FR-007, FR-008, FR-012 | done |
-| S-02 | destination-allergen-risk-check | Search for a destination city and see destination allergen and pollen risk without reporting symptoms | F-01 | FR-003, FR-009, FR-011 | proposed |
+| S-02 | destination-allergen-risk-check | Search for a destination city and see destination allergen and pollen risk without reporting symptoms | F-01 | FR-003, FR-009, FR-011 | done |
 
 ## Baseline
 
@@ -88,7 +88,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - What destination search scope is acceptable for the MVP: city-only, city plus country, or another minimal disambiguation? — Owner: team. Block: no.
 - **Risk:** This follows the same contract as S-01 so travel preparation can ship without accounts or symptom history; over-personalizing the wording would conflict with first-use fallback requirements.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -121,3 +121,4 @@ No open roadmap questions.
 
 - **F-01: (foundation) Minimal allergen, symptom, pollen-activity, probability-label, and non-diagnostic explanation contract is in place for the current and destination checks.** — Archived 2026-06-09 → `context/archive/2026-06-03-allergen-ranking-contract/`. Lesson: —.
 - **S-01: User can complete a guest current-symptoms allergen check with manual city entry, symptom selection, low/high intensity, automatic result updates, and compact likelihood results.** — Archived 2026-06-09 → `context/archive/2026-06-05-guest-current-symptoms-check/`. Lesson: —.
+- **S-02: User can search for a destination city and see current destination allergen and pollen risk with a brief explanation, without reporting symptoms or needing saved history.** — Archived 2026-06-09 → `context/archive/2026-06-06-destination-allergen-risk-check/`. Lesson: —.
