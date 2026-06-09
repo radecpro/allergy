@@ -63,3 +63,6 @@
 - `npm run verify:current-location` — passed
 - `npm audit --json` — passed with zero vulnerabilities
 
+## Release Risk Acceptance
+
+On 2026-06-09, the project owner accepted the `/api/current-pollen` billable-call abuse risk to meet the MVP deadline. Google API restrictions, quotas, and billing alerts remain required before public exposure; server-side caching, rate limiting, or signed request controls are deferred post-MVP.

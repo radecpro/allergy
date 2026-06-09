@@ -49,7 +49,7 @@
   - Tradeoff: Rate limiting/token validation needs deployment-aware design.
   - Confidence: MED — local app has no persistence or edge middleware yet.
   - Blind spot: Final hosting platform constraints are not checked here.
-- **Decision**: PENDING — queued as follow-up.
+- **Decision**: ACCEPTED — on 2026-06-09, the project owner accepted the public billable-call risk to meet the MVP deadline. Google API restrictions, quotas, and billing alerts remain required before public exposure; server-side abuse controls are deferred post-MVP.
 
 ### F3 — Pollen response exposes unnecessary coordinates
 
