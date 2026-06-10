@@ -234,14 +234,14 @@ There is no data migration. The verification interface changes from two `verify:
 
 #### Automated
 
-- [x] 2.1 Full `npm test` passes from the repository root
-- [x] 2.2 Full `npm run typecheck` passes from the repository root
-- [x] 2.3 `npm audit --json` completes with advisories fixed or documented
-- [x] 2.4 Test plan contains sections 1 through 8 and exactly three single-folder rollout rows
-- [x] 2.5 Documented package commands exist in `package.json`
+- [x] 2.1 Full `npm test` passes from the repository root — 061a60a
+- [x] 2.2 Full `npm run typecheck` passes from the repository root — 061a60a
+- [x] 2.3 `npm audit --json` completes with advisories fixed or documented — 061a60a
+- [x] 2.4 Test plan contains sections 1 through 8 and exactly three single-folder rollout rows — 061a60a
+- [x] 2.5 Documented package commands exist in `package.json` — 061a60a
 
 #### Manual
 
-- [x] 2.6 Cross-user read, update, and delete isolation is the top future automated risk
-- [x] 2.7 Test-plan scope excludes CI, coverage, browser tooling, and broad suite expansion
-- [x] 2.8 Later slices and dedicated rollout changes have an unambiguous test-layer and cookbook handoff
+- [x] 2.6 Cross-user read, update, and delete isolation is the top future automated risk — 061a60a
+- [x] 2.7 Test-plan scope excludes CI, coverage, browser tooling, and broad suite expansion — 061a60a
+- [x] 2.8 Later slices and dedicated rollout changes have an unambiguous test-layer and cookbook handoff — 061a60a
