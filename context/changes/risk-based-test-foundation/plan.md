@@ -219,29 +219,29 @@ There is no data migration. The verification interface changes from two `verify:
 
 #### Automated
 
-- [x] 1.1 `npm test` runs all migrated tests once and exits successfully
-- [x] 1.2 Focused allergen-ranking test run passes
-- [x] 1.3 Focused current-location test run passes
-- [x] 1.4 `npm run typecheck` passes with test files and configuration
-- [x] 1.5 Obsolete smoke commands/files and the direct `vite-node` dependency are absent
+- [x] 1.1 `npm test` runs all migrated tests once and exits successfully — c9d7d7d
+- [x] 1.2 Focused allergen-ranking test run passes — c9d7d7d
+- [x] 1.3 Focused current-location test run passes — c9d7d7d
+- [x] 1.4 `npm run typecheck` passes with test files and configuration — c9d7d7d
+- [x] 1.5 Obsolete smoke commands/files and the direct `vite-node` dependency are absent — c9d7d7d
 
 #### Manual
 
-- [x] 1.6 Migrated Vitest cases preserve all meaningful smoke assertions
-- [x] 1.7 Tests assert product contracts rather than production calculations
+- [x] 1.6 Migrated Vitest cases preserve all meaningful smoke assertions — c9d7d7d
+- [x] 1.7 Tests assert product contracts rather than production calculations — c9d7d7d
 
 ### Phase 2: Risk Plan & Foundation Verification
 
 #### Automated
 
-- [ ] 2.1 Full `npm test` passes from the repository root
-- [ ] 2.2 Full `npm run typecheck` passes from the repository root
-- [ ] 2.3 `npm audit --json` completes with advisories fixed or documented
-- [ ] 2.4 Test plan contains sections 1 through 8 and exactly three single-folder rollout rows
-- [ ] 2.5 Documented package commands exist in `package.json`
+- [x] 2.1 Full `npm test` passes from the repository root
+- [x] 2.2 Full `npm run typecheck` passes from the repository root
+- [x] 2.3 `npm audit --json` completes with advisories fixed or documented
+- [x] 2.4 Test plan contains sections 1 through 8 and exactly three single-folder rollout rows
+- [x] 2.5 Documented package commands exist in `package.json`
 
 #### Manual
 
-- [ ] 2.6 Cross-user read, update, and delete isolation is the top future automated risk
-- [ ] 2.7 Test-plan scope excludes CI, coverage, browser tooling, and broad suite expansion
-- [ ] 2.8 Later slices and dedicated rollout changes have an unambiguous test-layer and cookbook handoff
+- [x] 2.6 Cross-user read, update, and delete isolation is the top future automated risk
+- [x] 2.7 Test-plan scope excludes CI, coverage, browser tooling, and broad suite expansion
+- [x] 2.8 Later slices and dedicated rollout changes have an unambiguous test-layer and cookbook handoff
