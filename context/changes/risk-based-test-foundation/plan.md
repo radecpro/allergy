@@ -219,16 +219,16 @@ There is no data migration. The verification interface changes from two `verify:
 
 #### Automated
 
-- [ ] 1.1 `npm test` runs all migrated tests once and exits successfully
-- [ ] 1.2 Focused allergen-ranking test run passes
-- [ ] 1.3 Focused current-location test run passes
-- [ ] 1.4 `npm run typecheck` passes with test files and configuration
-- [ ] 1.5 Obsolete smoke commands/files and the direct `vite-node` dependency are absent
+- [x] 1.1 `npm test` runs all migrated tests once and exits successfully
+- [x] 1.2 Focused allergen-ranking test run passes
+- [x] 1.3 Focused current-location test run passes
+- [x] 1.4 `npm run typecheck` passes with test files and configuration
+- [x] 1.5 Obsolete smoke commands/files and the direct `vite-node` dependency are absent
 
 #### Manual
 
-- [ ] 1.6 Migrated Vitest cases preserve all meaningful smoke assertions
-- [ ] 1.7 Tests assert product contracts rather than production calculations
+- [x] 1.6 Migrated Vitest cases preserve all meaningful smoke assertions
+- [x] 1.7 Tests assert product contracts rather than production calculations
 
 ### Phase 2: Risk Plan & Foundation Verification
 

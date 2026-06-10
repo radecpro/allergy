@@ -5,9 +5,9 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "verify:allergen-ranking": "vite-node app/domain/allergen-ranking/smoke-check.ts",
-    "verify:current-location": "vite-node app/domain/current-location/smoke-check.ts",
     "start": "react-router-serve ./build/server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
@@ -27,6 +27,6 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.3",
-    "vite-node": "^6.0.0"
+    "vitest": "^4.1.0"
   }
 }

@@ -10,7 +10,7 @@ The MVP is guest-first but includes auth. Do not commit secrets, API keys, or GC
 
 ## Build, Test, and Development Commands
 
-Use `@package.json` as the source of truth for scripts. Before handoff, run `npm run typecheck`. Before release handoff, run `npm audit --json` and either fix advisories or document accepted advisories in the PR.
+Use `@package.json` as the source of truth for scripts. Run `npm test` for the complete one-shot suite and `npm run test:watch` for local iteration. Before handoff, run both `npm test` and `npm run typecheck`. Before release handoff, run `npm audit --json` and either fix advisories or document accepted advisories in the PR.
 
 ## Coding Style & Naming Conventions
 
@@ -18,7 +18,7 @@ Use `@tsconfig.json` for TypeScript compiler settings and path aliases. Prefer r
 
 ## Testing Guidelines
 
-No test runner is configured yet. For now, run `npm run typecheck` and manually verify key flows through `npm run dev` before handing off. When adding tests, prefer colocated `*.test.ts` or `*.test.tsx` files near the code under test, and add a corresponding `npm test` script in `package.json`.
+Use Vitest for automated tests. Keep `*.test.ts` or `*.test.tsx` files colocated near the code under test, and run one suite with `npm test -- path/to/file.test.ts`. Tests must be deterministic and must not call live providers. Read `context/foundation/test-plan.md` before expanding coverage so new tests target the documented product risks and use the cheapest useful layer.
 
 ## Commit & Pull Request Guidelines
 
