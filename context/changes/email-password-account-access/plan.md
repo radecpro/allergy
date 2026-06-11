@@ -118,7 +118,7 @@ Introduce the smallest typed persistence boundary required to give authenticated
 
 **Intent**: Make database and authentication prerequisites discoverable without committing secrets.
 
-**Contract**: Document `DATABASE_URL`, opt-in `TEST_DATABASE_URL`, `GOOGLE_CLOUD_PROJECT`, `IDENTITY_PLATFORM_API_KEY`, the canonical public `APP_ORIGIN`, and local-only `FIREBASE_AUTH_EMULATOR_HOST` alongside the existing Maps key. `TEST_DATABASE_URL` must point to a dedicated disposable database and is never used by the application runtime. `APP_ORIGIN` is an absolute origin with scheme, host, and optional port but no path; it is the trusted target used for authentication request-origin checks rather than an origin reconstructed from proxy-facing request headers. The supported default local auth path is the Firebase Authentication emulator at a host value such as `127.0.0.1:9099`, with no protocol and the same explicit project ID used by the Firebase CLI and Admin SDK. The provider adapter must support the emulator endpoint only when this local-only setting is present. Production must reject `FIREBASE_AUTH_EMULATOR_HOST`. Live non-production verification runs in a no-traffic Cloud Run revision under the runtime service account rather than relying on ordinary `gcloud auth application-default login` end-user credentials. Document Cloud SQL local proxy usage and that production values belong in Secret Manager.
+**Contract**: Document `DATABASE_URL`, opt-in `TEST_DATABASE_URL`, `GOOGLE_CLOUD_PROJECT`, `IDENTITY_PLATFORM_API_KEY`, the canonical public `APP_ORIGIN`, and local-only `FIREBASE_AUTH_EMULATOR_HOST` alongside the existing Maps key. `TEST_DATABASE_URL` must point to a dedicated disposable database and is never used by the application runtime. `APP_ORIGIN` is an absolute origin with scheme, host, and optional port but no path; it is the trusted target used for authentication request-origin checks rather than an origin reconstructed from proxy-facing request headers. The supported default local auth path is the Firebase Authentication emulator at a host value such as `127.0.0.1:9099`, with no protocol and the same explicit project ID used by the Firebase CLI and Admin SDK. The provider adapter must support the emulator endpoint only when this local-only setting is present. Production must reject `FIREBASE_AUTH_EMULATOR_HOST`. The final MVP project is verified before account traffic through a no-traffic Cloud Run revision and one-off job under the runtime service account rather than ordinary `gcloud auth application-default login` end-user credentials. Document Cloud SQL local proxy usage and that deployed values belong in Secret Manager.
 
 ### Success Criteria:
 
@@ -330,7 +330,7 @@ Complete the deterministic test coverage, production provider/database configura
 
 **Intent**: Detect missing APIs, incorrect runtime IAM, or unusable Firebase credentials before production traffic reaches the account-enabled revision.
 
-**Contract**: Add an explicit `npm run test:auth-live` command outside default `npm test`. It requires a non-production project, a dedicated smoke account supplied through approved runtime secrets, and an explicit opt-in flag; it must refuse a production project or missing opt-in. The test signs in through the Identity Platform REST adapter, creates a short-lived Firebase Admin session cookie, verifies it without revocation, verifies it with revocation checking, and emits no password, ID token, session cookie, or raw provider payload. Run it locally against the Auth emulator for developer verification and against a tagged/no-traffic Cloud Run revision or equivalent one-off job using the exact production runtime service account and non-production Identity Platform project. The live Cloud Run preflight is a release gate before traffic movement.
+**Contract**: Add an explicit `npm run test:auth-live` command outside default `npm test`. It requires a dedicated smoke account supplied through approved runtime secrets and explicit opt-in. Emulator mode requires the local emulator. A separate-project mode must refuse the production project. The final MVP project mode must require the exact final project ID plus a second final-target opt-in and may run only before the account-enabled revision receives traffic. The test signs in through the Identity Platform REST adapter, creates a short-lived Firebase Admin session cookie, verifies it without revocation, verifies it with revocation checking, and emits no password, ID token, session cookie, or raw provider payload. Run it locally against the Auth emulator and as a one-off Cloud Run Job using the exact final runtime service account. The live Cloud Run preflight is a release gate before traffic movement.
 
 #### 5. Final repository verification
 
@@ -338,7 +338,7 @@ Complete the deterministic test coverage, production provider/database configura
 
 **Intent**: Confirm that code, commands, configuration guidance, and preserved guest behavior form one coherent handoff.
 
-**Contract**: Run the default deterministic suite, the opt-in PostgreSQL integration suite against a disposable database, the approved live Firebase preflight in non-production, typecheck, production build, and dependency audit. Confirm all documented environment variables and package commands exist, no secrets are tracked, the runtime service account has only the documented auth permissions, and no auth middleware guards the existing public routes or APIs.
+**Contract**: Run the default deterministic suite, the opt-in PostgreSQL integration suite against a disposable database, the approved final-project pre-traffic Firebase preflight, typecheck, production build, and dependency audit. Confirm all documented environment variables and package commands exist, no secrets are tracked, the runtime service account has only the documented auth permissions, and no auth middleware guards the existing public routes or APIs.
 
 ### Success Criteria:
 
@@ -356,13 +356,13 @@ Complete the deterministic test coverage, production provider/database configura
 #### Manual Verification:
 
 - Identity Platform email/password, password-policy, and enumeration-protection settings match the plan.
-- The migration is applied to the target non-production database before preview verification and to production before traffic moves.
-- A no-traffic non-production Cloud Run preflight under the runtime service account proves REST sign-in plus session creation and both verification modes before traffic moves.
-- A preview smoke test confirms register, sign-in, session persistence, and sign-out using a non-production account.
+- The migration is applied to the final MVP database before preview verification and before account traffic moves.
+- A final-project pre-traffic Cloud Run Job under the runtime service account proves REST sign-in plus session creation and both verification modes before traffic moves.
+- A no-traffic revision smoke test confirms register, sign-in, session persistence, and sign-out using the dedicated smoke account.
 - Cloud Run receives database/auth configuration through Secret Manager or runtime identity, and logs contain no credentials, tokens, cookies, or full authentication payloads.
 - Final review confirms S-02 can obtain a revocation-checked stable local user ID without changing this slice's session contract.
 
-**Implementation Note**: Production migration and traffic changes require human approval. Mark the phase complete only after the live non-production auth smoke test and configuration review succeed.
+**Implementation Note**: The final MVP migration and traffic changes require human approval. Mark the phase complete only after the live final-project pre-traffic auth smoke test and configuration review succeed.
 
 ---
 
@@ -385,13 +385,13 @@ Complete the deterministic test coverage, production provider/database configura
 - Run `npm run test:auth-live` separately from `npm test`; use the Auth emulator locally and the no-traffic Cloud Run runtime identity for release preflight.
 - Exercise optional session verification separately from revocation-aware authentication-route and required-user verification, including a revoked-cookie login-loop regression.
 - Reuse the current-location resource-route suite to protect public API behavior.
-- Keep real Identity Platform smoke checks and the opt-in PostgreSQL suite outside `npm test` and confined to approved non-production or disposable environments.
+- Keep real Identity Platform smoke checks and the opt-in PostgreSQL suite outside `npm test`; run the managed smoke check only through the explicitly approved final-project pre-traffic mode.
 
 ### Manual Testing Steps:
 
 1. Run `npm run test:db` with a dedicated disposable `TEST_DATABASE_URL`; confirm migrations apply and repeated upserts preserve one local user ID while updating email fields.
 2. Run `npm run test:auth-live` against the local Auth emulator; confirm session creation and both verification modes pass without local service-account keys.
-3. Run the same live-auth preflight in a no-traffic non-production Cloud Run revision under the target runtime service account; confirm it passes before traffic movement.
+3. Run the same live-auth preflight as a final-project pre-traffic Cloud Run Job under the target runtime service account; confirm it passes before traffic movement.
 4. Open `/` signed out and complete a current-symptoms check.
 5. Open `/destination` signed out and complete a destination check.
 6. Register with a valid email and a 10-character password; confirm immediate authenticated state without an email-verification gate.
@@ -402,7 +402,7 @@ Complete the deterministic test coverage, production provider/database configura
 11. Submit auth forms with matching `Origin`, matching `Referer` and no `Origin`, cross-origin values, `Origin: null`, and neither source header; confirm only trusted-origin requests proceed.
 12. Try valid and malicious `returnTo` values, including `/login`, `/register`, `/logout`, and `/api/current-pollen`; confirm only internal GET page paths are honored.
 13. Expire or corrupt the session cookie; confirm public pages remain usable, the cookie is cleared, and the login form remains reachable.
-14. Disable or revoke the non-production user; confirm protected access redirects once to a usable login form, clears the cookie, and does not loop.
+14. Disable or revoke the dedicated smoke user before traffic movement; confirm protected access redirects once to a usable login form, clears the cookie, and does not loop.
 
 ## Performance Considerations
 
@@ -412,7 +412,7 @@ No account action should perform more provider/database work than required: one 
 
 ## Migration Notes
 
-The initial database migration is additive and creates only the `users` table. It must be generated and committed, reviewed as SQL, applied explicitly to a non-production database, and then applied to production before the account-enabled revision receives traffic. Do not run migrations from application startup or every Cloud Run instance.
+The initial database migration is additive and creates only the `users` table. It must be generated and committed, reviewed as SQL, and applied explicitly to the final MVP database before the account-enabled revision receives traffic. Do not run migrations from application startup or every Cloud Run instance.
 
 Application rollback remains viable because the previous guest-only revision ignores the new table. A failed migration should stop the release before traffic movement. If registration creates an Identity Platform user while local persistence fails, later sign-in performs the idempotent local-user upsert; no data migration or provider-user deletion is required.
 
@@ -448,67 +448,67 @@ Application rollback remains viable because the previous guest-only revision ign
 
 #### Automated
 
-- [ ] 1.1 Drizzle generates the committed initial user migration
-- [ ] 1.2 Typecheck passes with schema, client, and repository
-- [ ] 1.3 Focused identity persistence tests prove stable idempotent mapping
-- [ ] 1.4 Schema excludes passwords, refresh tokens, and session records
-- [ ] 1.5 Disposable PostgreSQL integration tests prove the real upsert contract
+- [x] 1.1 Drizzle generates the committed initial user migration
+- [x] 1.2 Typecheck passes with schema, client, and repository
+- [x] 1.3 Focused identity persistence tests prove stable idempotent mapping
+- [x] 1.4 Schema excludes passwords, refresh tokens, and session records
+- [x] 1.5 Disposable PostgreSQL integration tests prove the real upsert contract
 
 #### Manual
 
-- [ ] 1.6 Migration contains only the approved user identity table and constraints
-- [ ] 1.7 Migration and repository integration tests pass on disposable PostgreSQL
-- [ ] 1.8 Database pool limit is reviewed against Cloud Run scaling
+- [x] 1.6 Migration contains only the approved user identity table and constraints
+- [x] 1.7 Migration and repository integration tests pass on disposable PostgreSQL
+- [x] 1.8 Database pool limit is reviewed against Cloud Run scaling
 
 ### Phase 2: Identity Platform And Session Boundary
 
 #### Automated
 
-- [ ] 2.1 Focused auth tests pass for validation, redirects, origin checks, errors, sequencing, and cookies
-- [ ] 2.2 Local persistence failure cannot issue a session cookie
-- [ ] 2.3 Optional and required identity helpers use the correct revocation modes
-- [ ] 2.4 Typecheck passes with server-only auth boundaries
+- [x] 2.1 Focused auth tests pass for validation, redirects, origin checks, errors, sequencing, and cookies
+- [x] 2.2 Local persistence failure cannot issue a session cookie
+- [x] 2.3 Optional and required identity helpers use the correct revocation modes
+- [x] 2.4 Typecheck passes with server-only auth boundaries
 
 #### Manual
 
-- [ ] 2.5 Auth secrets and tokens are neither logged nor persisted
-- [ ] 2.6 Provider failures use enumeration-resistant Polish responses
-- [ ] 2.7 Invalid sessions degrade safely for public and protected access
+- [x] 2.5 Auth secrets and tokens are neither logged nor persisted
+- [x] 2.6 Provider failures use enumeration-resistant Polish responses
+- [x] 2.7 Invalid sessions degrade safely for public and protected access
 
 ### Phase 3: Account Routes And Shared Navigation
 
 #### Automated
 
-- [ ] 3.1 Auth route loader/action integration tests pass
-- [ ] 3.2 Signed-out root loading preserves public route access
-- [ ] 3.3 Existing current-location resource-route tests pass
-- [ ] 3.4 Full tests and typecheck pass after UI and route registration
+- [x] 3.1 Auth route loader/action integration tests pass
+- [x] 3.2 Signed-out root loading preserves public route access
+- [x] 3.3 Existing current-location resource-route tests pass
+- [x] 3.4 Full tests and typecheck pass after UI and route registration
 
 #### Manual
 
-- [ ] 3.5 Current-symptoms flow remains complete while signed out
-- [ ] 3.6 Destination flow remains complete while signed out
-- [ ] 3.7 Registration, sign-in, viewer state, and sign-out work responsively in Polish
-- [ ] 3.8 Return paths accept only valid internal application paths
+- [x] 3.5 Current-symptoms flow remains complete while signed out
+- [x] 3.6 Destination flow remains complete while signed out
+- [x] 3.7 Registration, sign-in, viewer state, and sign-out work responsively in Polish
+- [x] 3.8 Return paths accept only valid internal application paths
 
 ### Phase 4: Verification And Production Readiness
 
 #### Automated
 
-- [ ] 4.1 Full deterministic test suite passes without live providers
-- [ ] 4.2 Disposable PostgreSQL integration suite passes
-- [ ] 4.3 Emulator-backed Firebase session preflight passes
-- [ ] 4.4 Full typecheck passes
-- [ ] 4.5 Production build passes
-- [ ] 4.6 Dependency audit completes with advisories resolved or documented
-- [ ] 4.7 Public routes remain registered and auth mutations reject GET
+- [x] 4.1 Full deterministic test suite passes without live providers
+- [x] 4.2 Disposable PostgreSQL integration suite passes
+- [x] 4.3 Emulator-backed Firebase session preflight passes
+- [x] 4.4 Full typecheck passes
+- [x] 4.5 Production build passes
+- [x] 4.6 Dependency audit completes with advisories resolved or documented
+- [x] 4.7 Public routes remain registered and auth mutations reject GET
 
 #### Manual
 
-- [ ] 4.8 Identity Platform security settings match the approved policy
-- [ ] 4.9 Runtime IAM contains the approved Firebase session permissions
-- [ ] 4.10 Database migrations are applied in the approved release sequence
-- [ ] 4.11 No-traffic Cloud Run live-auth preflight passes
-- [ ] 4.12 Non-production account-flow smoke test passes
-- [ ] 4.13 Runtime secrets and logs satisfy the security contract
-- [ ] 4.14 S-02 can consume a revocation-checked stable local user ID
+- [x] 4.8 Identity Platform security settings match the approved policy
+- [x] 4.9 Runtime IAM contains the approved Firebase session permissions
+- [x] 4.10 Database migrations are applied in the approved release sequence
+- [x] 4.11 No-traffic Cloud Run live-auth preflight passes
+- [x] 4.12 Non-production account-flow smoke test passes
+- [x] 4.13 Runtime secrets and logs satisfy the security contract
+- [x] 4.14 S-02 can consume a revocation-checked stable local user ID

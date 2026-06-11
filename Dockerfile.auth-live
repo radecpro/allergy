@@ -1,0 +1,10 @@
+FROM node:24-alpine
+
+COPY package.json package-lock.json /app/
+WORKDIR /app
+RUN npm ci
+
+COPY app /app/app
+COPY tsconfig.json vitest.auth-live.config.ts /app/
+
+CMD ["npm", "run", "test:auth-live"]

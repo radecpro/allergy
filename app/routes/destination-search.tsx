@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Route } from "./+types/destination-search";
+import { AccountNav } from "~/components/account-nav";
 import { CityCombobox } from "~/components/city-combobox";
 import { ModeSwitch } from "~/components/mode-switch";
 import {
@@ -142,9 +143,12 @@ export default function DestinationSearch() {
     <main className="min-h-screen bg-stone-50 text-slate-950">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
         <header className="grid gap-3 border-b border-slate-200 pb-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-emerald-700">
-            Allergen Finder
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold uppercase tracking-normal text-emerald-700">
+              Allergen Finder
+            </p>
+            <AccountNav />
+          </div>
           <ModeSwitch />
           <div className="grid gap-3 lg:grid-cols-[1fr_22rem] lg:items-end">
             <div>

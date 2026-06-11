@@ -2,7 +2,7 @@
 
 
 # from react-router
-.env
+.env*
 /node_modules/
 # React Router
 /.react-router/

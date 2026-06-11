@@ -133,3 +133,140 @@ Cloud Run source deploy builds the app with Cloud Build and stores the generated
 - Deployment commands need approval to run outside the sandbox because `gcloud` must read/write local auth/config files and call GCP APIs.
 
 References: Google Cloud CLI initialization, Cloud Run source deploy, Cloud Build to Cloud Run, Artifact Registry with Cloud Run, and Cloud Run public access docs.
+
+## Account Access Rollout
+
+The account-enabled revision adds Identity Platform, Firebase Admin sessions,
+and Cloud SQL for PostgreSQL. Provision Cloud SQL in `europe-central2`, enable
+automated backups before user-owned data arrives, keep Cloud Run
+`max-instances` bounded, and retain the application pool maximum of three
+connections per instance.
+
+Enable the required services:
+
+```sh
+gcloud services enable \
+  identitytoolkit.googleapis.com \
+  sqladmin.googleapis.com \
+  secretmanager.googleapis.com \
+  serviceusage.googleapis.com \
+  --project gcp-10xdev-bara-lab-3t60
+```
+
+Configure Identity Platform email/password sign-in with a 10-character minimum,
+128-character maximum, no composition requirements, and email-enumeration
+protection. Email verification is intentionally not an access gate for this
+MVP. Monitor registration volume, failed sign-ins, throttling, and quotas.
+
+The Cloud Run runtime service account needs:
+
+- `roles/cloudsql.client`;
+- `roles/secretmanager.secretAccessor` only for this service's secrets;
+- `roles/serviceusage.serviceUsageConsumer`;
+- a project-level custom role containing only
+  `firebaseauth.users.createSession` and `firebaseauth.users.get`.
+
+Do not grant Firebase Authentication Admin or Identity Platform Admin to the
+runtime service account. Store `DATABASE_URL`, `IDENTITY_PLATFORM_API_KEY`,
+`GOOGLE_MAPS_API_KEY`, and smoke credentials in Secret Manager. Set
+`APP_ORIGIN` to the exact canonical public service origin. Attach the Cloud SQL
+instance to the revision and never set `FIREBASE_AUTH_EMULATOR_HOST` in
+deployed environments.
+
+Use the Cloud SQL Unix socket in the runtime database URL:
+
+```sh
+INSTANCE_CONNECTION_NAME="gcp-10xdev-bara-lab-3t60:europe-central2:INSTANCE"
+DATABASE_URL="postgresql://USER:PASSWORD@localhost/DATABASE?host=/cloudsql/${INSTANCE_CONNECTION_NAME}"
+```
+
+Deploy the account-enabled service with the bounded instance count, explicit
+runtime identity, Cloud SQL attachment, and Secret Manager bindings:
+
+```sh
+gcloud run deploy allergen-finder \
+  --image "$APPLICATION_IMAGE" \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+  --add-cloudsql-instances "$INSTANCE_CONNECTION_NAME" \
+  --set-secrets "DATABASE_URL=allergen-database-url:latest,IDENTITY_PLATFORM_API_KEY=allergen-identity-api-key:latest,GOOGLE_MAPS_API_KEY=allergen-google-maps-api-key:latest" \
+  --set-env-vars "GOOGLE_CLOUD_PROJECT=gcp-10xdev-bara-lab-3t60,APP_ORIGIN=$SERVICE_ORIGIN" \
+  --max-instances 3 \
+  --no-traffic
+```
+
+The live-auth preflight uses a dedicated image because the production image
+correctly omits Vitest and development dependencies:
+
+```sh
+PREFLIGHT_IMAGE="europe-central2-docker.pkg.dev/gcp-10xdev-bara-lab-3t60/allergen-finder/auth-preflight:$REVISION"
+
+gcloud builds submit \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --gcs-source-staging-dir gs://run-sources-gcp-10xdev-bara-lab-3t60-europe-central2/cloud-build/source \
+  --config cloudbuild.auth-live.yaml \
+  --substitutions "_IMAGE=$PREFLIGHT_IMAGE" \
+  .
+
+gcloud run jobs deploy allergen-finder-auth-preflight \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --image "$PREFLIGHT_IMAGE" \
+  --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+  --set-secrets "IDENTITY_PLATFORM_API_KEY=allergen-identity-api-key:latest,AUTH_LIVE_EMAIL=allergen-smoke-email:latest,AUTH_LIVE_PASSWORD=allergen-smoke-password:latest" \
+  --set-env-vars "AUTH_LIVE_OPT_IN=1,AUTH_LIVE_TARGET=final-pre-traffic,AUTH_LIVE_FINAL_PROJECT_ID=gcp-10xdev-bara-lab-3t60,AUTH_LIVE_ALLOW_FINAL_TARGET=1,GOOGLE_CLOUD_PROJECT=gcp-10xdev-bara-lab-3t60"
+
+gcloud run jobs execute allergen-finder-auth-preflight \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --wait
+```
+
+The migration also uses a dedicated one-off image:
+
+```sh
+MIGRATION_IMAGE="europe-central2-docker.pkg.dev/gcp-10xdev-bara-lab-3t60/allergen-finder/migrate:$REVISION"
+
+gcloud builds submit \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --gcs-source-staging-dir gs://run-sources-gcp-10xdev-bara-lab-3t60-europe-central2/cloud-build/source \
+  --config cloudbuild.migrate.yaml \
+  --substitutions "_IMAGE=$MIGRATION_IMAGE" \
+  .
+
+gcloud run jobs deploy allergen-finder-migrate \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --image "$MIGRATION_IMAGE" \
+  --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+  --set-cloudsql-instances "$INSTANCE_CONNECTION_NAME" \
+  --set-secrets "DATABASE_URL=allergen-database-url:latest"
+
+gcloud run jobs execute allergen-finder-migrate \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --wait
+```
+
+### Release Sequence
+
+1. Build and execute the dedicated migration Cloud Run Job above against the
+   final MVP database.
+2. Deploy a tagged/no-traffic revision using the command above, target runtime
+   service account, attached Cloud SQL instance, and final MVP project.
+3. Run `npm run test:db` against a disposable database.
+4. Build and execute the dedicated live-auth Cloud Run Job above under the
+   same runtime service account.
+5. Smoke test registration, sign-in, seven-day session persistence, visible
+   account email, sign-out, and both signed-out guest checks.
+6. Inspect logs and confirm they contain no passwords, ID tokens, refresh
+   tokens, session cookies, or full provider payloads.
+7. Move traffic only after explicit human approval. The previous guest-only
+   revision remains rollback-compatible because it ignores the new `users`
+   table.
+
+Production migrations, secret rotation, and traffic movement always require
+human approval. A failed migration or live-auth preflight stops the release.

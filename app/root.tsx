@@ -7,8 +7,17 @@ import {
   ScrollRestoration,
 } from "react-router";
 
+import { createProductionAuthDependencies } from "~/domain/auth/dependencies.server";
+import type { AuthSessionManager } from "~/domain/auth/session.server";
+
 import type { Route } from "./+types/root";
 import "./app.css";
+
+export type RootLoaderData = {
+  viewer: {
+    email: string;
+  } | null;
+};
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -23,9 +32,30 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+export function createRootLoader(sessions: AuthSessionManager) {
+  return async function rootLoader(request: Request): Promise<Response> {
+    const result = await sessions.getOptionalUser(request);
+
+    return Response.json(
+      {
+        viewer: result.user
+          ? {
+              email: result.user.email,
+            }
+          : null,
+      } satisfies RootLoaderData,
+      { headers: result.headers },
+    );
+  };
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  return createRootLoader(createProductionAuthDependencies().sessions)(request);
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pl">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

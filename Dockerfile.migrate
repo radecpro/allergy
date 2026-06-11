@@ -1,0 +1,12 @@
+FROM node:24-alpine
+
+COPY package.json package-lock.json /app/
+WORKDIR /app
+RUN npm ci
+
+COPY app/db/schema.server.ts /app/app/db/schema.server.ts
+COPY drizzle /app/drizzle
+COPY drizzle.config.ts tsconfig.json /app/
+COPY scripts /app/scripts
+
+CMD ["npm", "run", "db:migrate"]

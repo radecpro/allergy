@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["app/**/*.test.ts"],
-    exclude: ["app/**/*.integration.test.ts"],
+    include: ["app/**/auth-live.integration.test.ts"],
+    fileParallelism: false,
   },
 });

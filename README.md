@@ -1,111 +1,162 @@
 # Allergen Finder
 
-Allergen Finder is a greenfield product concept for helping people with seasonal inhalant allergies identify likely allergens behind current or expected symptoms.
+Allergen Finder is a React Router full-stack TypeScript application for guest
+allergen checks and optional email/password accounts.
 
-The repository currently contains foundation planning artifacts:
+## Local Setup
 
-- `context/idea-notes.md` — original idea notes
-- `context/foundation/shape-notes.md` — shaped discovery notes
-- `context/foundation/prd.md` — product requirements document
-
-# Welcome to React Router!
-
-A modern, production-ready template for building full-stack React applications using React Router.
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
-
-## Features
-
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Development
+Copy the variable names from `.env.example` into a local `.env`. Required
+runtime settings are:
 
-Start the development server with HMR:
+- `GOOGLE_MAPS_API_KEY`: server-side Maps Platform key.
+- `DATABASE_URL`: application PostgreSQL connection string.
+- `GOOGLE_CLOUD_PROJECT`: explicit Identity Platform/Firebase project ID.
+- `IDENTITY_PLATFORM_API_KEY`: server-side Identity Toolkit REST API key.
+- `APP_ORIGIN`: exact public origin, such as `http://localhost:5173`. It must
+  contain a scheme, host, optional port, and no path.
+- `FIREBASE_AUTH_EMULATOR_HOST`: local-only Auth emulator host such as
+  `127.0.0.1:9099`, without a protocol. Production rejects this variable.
+
+Start the app:
 
 ```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+The supported local authentication path is the Firebase Authentication
+emulator using the same `GOOGLE_CLOUD_PROJECT` in the Firebase CLI and Admin
+SDK. Do not use downloaded service-account keys or ordinary end-user
+`gcloud auth application-default login` credentials for this flow.
 
-### Google Maps Platform configuration
+Start the local emulator with:
 
-Live city search and pollen lookup require a server-side environment variable:
+```bash
+firebase emulators:start --only auth --project allergen-finder-local
+```
 
-- `GOOGLE_MAPS_API_KEY` - Google Maps Platform key used only by server routes.
+## Database
 
-Enable these APIs in the Google Cloud project before local or deployed live-provider checks:
+The application uses Drizzle and PostgreSQL. Migrations are explicit release
+actions and never run during application startup.
+
+```bash
+npm run db:generate
+DATABASE_URL=postgresql://... npm run db:migrate
+```
+
+For local Cloud SQL access, run the Cloud SQL Auth Proxy and point
+`DATABASE_URL` at its local listener. Production values belong in Secret
+Manager.
+
+The real repository integration suite requires a separate disposable database.
+It fails rather than falling back to `DATABASE_URL`:
+
+```bash
+TEST_DATABASE_URL=postgresql://... npm run test:db
+```
+
+## Identity Platform
+
+Enable `identitytoolkit.googleapis.com`, then configure Identity Platform:
+
+- enable email/password sign-in;
+- enforce passwords from 10 through 128 characters with no composition rules;
+- enable email-enumeration protection;
+- do not require email verification for this MVP;
+- monitor registration, failed sign-in, throttling, and quota usage.
+
+Application sessions are HTTP-only Firebase Admin session cookies lasting
+seven days. Provider errors shown by the application are intentionally generic.
+
+### Live Auth Preflight
+
+`npm run test:auth-live` is outside the deterministic suite. It refuses to run
+without explicit opt-in. It accepts `emulator`, `non-production`, or the more
+strict `final-pre-traffic` target.
+
+For the local emulator, create the dedicated smoke account in the emulator,
+then run:
+
+```bash
+AUTH_LIVE_OPT_IN=1 \
+AUTH_LIVE_TARGET=emulator \
+AUTH_LIVE_EMAIL=smoke@example.test \
+AUTH_LIVE_PASSWORD='local-smoke-password' \
+GOOGLE_CLOUD_PROJECT=allergen-finder-local \
+IDENTITY_PLATFORM_API_KEY=fake-api-key \
+FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+npm run test:auth-live
+```
+
+For this MVP, release verification runs in the final GCP project before the
+account-enabled revision receives traffic. Build `Dockerfile.auth-live` and run
+it as a Cloud Run Job using the exact runtime service account; test tooling
+stays out of the application image. Set
+`AUTH_LIVE_TARGET=final-pre-traffic`,
+`AUTH_LIVE_FINAL_PROJECT_ID` to the exact `GOOGLE_CLOUD_PROJECT`, and
+`AUTH_LIVE_ALLOW_FINAL_TARGET=1`, with no emulator variable. Supply smoke
+credentials through approved runtime secrets. This verifies REST sign-in,
+short-lived session creation, normal verification, and revocation-aware
+verification before traffic moves.
+
+The concrete build and Cloud Run Job commands are in
+`context/deployment/deploy-plan.md`.
+
+`Dockerfile.migrate` is the one-off migration artifact. It includes Drizzle
+Kit and committed SQL migrations but not the application server. Run it as an
+explicit approved Cloud Run Job before moving traffic; migrations never run
+from application startup.
+
+## Google Maps Platform
+
+Live city search and pollen lookup require `GOOGLE_MAPS_API_KEY`. Enable:
 
 - Places API
 - Geocoding API
 - Pollen API
 
-Keep the key out of client code and do not commit it. Restrict the key to only the APIs above, use server/IP restrictions where the deployment platform makes that practical, and configure Google-side quota or billing alerts before exposing the public guest endpoints.
+Keep the key out of client code and do not commit it. Restrict it to these APIs
+and configure quota or billing alerts before exposing public endpoints.
 
-## Building for Production
+## Verification
 
-Create a production build:
+Default tests never call live Identity Platform, Firebase, PostgreSQL, or
+Google Maps:
 
 ```bash
+npm test
+npm run typecheck
 npm run build
+npm audit --json
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+Release verification additionally requires:
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+npm run test:db
+npm run test:auth-live
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+### Accepted Audit Advisories
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+On June 10, 2026, `npm audit --json` reported 10 moderate advisories and no
+high or critical advisories. `npm audit fix` found no non-breaking update.
+The remaining paths are:
 
-### DIY Deployment
+- a development-only legacy `esbuild` under current `drizzle-kit`;
+- `uuid` through Firebase Admin's Google Cloud Storage dependencies.
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
+`npm audit fix --force` recommends downgrading `drizzle-kit` and
+`firebase-admin` across major versions, so it is not an accepted remediation.
+The application does not expose the Drizzle Kit development server and does
+not call the affected UUID buffer APIs. Re-run the audit on dependency updates
+and remove this acceptance when upstream packages resolve the chains.
 
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+Review `context/deployment/deploy-plan.md` before applying migrations or moving
+Cloud Run traffic.
