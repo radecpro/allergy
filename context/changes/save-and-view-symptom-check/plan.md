@@ -286,10 +286,11 @@ body parsing by reusing `hasTrustedRequestOrigin` and the configured
 `APP_ORIGIN`; test matching Origin, Referer fallback, missing, null, malformed,
 and cross-origin evidence. Then call `requireUser`, validate snapshot, and call
 `createForOwner(user.id, requestId, snapshot)` and redirect to
-`/history/:checkId?saved=1`. Invalid input returns safe Polish action data and
-does not call the repository. Conflict returns a safe Polish response that
-requires a fresh request ID. Missing/invalid sessions use the existing
-revocation-aware redirect and cookie clearing behavior. No owner ID is accepted.
+`/history/:checkId?saved=1&requestId=:requestId`. Invalid input returns safe
+Polish action data and does not call the repository. Conflict returns a safe
+Polish response that requires a fresh request ID. Missing/invalid sessions use
+the existing revocation-aware redirect and cookie clearing behavior. No owner
+ID is accepted.
 
 #### 2. Save UI and explicit-consent copy
 
@@ -590,12 +591,12 @@ data operation is part of this plan.
 
 #### Automated
 
-- [ ] 3.1 Save action tests pass for method, hardened origin, auth, bounds, validation, conflict, ownership, and redirect
-- [ ] 3.2 Pending snapshot tests pass for restoration, expiry, failure, cancellation, and cleanup
-- [ ] 3.3 Auth return-path tests pass for history and pending-save destinations
-- [ ] 3.4 PostgreSQL explicit-consent test proves only Save inserts
-- [ ] 3.5 Full tests and typecheck pass after save and handoff UI
-- [ ] 3.10 Minimal protected detail route and Polish not-found boundary work
+- [x] 3.1 Save action tests pass for method, hardened origin, auth, bounds, validation, conflict, ownership, and redirect
+- [x] 3.2 Pending snapshot tests pass for restoration, expiry, failure, cancellation, and cleanup
+- [x] 3.3 Auth return-path tests pass for history and pending-save destinations
+- [x] 3.4 PostgreSQL explicit-consent test proves only Save inserts
+- [x] 3.5 Full tests and typecheck pass after save and handoff UI
+- [x] 3.10 Minimal protected detail route and Polish not-found boundary work
 
 #### Manual
 

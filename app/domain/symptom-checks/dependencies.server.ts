@@ -3,8 +3,11 @@ import { createProductionAuthDependencies } from "~/domain/auth/dependencies.ser
 import { createSymptomCheckRepository } from "./symptom-check-repository.server";
 
 export function createProductionSymptomCheckDependencies() {
+  const auth = createProductionAuthDependencies();
+
   return {
-    sessions: createProductionAuthDependencies().sessions,
+    appOrigin: auth.appOrigin,
+    sessions: auth.sessions,
     repository: createSymptomCheckRepository(),
   };
 }

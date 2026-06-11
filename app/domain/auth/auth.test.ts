@@ -135,7 +135,15 @@ describe("credential validation", () => {
 describe("returnTo validation", () => {
   it.each([
     ["/", "/"],
+    ["/?save=pending", "/?save=pending"],
     ["/destination?city=Warsaw#results", "/destination?city=Warsaw#results"],
+    ["/history", "/history"],
+    [
+      "/history/123e4567-e89b-42d3-a456-426614174000",
+      "/history/123e4567-e89b-42d3-a456-426614174000",
+    ],
+    ["/?save=unexpected", "/"],
+    ["/history/not-a-uuid", "/"],
     ["https://evil.example", "/"],
     ["//evil.example/path", "/"],
     ["/login?returnTo=/destination", "/"],

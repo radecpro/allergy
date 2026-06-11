@@ -3,6 +3,7 @@ import type { Route } from "./+types/home";
 import { AccountNav } from "~/components/account-nav";
 import { CityCombobox } from "~/components/city-combobox";
 import { ModeSwitch } from "~/components/mode-switch";
+import { SymptomCheckSave } from "~/components/symptom-check-save";
 import {
   allergenIds,
   pollenActivityLabels,
@@ -18,6 +19,9 @@ import type {
 } from "~/domain/allergen-ranking";
 import type { CurrentPollenResponse } from "~/domain/current-location/http";
 import type { CitySuggestion } from "~/domain/current-location/types";
+import { createProductionSymptomCheckDependencies } from "~/domain/symptom-checks/dependencies.server";
+import { buildCurrentSymptomSnapshot } from "~/domain/symptom-checks/snapshot";
+import { createSaveSymptomCheckAction } from "~/domain/symptom-checks/symptom-check-route-handlers.server";
 
 const emptyPollenActivity = Object.fromEntries(
   allergenIds.map((allergenId) => [allergenId, "unknown"]),
@@ -34,6 +38,12 @@ export function meta({}: Route.MetaArgs) {
         "Polski test gościnny łączący bieżące objawy z aktualną aktywnością pyłków.",
     },
   ];
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  return createSaveSymptomCheckAction(
+    createProductionSymptomCheckDependencies(),
+  )(request);
 }
 
 function isAbortError(error: unknown): boolean {
@@ -75,6 +85,27 @@ export default function Home() {
       pollenActivity,
     });
   }, [intensity, pollenActivity, resultsReady, selectedSymptomIds]);
+  const saveSnapshot = useMemo(() => {
+    if (!resultsReady || !selectedCity || !intensity) {
+      return null;
+    }
+
+    return buildCurrentSymptomSnapshot({
+      city: {
+        placeId: selectedCity.placeId,
+        label: selectedCity.label,
+      },
+      selectedSymptomIds,
+      intensity,
+      pollenActivity,
+    });
+  }, [
+    intensity,
+    pollenActivity,
+    resultsReady,
+    selectedCity,
+    selectedSymptomIds,
+  ]);
 
   useEffect(() => {
     if (selectedCity === null) {
@@ -146,8 +177,9 @@ export default function Home() {
               </p>
             </div>
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-              To nie jest diagnoza medyczna. Aplikacja nie zapisuje historii
-              lokalizacji ani objawów.
+              To nie jest diagnoza medyczna. Aplikacja nie zapisuje lokalizacji
+              ani objawów automatycznie. Historia powstaje tylko po wybraniu
+              opcji zapisu.
             </div>
           </div>
         </header>
@@ -322,6 +354,10 @@ export default function Home() {
                     );
                   })}
                 </div>
+                <SymptomCheckSave
+                  snapshot={saveSnapshot}
+                  disabled={pollenStatus === "loading"}
+                />
               </div>
             )}
 

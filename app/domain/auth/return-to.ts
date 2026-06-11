@@ -1,5 +1,7 @@
-const getPagePaths = new Set(["/", "/destination"]);
+const getPagePaths = new Set(["/", "/destination", "/history"]);
 const forbiddenPrefixes = ["/login", "/register", "/logout", "/api"];
+const historyDetailPattern =
+  /^\/history\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function normalizeReturnTo(
   value: FormDataEntryValue | string | null | undefined,
@@ -33,7 +35,18 @@ export function normalizeReturnTo(
     return "/";
   }
 
-  if (!getPagePaths.has(destination.pathname)) {
+  if (
+    !getPagePaths.has(destination.pathname) &&
+    !historyDetailPattern.test(destination.pathname)
+  ) {
+    return "/";
+  }
+
+  if (
+    destination.pathname === "/" &&
+    destination.search !== "" &&
+    destination.search !== "?save=pending"
+  ) {
     return "/";
   }
 

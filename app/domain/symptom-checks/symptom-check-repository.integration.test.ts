@@ -13,6 +13,7 @@ import {
   createSymptomCheckRepository,
   SymptomCheckRequestConflictError,
 } from "./symptom-check-repository.server";
+import { createSaveSymptomCheckAction } from "./symptom-check-route-handlers.server";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
@@ -150,5 +151,58 @@ describe("PostgreSQL symptom-check repository", () => {
         snapshot("Łódź", "2026-06-10T13:00:00.000Z", "low"),
       ),
     ).rejects.toBeInstanceOf(SymptomCheckRequestConflictError);
+  });
+
+  it("inserts only after the explicit authenticated save action", async () => {
+    const ownerId = ownerIds[0];
+    const [before] = await database
+      .select({ value: count() })
+      .from(schema.symptomChecks)
+      .where(eq(schema.symptomChecks.ownerId, ownerId));
+    const completedCheck = snapshot(
+      "Wrocław",
+      "2026-06-10T14:00:00.000Z",
+    );
+    const [afterCompletion] = await database
+      .select({ value: count() })
+      .from(schema.symptomChecks)
+      .where(eq(schema.symptomChecks.ownerId, ownerId));
+
+    expect(afterCompletion?.value).toBe(before?.value);
+
+    const action = createSaveSymptomCheckAction({
+      appOrigin: "https://allergen.example",
+      sessions: {
+        requireUser: async () => ({
+          id: ownerId,
+          providerUid: "integration-provider",
+          email: "integration@example.test",
+          normalizedEmail: "integration@example.test",
+        }),
+      },
+      repository,
+      originValidator: () => true,
+      now: () => new Date("2026-06-11T12:00:00.000Z"),
+    });
+    const response = await action(
+      new Request("https://allergen.example/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          requestId: randomUUID(),
+          source: "direct",
+          snapshot: JSON.stringify(completedCheck),
+        }),
+      }),
+    );
+    const [afterSave] = await database
+      .select({ value: count() })
+      .from(schema.symptomChecks)
+      .where(eq(schema.symptomChecks.ownerId, ownerId));
+
+    expect(response.status).toBe(302);
+    expect(afterSave?.value).toBe((before?.value ?? 0) + 1);
   });
 });
