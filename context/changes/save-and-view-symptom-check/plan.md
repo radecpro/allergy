@@ -560,15 +560,15 @@ data operation is part of this plan.
 
 #### Automated
 
-- [x] 1.1 Snapshot construction, validation, canonicalization, and ranking tests pass
-- [x] 1.2 Drizzle generates the additive symptom-check migration
-- [x] 1.3 Typecheck passes with snapshot and schema contracts
-- [x] 1.4 Schema excludes disallowed precise, derived, credential, and session data
+- [x] 1.1 Snapshot construction, validation, canonicalization, and ranking tests pass — df32530
+- [x] 1.2 Drizzle generates the additive symptom-check migration — df32530
+- [x] 1.3 Typecheck passes with snapshot and schema contracts — df32530
+- [x] 1.4 Schema excludes disallowed precise, derived, credential, and session data — df32530
 
 #### Manual
 
-- [x] 1.5 Generated migration contains only approved additive objects
-- [x] 1.6 Snapshot examples contain only minimum location context
+- [x] 1.5 Generated migration contains only approved additive objects — df32530
+- [x] 1.6 Snapshot examples contain only minimum location context — df32530
 
 ### Phase 2: Owner-Scoped Persistence And Isolation
 
