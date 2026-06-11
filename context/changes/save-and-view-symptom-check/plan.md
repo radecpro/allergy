@@ -591,12 +591,12 @@ data operation is part of this plan.
 
 #### Automated
 
-- [x] 3.1 Save action tests pass for method, hardened origin, auth, bounds, validation, conflict, ownership, and redirect
-- [x] 3.2 Pending snapshot tests pass for restoration, expiry, failure, cancellation, and cleanup
-- [x] 3.3 Auth return-path tests pass for history and pending-save destinations
-- [x] 3.4 PostgreSQL explicit-consent test proves only Save inserts
-- [x] 3.5 Full tests and typecheck pass after save and handoff UI
-- [x] 3.10 Minimal protected detail route and Polish not-found boundary work
+- [x] 3.1 Save action tests pass for method, hardened origin, auth, bounds, validation, conflict, ownership, and redirect — 2d1432d
+- [x] 3.2 Pending snapshot tests pass for restoration, expiry, failure, cancellation, and cleanup — 2d1432d
+- [x] 3.3 Auth return-path tests pass for history and pending-save destinations — 2d1432d
+- [x] 3.4 PostgreSQL explicit-consent test proves only Save inserts — 2d1432d
+- [x] 3.5 Full tests and typecheck pass after save and handoff UI — 2d1432d
+- [x] 3.10 Minimal protected detail route and Polish not-found boundary work — 2d1432d
 
 #### Manual
 
