@@ -33,7 +33,7 @@ another user's records, and ordinary check completion creates no database row.
 | Current intensity | Copy shared intensity to every saved symptom | Avoids storage churn when S-04 lands | Research |
 | Derived ranking | Recompute from saved inputs | Avoids duplicating labels, scores, and explanations | Plan |
 | Guest handoff | Expiring `sessionStorage` draft after Save is pressed | Preserves state without pre-auth persistence or URL disclosure | Research |
-| Save semantics | Final authenticated POST with one-use request ID | Keeps consent explicit and retries idempotent | Plan |
+| Save semantics | Final authenticated POST with content-bound request ID | Keeps consent explicit and rejects key reuse for different content | Plan |
 | Foreign record | Same 404 as missing record | Avoids confirming another user's record exists | Research |
 | Test evidence | Real two-user PostgreSQL integration tests | UI filtering and mocks cannot prove ownership predicates | Test plan |
 
@@ -64,10 +64,12 @@ another user's records, and ordinary check completion creates no database row.
 The browser builds a versioned snapshot only when Save is pressed. Authenticated
 users POST it through the public home action; guests place it temporarily in
 `sessionStorage`, authenticate, restore it on `/`, and make the same final POST.
-The action validates origin, session, bounded input, and a one-use request ID,
-then calls an owner-scoped repository. Protected history loaders use the same
-revocation-aware session boundary and recompute display rankings from saved
-inputs.
+The action reuses the hardened auth origin validator, validates session and
+bounded input, and binds a request ID to the canonical snapshot before calling
+an owner-scoped repository. A successful detail response clears the matching
+pending draft and removes transient success query state. Protected history
+loaders use the same revocation-aware session boundary and recompute display
+rankings from saved inputs.
 
 ## Phases at a Glance
 
@@ -75,8 +77,8 @@ inputs.
 | --- | --- | --- |
 | 1. Snapshot And Schema | Typed versioned record contract and additive migration | Persisting too much data or an unreadable future format |
 | 2. Owner-Scoped Persistence | Create/list/detail repository and real isolation tests | Cross-user disclosure or duplicate writes |
-| 3. Explicit Save Handoff | Signed-in save and guest authentication restoration | Implicit persistence or lost completed state |
-| 4. Private History Experience | Protected list/detail UI and final verification | UI-only privacy or guest-flow regression |
+| 3. Explicit Save Handoff | Signed-in save, guest restoration, and minimal detail destination | Implicit persistence or lost completed state |
+| 4. Private History Experience | Full list/detail UI and release verification | UI-only privacy or guest-flow regression |
 
 **Prerequisites:** Implemented F-01 and implementation-reviewed S-01; disposable
 PostgreSQL for integration verification.
@@ -89,8 +91,8 @@ PostgreSQL for integration verification.
   after success, cancellation, invalid data, or expiry.
 - Ranking behavior can evolve; supported snapshot and ranking versions must
   remain readable, but exact historical wording is not persisted.
-- Cloud SQL backups must be verified before symptom history is treated as
-  durable production data.
+- Cloud SQL retention and a non-production restore drill must be verified
+  before symptom history is treated as durable production data.
 
 ## Success Criteria (Summary)
 

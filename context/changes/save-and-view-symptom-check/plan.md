@@ -72,8 +72,9 @@ and partial pollen maps are canonicalized to a complete map with `unknown`.
 The home route gains a POST action. It validates trusted origin, bounded
 form-encoded input, snapshot structure, and a client-generated one-use request
 ID before deriving owner identity through `requireUser`. The repository inserts
-with an owner/request-ID uniqueness constraint so a retry returns the same
-record rather than creating a duplicate.
+with an owner/request-ID uniqueness constraint so a retry with the same
+canonical snapshot returns the same record rather than creating a duplicate.
+Reuse of that request ID with different snapshot content returns a conflict.
 
 For guests, pressing Save writes the validated pending snapshot to tab-local
 `sessionStorage` with version and expiry, then sends the user to login with
@@ -92,8 +93,11 @@ saved snapshot.
 
 Do not enable Save while pollen status is loading. Write pending browser state
 only after Save is pressed, and do not clear it until the final save succeeds
-or the user cancels. The final server write must validate origin before parsing
-private data and authenticate before calling the repository.
+or the user cancels. The successful detail destination clears only a pending
+draft whose request ID matches the completed save, then replaces the URL to
+remove transient success query state. The final server write must reuse
+`hasTrustedRequestOrigin`, validate origin before parsing private data, and
+authenticate before calling the repository.
 
 ### Privacy And Logging
 
@@ -127,7 +131,9 @@ snapshot from the current shared-intensity check, parse unknown input with
 bounded strings and supported enum values, canonicalize missing pollen entries
 to `unknown`, and reconstruct the current ranking. Reject empty or duplicate
 symptoms, invalid dates/versions/enums, oversized values, extra owner fields,
-and malformed JSON.
+and malformed JSON. Direct signed-in saves derive completion time from the
+server. Pending guest saves accept only timestamps within the draft lifetime
+and a small future clock-skew allowance.
 
 #### 2. Symptom-check schema
 
@@ -197,9 +203,11 @@ a typed repository, then prove ownership with two users in real PostgreSQL.
 **Contract**: Expose only `createForOwner(ownerId, requestId, snapshot)`,
 `listForOwner(ownerId)`, and `findForOwner(ownerId, checkId)`. Every query
 includes the trusted owner UUID. Creation uses the owner/request-ID uniqueness
-constraint and returns the existing owner record on a retry. Mapping validates
-stored JSON and supported versions before returning domain records. No public
-`findById`, list-all, or browser-supplied owner operation may exist.
+constraint and returns the existing owner record only when a retry carries the
+same canonical snapshot fingerprint. The same key with different content
+returns a typed conflict. Mapping validates stored JSON and supported versions
+before returning domain records. No public `findById`, list-all, or
+browser-supplied owner operation may exist.
 
 #### 2. PostgreSQL integration suite
 
@@ -212,6 +220,7 @@ stored JSON and supported versions before returning domain records. No public
 A and user B, create records for both, and prove lists contain only owner
 records; owner detail succeeds; foreign and missing IDs both return null;
 repeated request IDs return one stable record; and newer records sort first.
+Add concurrent same-content retries and different-content key-reuse coverage.
 Clean up test-owned rows and users. Do not call Identity Platform, Firebase, or
 Google providers.
 
@@ -243,6 +252,8 @@ database dependencies.
   local user and duplicate request IDs do not create duplicate rows.
 - Cross-user and missing identifiers are indistinguishable at the repository
   boundary.
+- Reusing one request ID with different snapshot content produces a conflict
+  rather than returning an unrelated record.
 
 **Implementation Note**: Do not proceed to routes until real PostgreSQL proves
 the owner predicates.
@@ -270,10 +281,13 @@ new symptom check.
 
 **Contract**: Accept only POST form submissions with trusted origin, bounded
 body size, UUID request ID, and versioned snapshot JSON. Validate origin before
-body parsing, call `requireUser`, validate snapshot, then call
+body parsing by reusing `hasTrustedRequestOrigin` and the configured
+`APP_ORIGIN`; test matching Origin, Referer fallback, missing, null, malformed,
+and cross-origin evidence. Then call `requireUser`, validate snapshot, and call
 `createForOwner(user.id, requestId, snapshot)` and redirect to
 `/history/:checkId?saved=1`. Invalid input returns safe Polish action data and
-does not call the repository. Missing/invalid sessions use the existing
+does not call the repository. Conflict returns a safe Polish response that
+requires a fresh request ID. Missing/invalid sessions use the existing
 revocation-aware redirect and cookie clearing behavior. No owner ID is accepted.
 
 #### 2. Save UI and explicit-consent copy
@@ -289,7 +303,9 @@ intensity, and settled pollen state form a valid snapshot. Signed-in users
 submit directly. Guests pressing Save create an expiring versioned pending
 snapshot in `sessionStorage` and navigate to
 `/login?returnTo=%2F%3Fsave%3Dpending`. Update page copy from "never saves" to
-"does not save automatically; only explicit Save stores the check."
+"does not save automatically; only explicit Save stores the check." Consume
+action/fetcher errors and render actionable Polish feedback without discarding
+the completed check.
 
 #### 3. Pending save restoration
 
@@ -304,8 +320,11 @@ without pre-auth server persistence.
 snapshot version, request ID, and snapshot. On `?save=pending`, parse and
 restore supported unexpired data, show the saved check summary, and require a
 final explicit submit. Clear on success, cancellation, expiry, or invalid data.
-Alternative login/register links must continue preserving `returnTo`. Browser
-storage failures show a safe retry message and never silently save.
+On successful redirect, a minimal detail route clears only the matching request
+ID and removes `saved` from the URL with `history.replaceState`, so refresh does
+not repeat the message. Alternative login/register links must continue
+preserving `returnTo`. Browser storage failures show a safe retry message and
+never silently save.
 
 #### 4. Authentication return path
 
@@ -319,20 +338,36 @@ this slice without weakening the existing redirect allowlist.
 `/?save=pending` handoff. Continue rejecting auth, API, mutation-only,
 protocol-relative, malformed, and arbitrary paths.
 
+#### 5. Minimal detail destination
+
+**Files**: `app/routes/history.$checkId.tsx`, `app/routes.ts`
+
+**Intent**: Give successful Phase 3 saves a working protected destination and
+an executable pending-draft cleanup point.
+
+**Contract**: Register the detail route and implement its protected loader with
+owner-scoped lookup, private/no-store headers, and identical invalid, missing,
+or foreign 404 behavior. Render a minimal Polish saved-check confirmation and
+summary using shared domain values. Include a route-level Polish
+`ErrorBoundary`. Phase 4 expands this page into the complete detail experience.
+
 ### Success Criteria:
 
 #### Automated Verification:
 
 - `npm test -- app/domain/symptom-checks/symptom-check-routes.test.ts` proves
-  method, origin, body limit, authentication, owner derivation, validation,
-  idempotency handoff, and redirect behavior.
+  method, exact hardened origin cases, body limit, authentication, owner
+  derivation, validation, conflict, idempotency handoff, and redirect behavior.
 - `npm test -- app/domain/symptom-checks/pending-snapshot.test.ts` passes expiry,
   version, invalid-data, storage-failure, and clear-after-use cases.
 - Existing auth tests pass with the narrow history and pending-save return
   paths.
 - Full `npm test` and `npm run typecheck` pass.
-- Tests prove selecting a city, receiving pollen, changing symptoms, and
-  producing results do not call a write repository; only explicit save does.
+- The minimal protected detail route, private cache headers, and Polish
+  not-found boundary pass focused route tests.
+- `npm run test:db` includes an explicit-consent integration scenario proving
+  ordinary current-check/pollen requests leave row count unchanged and only the
+  explicit authenticated save inserts.
 
 #### Manual Verification:
 
@@ -340,6 +375,8 @@ protocol-relative, malformed, and arbitrary paths.
   double-click/retry creates one record.
 - A guest completes a check, presses Save, registers or signs in, returns with
   the same city/symptoms/intensity/pollen context, confirms, and reaches detail.
+- Successful detail navigation clears the matching pending draft and refresh
+  does not repeat the saved message.
 - Cancelling or allowing the pending save to expire creates no database row.
 - Public current-symptoms and destination flows remain complete while signed
   out on mobile and desktop.
@@ -353,8 +390,8 @@ must be exercised before private history UI is added.
 
 ### Overview
 
-Expose protected owner-only history pages and complete functional, privacy,
-migration, and release verification.
+Expand the protected detail destination, add the owner-only history list, and
+complete functional, privacy, migration, and release verification.
 
 ### Changes Required:
 
@@ -370,7 +407,8 @@ migration, and release verification.
 `listForOwner(user.id)`. The detail loader validates UUID syntax, calls
 `findForOwner(user.id, checkId)`, and throws the same 404 for invalid, missing,
   or foreign IDs. Database failures propagate. Loader responses contain no
-  owner IDs and set private/no-store cache headers.
+  owner IDs and set private/no-store cache headers. Keep the route-level Polish
+  error boundary introduced in Phase 3.
 
 #### 2. History pages
 
@@ -383,10 +421,11 @@ ranking or label logic.
 
 **Contract**: List newest records with completion time, city, symptom summary,
 and top ranked allergen context; show an empty state and link to a new check.
-Detail renders immutable city/completion/pollen context, saved symptom
-intensities, recomputed ranked result cards, non-diagnostic copy, and a link
-back to history. A successful-save message appears once from `?saved=1`.
-Components use domain labels and ranking helpers rather than persisted prose.
+Expand the Phase 3 detail page to render immutable city/completion/pollen
+context, saved symptom intensities, recomputed ranked result cards,
+non-diagnostic copy, and a link back to history. The successful-save message is
+cleared from the URL after first render. Components use domain labels and
+ranking helpers rather than persisted prose.
 
 #### 3. Route registration and navigation
 
@@ -408,10 +447,11 @@ continues to show login only. Do not add a global route guard.
 for user symptom history.
 
 **Contract**: Document migration ordering, verified Cloud SQL automated backups,
-private-data logging restrictions, no-traffic verification, rollback
-compatibility with the account-enabled revision, and required database/auth
-smoke checks before traffic movement. No production migration or traffic change
-is executed without human approval.
+retention, a non-production restore drill and evidence, private-data logging
+restrictions, no-traffic verification, rollback compatibility with the
+account-enabled revision, and required database/auth smoke checks before
+traffic movement. No production migration or traffic change is executed
+without human approval.
 
 ### Success Criteria:
 
@@ -435,8 +475,8 @@ is executed without human approval.
   and desktop with no horizontal overflow.
 - Detail reproduces the saved city, symptoms, intensity, unknown pollen states,
   and ranking with Polish non-diagnostic copy.
-- Production migration sequencing and Cloud SQL automated backups are verified
-  before symptom history is treated as durable.
+- Production migration sequencing, Cloud SQL retention, and a non-production
+  restore drill are verified before symptom history is treated as durable.
 - Runtime logs contain no symptom snapshot, city label, record contents,
   session cookie, token, or owner identifier.
 
@@ -478,7 +518,8 @@ and traffic movement remain human-approved release actions.
 8. Verify unknown pollen remains unknown and detail ranking matches the save.
 9. Complete both public guest flows at mobile and desktop widths.
 10. Inspect the disposable database, generated migration, and application logs.
-11. Verify Cloud SQL backups and approved migration order before production use.
+11. Verify Cloud SQL retention, a non-production restore drill, and approved
+    migration order before production use.
 
 ## Performance Considerations
 
@@ -533,7 +574,7 @@ data operation is part of this plan.
 #### Automated
 
 - [ ] 2.1 Disposable PostgreSQL proves two-user create, list, and detail isolation
-- [ ] 2.2 Duplicate owner request IDs return one stable record
+- [ ] 2.2 Same-content retries are idempotent and different-content key reuse conflicts
 - [ ] 2.3 Snapshot tests remain green through repository mapping
 - [ ] 2.4 Typecheck passes with repository and dependency contracts
 - [ ] 2.5 Every persistence operation scopes by trusted owner identity
@@ -542,16 +583,18 @@ data operation is part of this plan.
 
 - [ ] 2.6 Database rows reference only their intended local users
 - [ ] 2.7 Foreign and missing identifiers are indistinguishable
+- [ ] 2.8 Different-content request ID reuse is rejected
 
 ### Phase 3: Explicit Save And Guest Authentication Handoff
 
 #### Automated
 
-- [ ] 3.1 Save action tests pass for method, origin, auth, bounds, validation, ownership, and redirect
+- [ ] 3.1 Save action tests pass for method, hardened origin, auth, bounds, validation, conflict, ownership, and redirect
 - [ ] 3.2 Pending snapshot tests pass for restoration, expiry, failure, cancellation, and cleanup
 - [ ] 3.3 Auth return-path tests pass for history and pending-save destinations
-- [ ] 3.4 Explicit-consent tests prove only Save invokes persistence
+- [ ] 3.4 PostgreSQL explicit-consent test proves only Save inserts
 - [ ] 3.5 Full tests and typecheck pass after save and handoff UI
+- [ ] 3.10 Minimal protected detail route and Polish not-found boundary work
 
 #### Manual
 
@@ -559,6 +602,7 @@ data operation is part of this plan.
 - [ ] 3.7 Guest check survives registration or sign-in and final confirmation
 - [ ] 3.8 Cancelled or expired pending saves create no record
 - [ ] 3.9 Both guest product flows remain complete on mobile and desktop
+- [ ] 3.11 Successful save clears matching pending state and one-time URL status
 
 ### Phase 4: Private History List, Detail, And Release Verification
 
@@ -579,5 +623,5 @@ data operation is part of this plan.
 - [ ] 4.10 Two authenticated users cannot view each other's records
 - [ ] 4.11 History empty, one-record, and multi-record states render responsively
 - [ ] 4.12 Detail reproduces saved inputs, unknown pollen, ranking, and safety copy
-- [ ] 4.13 Production migration order and automated backups are verified
+- [ ] 4.13 Production migration order, backup retention, and restore drill are verified
 - [ ] 4.14 Runtime logs contain no private check, credential, token, or owner data

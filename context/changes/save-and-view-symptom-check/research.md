@@ -92,8 +92,9 @@ disguised as not-found.
   payload rejection, protected redirects, and identical not-found behavior.
 - PostgreSQL integration tests create two users and prove owner-scoped create,
   list, and detail behavior with a foreign record ID.
-- Explicit-consent tests prove ordinary check completion performs no write and
-  only the explicit save action reaches the repository.
+- Explicit-consent integration tests inspect PostgreSQL row counts and prove
+  ordinary check completion performs no write while only the explicit save
+  action inserts.
 - Existing public-route, ranking, auth, full-suite, and typecheck tests remain
   required.
 
