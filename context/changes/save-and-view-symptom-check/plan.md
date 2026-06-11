@@ -610,15 +610,15 @@ data operation is part of this plan.
 
 #### Automated
 
-- [x] 4.1 Route tests prove protected owner-only list and detail behavior
-- [x] 4.2 Foreign, missing, and invalid identifiers share not-found behavior
-- [x] 4.3 Private loader data and cache headers satisfy the privacy contract
-- [x] 4.4 Full PostgreSQL integration suite passes
-- [x] 4.5 Full deterministic test suite passes
-- [x] 4.6 Typecheck passes
-- [x] 4.7 Production build passes
-- [x] 4.8 Dependency audit completes with advisories resolved or documented
-- [x] 4.9 Public routes and APIs remain unguarded
+- [x] 4.1 Route tests prove protected owner-only list and detail behavior — 7d15092
+- [x] 4.2 Foreign, missing, and invalid identifiers share not-found behavior — 7d15092
+- [x] 4.3 Private loader data and cache headers satisfy the privacy contract — 7d15092
+- [x] 4.4 Full PostgreSQL integration suite passes — 7d15092
+- [x] 4.5 Full deterministic test suite passes — 7d15092
+- [x] 4.6 Typecheck passes — 7d15092
+- [x] 4.7 Production build passes — 7d15092
+- [x] 4.8 Dependency audit completes with advisories resolved or documented — 7d15092
+- [x] 4.9 Public routes and APIs remain unguarded — 7d15092
 
 #### Manual
 
