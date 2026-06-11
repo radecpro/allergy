@@ -1,4 +1,5 @@
 import {
+  allergenCatalog,
   pollenActivityLabels,
   symptomCatalog,
   symptomIntensityLabels,
@@ -46,11 +47,17 @@ export function SymptomCheckSummary({
       {!compact ? (
         <div className="grid gap-1 text-slate-600 sm:grid-cols-2">
           {Object.entries(snapshot.pollenActivity).map(
-            ([allergenId, activity]) => (
-              <p key={allergenId}>
-                {allergenId}: {pollenActivityLabels[activity]}
-              </p>
-            ),
+            ([allergenId, activity]) => {
+              const label =
+                allergenCatalog.find((allergen) => allergen.id === allergenId)
+                  ?.label ?? allergenId;
+
+              return (
+                <p key={allergenId}>
+                  {label}: {pollenActivityLabels[activity]}
+                </p>
+              );
+            },
           )}
         </div>
       ) : null}
