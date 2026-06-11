@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { users } from "~/db/schema.server";
+import * as schema from "~/db/schema.server";
 
 import { createUserRepository } from "./user-repository.server";
 
@@ -23,7 +23,7 @@ const pool = new Pool({
   max: 1,
   connectionTimeoutMillis: 5_000,
 });
-const database = drizzle(pool, { schema: { users } });
+const database = drizzle(pool, { schema });
 const repository = createUserRepository(database);
 const testProviderUids: string[] = [];
 
@@ -34,8 +34,8 @@ beforeAll(async () => {
 afterAll(async () => {
   if (testProviderUids.length > 0) {
     await database
-      .delete(users)
-      .where(eq(users.identityPlatformUid, testProviderUids[0]));
+      .delete(schema.users)
+      .where(eq(schema.users.identityPlatformUid, testProviderUids[0]));
   }
   await pool.end();
 });

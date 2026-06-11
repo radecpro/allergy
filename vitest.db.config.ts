@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["app/**/user-repository.integration.test.ts"],
+    include: ["app/**/*-repository.integration.test.ts"],
     fileParallelism: false,
   },
 });

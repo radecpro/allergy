@@ -1,7 +1,7 @@
 ---
 change_id: save-and-view-symptom-check
 title: Save and view private symptom checks
-status: plan_reviewed
+status: implementing
 created: 2026-06-11
 updated: 2026-06-11
 archived_at: null

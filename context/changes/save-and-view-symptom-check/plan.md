@@ -142,13 +142,14 @@ and a small future clock-skew allowance.
 **Intent**: Add the smallest backward-compatible durable record shape.
 
 **Contract**: Add `symptom_checks` with UUID primary key, non-null `owner_id`
-foreign key to `users.id`, bounded client request ID, snapshot/ranking version,
-city place ID and label, JSONB symptoms and pollen activity, completed/created/
-updated timezone timestamps, an owner-created-time index, and a unique
-`(owner_id, client_request_id)` constraint. Use cascading delete from users only
-if the database user lifecycle is later implemented; do not add current account
-deletion behavior in this slice. Migration must be additive and compatible with
-the previous account-enabled revision.
+foreign key to `users.id`, bounded client request ID, canonical snapshot
+fingerprint, snapshot/ranking version, city place ID and label, JSONB symptoms
+and pollen activity, completed/created/updated timezone timestamps, an
+owner-created-time index, and a unique `(owner_id, client_request_id)`
+constraint. Use cascading delete from users only if the database user lifecycle
+is later implemented; do not add current account deletion behavior in this
+slice. Migration must be additive and compatible with the previous
+account-enabled revision.
 
 #### 3. Database integration discovery
 
@@ -559,15 +560,15 @@ data operation is part of this plan.
 
 #### Automated
 
-- [ ] 1.1 Snapshot construction, validation, canonicalization, and ranking tests pass
-- [ ] 1.2 Drizzle generates the additive symptom-check migration
-- [ ] 1.3 Typecheck passes with snapshot and schema contracts
-- [ ] 1.4 Schema excludes disallowed precise, derived, credential, and session data
+- [x] 1.1 Snapshot construction, validation, canonicalization, and ranking tests pass
+- [x] 1.2 Drizzle generates the additive symptom-check migration
+- [x] 1.3 Typecheck passes with snapshot and schema contracts
+- [x] 1.4 Schema excludes disallowed precise, derived, credential, and session data
 
 #### Manual
 
-- [ ] 1.5 Generated migration contains only approved additive objects
-- [ ] 1.6 Snapshot examples contain only minimum location context
+- [x] 1.5 Generated migration contains only approved additive objects
+- [x] 1.6 Snapshot examples contain only minimum location context
 
 ### Phase 2: Owner-Scoped Persistence And Isolation
 
