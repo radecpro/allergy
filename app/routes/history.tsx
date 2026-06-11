@@ -21,6 +21,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   )(request);
 }
 
+export function headers({ loaderHeaders }: Route.HeadersArgs) {
+  return {
+    "Cache-Control":
+      loaderHeaders.get("Cache-Control") ?? "private, no-store",
+  };
+}
+
 export default function SymptomCheckHistory() {
   const data = useLoaderData() as SymptomCheckListLoaderData;
 

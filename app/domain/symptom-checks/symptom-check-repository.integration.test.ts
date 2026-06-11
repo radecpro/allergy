@@ -7,10 +7,12 @@ import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import * as schema from "~/db/schema.server";
+import { createCurrentPollenLoader } from "~/routes/api.current-pollen";
 
 import { buildCurrentSymptomSnapshot } from "./snapshot";
 import {
   createSymptomCheckRepository,
+  fingerprintSymptomCheckSnapshot,
   SymptomCheckRequestConflictError,
 } from "./symptom-check-repository.server";
 import { createSaveSymptomCheckAction } from "./symptom-check-route-handlers.server";
@@ -136,6 +138,29 @@ describe("PostgreSQL symptom-check repository", () => {
     expect(rowCount?.value).toBe(1);
   });
 
+  it("ignores regenerated completion time for an idempotent direct retry", async () => {
+    const requestId = randomUUID();
+    const submitted = snapshot(
+      "Szczecin",
+      "2026-06-10T11:59:00.000Z",
+    );
+    const fingerprint = fingerprintSymptomCheckSnapshot(submitted);
+    const first = await repository.createForOwner(
+      ownerIds[0],
+      requestId,
+      snapshot("Szczecin", "2026-06-10T12:00:00.000Z"),
+      fingerprint,
+    );
+    const retried = await repository.createForOwner(
+      ownerIds[0],
+      requestId,
+      snapshot("Szczecin", "2026-06-10T12:01:00.000Z"),
+      fingerprint,
+    );
+
+    expect(retried).toEqual(first);
+  });
+
   it("rejects request-ID reuse with different canonical content", async () => {
     const requestId = randomUUID();
     await repository.createForOwner(
@@ -153,12 +178,55 @@ describe("PostgreSQL symptom-check repository", () => {
     ).rejects.toBeInstanceOf(SymptomCheckRequestConflictError);
   });
 
+  it("treats completion time as canonical content by default", async () => {
+    const requestId = randomUUID();
+    await repository.createForOwner(
+      ownerIds[0],
+      requestId,
+      snapshot("Katowice", "2026-06-10T13:00:00.000Z"),
+    );
+
+    await expect(
+      repository.createForOwner(
+        ownerIds[0],
+        requestId,
+        snapshot("Katowice", "2026-06-10T13:01:00.000Z"),
+      ),
+    ).rejects.toBeInstanceOf(SymptomCheckRequestConflictError);
+  });
+
   it("inserts only after the explicit authenticated save action", async () => {
     const ownerId = ownerIds[0];
     const [before] = await database
       .select({ value: count() })
       .from(schema.symptomChecks)
       .where(eq(schema.symptomChecks.ownerId, ownerId));
+    const currentPollenLoader = createCurrentPollenLoader({
+      geocode: async () => ({
+        status: "ok",
+        city: {
+          placeId: "place-wroclaw",
+          label: "Wrocław, Polska",
+          latitude: 51.1079,
+          longitude: 17.0385,
+          country: "Polska",
+        },
+      }),
+      lookupPollen: async () => ({
+        status: "ok",
+        pollenActivity: {
+          "grass-pollen": "high",
+          "tree-pollen": "moderate",
+          "weed-pollen": "low",
+          "ragweed-pollen": "unknown",
+        },
+      }),
+    });
+    const pollenResponse = await currentPollenLoader(
+      new Request(
+        "http://localhost/api/current-pollen?placeId=place-wroclaw",
+      ),
+    );
     const completedCheck = snapshot(
       "Wrocław",
       "2026-06-10T14:00:00.000Z",
@@ -168,6 +236,7 @@ describe("PostgreSQL symptom-check repository", () => {
       .from(schema.symptomChecks)
       .where(eq(schema.symptomChecks.ownerId, ownerId));
 
+    expect(pollenResponse.status).toBe(200);
     expect(afterCompletion?.value).toBe(before?.value);
 
     const action = createSaveSymptomCheckAction({

@@ -62,6 +62,7 @@ export interface SymptomCheckRepository {
     ownerId: string,
     clientRequestId: string,
     snapshot: SymptomCheckSnapshot,
+    idempotencyFingerprint?: string,
   ): Promise<SymptomCheckRecord>;
   listForOwner(ownerId: string): Promise<SymptomCheckRecord[]>;
   findForOwner(

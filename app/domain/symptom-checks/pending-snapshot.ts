@@ -104,9 +104,15 @@ export function clearPendingSymptomCheck(
 ): boolean {
   try {
     if (requestId) {
-      const pending = loadPendingSymptomCheck(storage);
+      const raw = storage.getItem(pendingSnapshotStorageKey);
 
-      if (!pending || pending.requestId !== requestId) {
+      if (!raw) {
+        return false;
+      }
+
+      const pending = JSON.parse(raw) as { requestId?: unknown };
+
+      if (pending.requestId !== requestId) {
         return false;
       }
     }

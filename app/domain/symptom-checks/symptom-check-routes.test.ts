@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { redirect } from "react-router";
 
 import type { LocalUser } from "~/domain/auth/types";
 
@@ -111,7 +112,39 @@ describe("save symptom-check action", () => {
       expect.objectContaining({
         completedAt: "2026-06-11T12:05:00.000Z",
       }),
+      expect.any(String),
     );
+  });
+
+  it("propagates signed-out redirects before repository work", async () => {
+    const repository = createRepository();
+    const action = createSaveSymptomCheckAction({
+      appOrigin,
+      sessions: {
+        requireUser: vi.fn(async () => {
+          throw redirect("/login?returnTo=%2F", {
+            headers: { "Set-Cookie": "cleared-session" },
+          });
+        }),
+      },
+      repository,
+      originValidator: () => true,
+    });
+
+    try {
+      await action(saveRequest());
+      throw new Error("Expected authentication redirect.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Response);
+      expect((error as Response).status).toBe(302);
+      expect((error as Response).headers.get("Location")).toBe(
+        "/login?returnTo=%2F",
+      );
+      expect((error as Response).headers.get("Set-Cookie")).toBe(
+        "cleared-session",
+      );
+    }
+    expect(repository.createForOwner).not.toHaveBeenCalled();
   });
 
   it("rejects invalid data before repository work", async () => {
@@ -219,14 +252,51 @@ describe("symptom-check detail loader", () => {
         repository,
       });
 
-      await expect(
-        loader(
+      try {
+        await loader(
           new Request(`${appOrigin}/history/${candidate ?? ""}`),
           candidate,
-        ),
-      ).rejects.toMatchObject({ status: 404 });
+        );
+        throw new Error("Expected a not-found response.");
+      } catch (error) {
+        expect(error).toBeInstanceOf(Response);
+        expect((error as Response).status).toBe(404);
+        expect((error as Response).headers.get("Cache-Control")).toBe(
+          "private, no-store",
+        );
+      }
     },
   );
+
+  it("preserves signed-out redirects and does not query persistence", async () => {
+    const repository = createRepository();
+    const loader = createSymptomCheckDetailLoader({
+      appOrigin,
+      sessions: {
+        requireUser: vi.fn(async () => {
+          throw redirect(`/login?returnTo=%2Fhistory%2F${checkId}`, {
+            headers: { "Set-Cookie": "cleared-session" },
+          });
+        }),
+      },
+      repository,
+    });
+
+    try {
+      await loader(new Request(`${appOrigin}/history/${checkId}`), checkId);
+      throw new Error("Expected authentication redirect.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Response);
+      expect((error as Response).status).toBe(302);
+      expect((error as Response).headers.get("Location")).toBe(
+        `/login?returnTo=%2Fhistory%2F${checkId}`,
+      );
+      expect((error as Response).headers.get("Set-Cookie")).toBe(
+        "cleared-session",
+      );
+    }
+    expect(repository.findForOwner).not.toHaveBeenCalled();
+  });
 });
 
 describe("symptom-check list loader", () => {
@@ -245,5 +315,35 @@ describe("symptom-check list loader", () => {
     expect(repository.listForOwner).toHaveBeenCalledWith(user.id);
     expect(payload).toEqual({ records: [record] });
     expect(JSON.stringify(payload)).not.toContain(user.id);
+  });
+
+  it("preserves signed-out redirects and does not list records", async () => {
+    const repository = createRepository();
+    const loader = createSymptomCheckListLoader({
+      appOrigin,
+      sessions: {
+        requireUser: vi.fn(async () => {
+          throw redirect("/login?returnTo=%2Fhistory", {
+            headers: { "Set-Cookie": "cleared-session" },
+          });
+        }),
+      },
+      repository,
+    });
+
+    try {
+      await loader(new Request(`${appOrigin}/history`));
+      throw new Error("Expected authentication redirect.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Response);
+      expect((error as Response).status).toBe(302);
+      expect((error as Response).headers.get("Location")).toBe(
+        "/login?returnTo=%2Fhistory",
+      );
+      expect((error as Response).headers.get("Set-Cookie")).toBe(
+        "cleared-session",
+      );
+    }
+    expect(repository.listForOwner).not.toHaveBeenCalled();
   });
 });

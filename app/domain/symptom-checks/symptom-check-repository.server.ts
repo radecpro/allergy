@@ -20,8 +20,12 @@ export class SymptomCheckRequestConflictError extends Error {
   }
 }
 
-function fingerprintSnapshot(snapshot: SymptomCheckSnapshot): string {
-  return createHash("sha256").update(JSON.stringify(snapshot)).digest("hex");
+export function fingerprintSymptomCheckSnapshot(
+  snapshot: SymptomCheckSnapshot,
+): string {
+  return createHash("sha256")
+    .update(JSON.stringify(snapshot))
+    .digest("hex");
 }
 
 function toRecord(
@@ -55,8 +59,15 @@ export function createSymptomCheckRepository(
   database: Database = getDatabase(),
 ): SymptomCheckRepository {
   return {
-    async createForOwner(ownerId, clientRequestId, snapshot) {
-      const snapshotFingerprint = fingerprintSnapshot(snapshot);
+    async createForOwner(
+      ownerId,
+      clientRequestId,
+      snapshot,
+      idempotencyFingerprint,
+    ) {
+      const snapshotFingerprint =
+        idempotencyFingerprint ??
+        fingerprintSymptomCheckSnapshot(snapshot);
       const [created] = await database
         .insert(symptomChecks)
         .values({

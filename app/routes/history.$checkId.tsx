@@ -27,6 +27,15 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   )(request, params.checkId);
 }
 
+export function headers({ loaderHeaders, errorHeaders }: Route.HeadersArgs) {
+  return {
+    "Cache-Control":
+      errorHeaders?.get("Cache-Control") ??
+      loaderHeaders.get("Cache-Control") ??
+      "private, no-store",
+  };
+}
+
 export default function SavedSymptomCheck() {
   const data = useLoaderData() as SymptomCheckDetailLoaderData;
   const rankedResults = reconstructSymptomCheck(

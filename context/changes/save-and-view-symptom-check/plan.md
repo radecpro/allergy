@@ -201,14 +201,17 @@ a typed repository, then prove ownership with two users in real PostgreSQL.
 
 **Intent**: Make owner scoping unavoidable at every persistence entry point.
 
-**Contract**: Expose only `createForOwner(ownerId, requestId, snapshot)`,
+**Contract**: Expose only
+`createForOwner(ownerId, requestId, snapshot, idempotencyFingerprint?)`,
 `listForOwner(ownerId)`, and `findForOwner(ownerId, checkId)`. Every query
 includes the trusted owner UUID. Creation uses the owner/request-ID uniqueness
 constraint and returns the existing owner record only when a retry carries the
-same canonical snapshot fingerprint. The same key with different content
-returns a typed conflict. Mapping validates stored JSON and supported versions
-before returning domain records. No public `findById`, list-all, or
-browser-supplied owner operation may exist.
+same full submitted-snapshot fingerprint. The optional fingerprint is computed
+only by the server action when it adjusts direct-save completion time; it is
+never accepted from browser input. The same key with different content returns
+a typed conflict. Mapping validates stored JSON and supported versions before
+returning domain records. No public `findById`, list-all, or browser-supplied
+owner operation may exist.
 
 #### 2. PostgreSQL integration suite
 

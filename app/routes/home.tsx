@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Route } from "./+types/home";
 import { AccountNav } from "~/components/account-nav";
 import { CityCombobox } from "~/components/city-combobox";
@@ -67,6 +67,7 @@ export default function Home() {
     useState<PollenActivityByAllergen>(emptyPollenActivity);
   const [pollenStatus, setPollenStatus] = useState<AsyncStatus>("idle");
   const [pollenMessage, setPollenMessage] = useState("");
+  const activePollenPlaceIdRef = useRef<string | null>(null);
 
   const resultsReady =
     selectedCity !== null && selectedSymptomIds.length > 0 && intensity !== null;
@@ -122,12 +123,20 @@ export default function Home() {
     })
       .then(async (response) => {
         const payload = (await response.json()) as CurrentPollenResponse;
+
+        if (activePollenPlaceIdRef.current !== selectedCity.placeId) {
+          return;
+        }
+
         setPollenActivity(payload.pollenActivity);
         setPollenStatus(payload.status === "ok" ? "idle" : "unavailable");
         setPollenMessage(payload.message ?? "");
       })
       .catch((error: unknown) => {
-        if (!isAbortError(error)) {
+        if (
+          !isAbortError(error) &&
+          activePollenPlaceIdRef.current === selectedCity.placeId
+        ) {
           setPollenActivity(emptyPollenActivity);
           setPollenStatus("unavailable");
           setPollenMessage("Aktualne dane pyłkowe są chwilowo niedostępne.");
@@ -138,12 +147,15 @@ export default function Home() {
   }, [selectedCity]);
 
   const handleCitySelect = useCallback((city: CitySuggestion | null) => {
+    activePollenPlaceIdRef.current = city?.placeId ?? null;
     setSelectedCity(city);
+    setPollenActivity(emptyPollenActivity);
+    setPollenMessage("");
 
     if (city === null) {
-      setPollenActivity(emptyPollenActivity);
       setPollenStatus("idle");
-      setPollenMessage("");
+    } else {
+      setPollenStatus("loading");
     }
   }, []);
 
@@ -183,6 +195,8 @@ export default function Home() {
             </div>
           </div>
         </header>
+
+        <SymptomCheckSave snapshot={saveSnapshot} disabled={pollenStatus === "loading"} />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,25rem)_1fr]">
           <section
@@ -354,10 +368,6 @@ export default function Home() {
                     );
                   })}
                 </div>
-                <SymptomCheckSave
-                  snapshot={saveSnapshot}
-                  disabled={pollenStatus === "loading"}
-                />
               </div>
             )}
 

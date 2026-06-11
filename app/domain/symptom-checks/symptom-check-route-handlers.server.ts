@@ -4,6 +4,7 @@ import { hasTrustedRequestOrigin } from "~/domain/auth/request-security.server";
 import type { AuthSessionManager } from "~/domain/auth/session.server";
 
 import {
+  fingerprintSymptomCheckSnapshot,
   SymptomCheckRequestConflictError,
 } from "./symptom-check-repository.server";
 import { isUuid, pendingSnapshotLifetimeMs } from "./pending-snapshot";
@@ -99,6 +100,15 @@ function errorResponse(error: string, status: number): Response {
   );
 }
 
+function notFoundResponse(): Response {
+  return new Response("Not Found", {
+    status: 404,
+    headers: {
+      "Cache-Control": "private, no-store",
+    },
+  });
+}
+
 export function createSaveSymptomCheckAction(
   dependencies: SymptomCheckRouteDependencies,
 ) {
@@ -169,12 +179,15 @@ export function createSaveSymptomCheckAction(
       source === "direct"
         ? { ...parsed, completedAt: now.toISOString() }
         : parsed;
+    const idempotencyFingerprint =
+      fingerprintSymptomCheckSnapshot(parsed);
 
     try {
       const record = await dependencies.repository.createForOwner(
         user.id,
         requestId,
         snapshot,
+        idempotencyFingerprint,
       );
       const target = new URL(
         `/history/${record.id}`,
@@ -205,13 +218,13 @@ export function createSymptomCheckDetailLoader(
     const user = await dependencies.sessions.requireUser(request);
 
     if (!checkId || !isUuid(checkId)) {
-      throw new Response("Not Found", { status: 404 });
+      throw notFoundResponse();
     }
 
     const record = await dependencies.repository.findForOwner(user.id, checkId);
 
     if (!record) {
-      throw new Response("Not Found", { status: 404 });
+      throw notFoundResponse();
     }
 
     const url = new URL(request.url);

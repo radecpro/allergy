@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useFetcher,
   useNavigate,
@@ -36,6 +36,8 @@ export function SymptomCheckSave({
   const [searchParams] = useSearchParams();
   const [pending, setPending] = useState<PendingSymptomCheck | null>(null);
   const [localError, setLocalError] = useState("");
+  const directRequestIdRef = useRef<string | null>(null);
+  const submittingRef = useRef(false);
   const viewer = rootData?.viewer ?? null;
 
   useEffect(() => {
@@ -57,6 +59,11 @@ export function SymptomCheckSave({
     requestId: string,
     source: "direct" | "pending",
   ) {
+    if (submittingRef.current) {
+      return;
+    }
+
+    submittingRef.current = true;
     fetcher.submit(
       {
         requestId,
@@ -72,13 +79,15 @@ export function SymptomCheckSave({
       return;
     }
 
-    const requestId = window.crypto.randomUUID();
-
     if (viewer) {
+      const requestId =
+        directRequestIdRef.current ?? window.crypto.randomUUID();
+      directRequestIdRef.current = requestId;
       submit(snapshot, requestId, "direct");
       return;
     }
 
+    const requestId = window.crypto.randomUUID();
     const pendingSave = createPendingSymptomCheck(requestId, snapshot);
 
     if (!storePendingSymptomCheck(window.sessionStorage, pendingSave)) {
@@ -101,6 +110,16 @@ export function SymptomCheckSave({
   }
 
   const error = fetcher.data?.error ?? localError;
+
+  useEffect(() => {
+    if (fetcher.state === "idle") {
+      submittingRef.current = false;
+    }
+  }, [fetcher.state]);
+
+  useEffect(() => {
+    directRequestIdRef.current = null;
+  }, [snapshot]);
 
   if (pending && viewer) {
     return (
