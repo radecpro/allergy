@@ -26,6 +26,8 @@ type SymptomCheckSaveProps = {
   disabled: boolean;
 };
 
+export const symptomCheckSaveActionPath = "/?index";
+
 export function SymptomCheckSave({
   snapshot,
   disabled,
@@ -70,7 +72,7 @@ export function SymptomCheckSave({
         source,
         snapshot: JSON.stringify(savedSnapshot),
       },
-      { method: "post", action: "/" },
+      { method: "post", action: symptomCheckSaveActionPath },
     );
   }
 
