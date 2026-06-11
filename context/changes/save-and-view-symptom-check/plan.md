@@ -574,17 +574,17 @@ data operation is part of this plan.
 
 #### Automated
 
-- [ ] 2.1 Disposable PostgreSQL proves two-user create, list, and detail isolation
-- [ ] 2.2 Same-content retries are idempotent and different-content key reuse conflicts
-- [ ] 2.3 Snapshot tests remain green through repository mapping
-- [ ] 2.4 Typecheck passes with repository and dependency contracts
-- [ ] 2.5 Every persistence operation scopes by trusted owner identity
+- [x] 2.1 Disposable PostgreSQL proves two-user create, list, and detail isolation
+- [x] 2.2 Same-content retries are idempotent and different-content key reuse conflicts
+- [x] 2.3 Snapshot tests remain green through repository mapping
+- [x] 2.4 Typecheck passes with repository and dependency contracts
+- [x] 2.5 Every persistence operation scopes by trusted owner identity
 
 #### Manual
 
-- [ ] 2.6 Database rows reference only their intended local users
-- [ ] 2.7 Foreign and missing identifiers are indistinguishable
-- [ ] 2.8 Different-content request ID reuse is rejected
+- [x] 2.6 Database rows reference only their intended local users
+- [x] 2.7 Foreign and missing identifiers are indistinguishable
+- [x] 2.8 Different-content request ID reuse is rejected
 
 ### Phase 3: Explicit Save And Guest Authentication Handoff
 

@@ -49,3 +49,23 @@ export type ReconstructedSymptomCheck = {
   snapshot: SymptomCheckSnapshot;
   rankedResults: CurrentSymptomRankedResult[];
 };
+
+export type SymptomCheckRecord = {
+  id: string;
+  snapshot: SymptomCheckSnapshot;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface SymptomCheckRepository {
+  createForOwner(
+    ownerId: string,
+    clientRequestId: string,
+    snapshot: SymptomCheckSnapshot,
+  ): Promise<SymptomCheckRecord>;
+  listForOwner(ownerId: string): Promise<SymptomCheckRecord[]>;
+  findForOwner(
+    ownerId: string,
+    checkId: string,
+  ): Promise<SymptomCheckRecord | null>;
+}
