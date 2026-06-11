@@ -270,3 +270,27 @@ gcloud run jobs execute allergen-finder-migrate \
 
 Production migrations, secret rotation, and traffic movement always require
 human approval. A failed migration or live-auth preflight stops the release.
+
+## Saved History Rollout
+
+The symptom-history migration is additive and creates `symptom_checks` after
+the account-enabled `users` table. Before moving traffic to the
+history-enabled revision:
+
+1. Verify Cloud SQL automated-backup retention and record the configured
+   retention window.
+2. Restore the latest backup into a non-production Cloud SQL database, run a
+   basic user-table read, and retain the restore job/database evidence.
+3. Run the migration job against the final database before deploying the
+   no-traffic history revision.
+4. Run `npm run test:db` against a separate disposable database.
+5. Run deterministic tests, typecheck, production build, dependency audit, and
+   the approved live-auth preflight.
+6. Smoke test explicit save, private history list/detail, cross-user not-found
+   behavior, and both signed-out guest flows.
+7. Inspect Cloud Run logs and confirm they contain no symptom snapshot, city
+   label, record content, owner identifier, password, token, or session cookie.
+
+The previous account-enabled revision remains rollback-compatible because it
+ignores the additive `symptom_checks` table. Production migration, restore,
+and traffic changes require explicit human approval.

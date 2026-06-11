@@ -6,6 +6,7 @@ import { buildCurrentSymptomSnapshot } from "./snapshot";
 import {
   createSaveSymptomCheckAction,
   createSymptomCheckDetailLoader,
+  createSymptomCheckListLoader,
 } from "./symptom-check-route-handlers.server";
 import {
   SymptomCheckRequestConflictError,
@@ -226,4 +227,23 @@ describe("symptom-check detail loader", () => {
       ).rejects.toMatchObject({ status: 404 });
     },
   );
+});
+
+describe("symptom-check list loader", () => {
+  it("returns only repository-owned records with private caching", async () => {
+    const repository = createRepository();
+    vi.mocked(repository.listForOwner).mockResolvedValue([record]);
+    const loader = createSymptomCheckListLoader({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+    });
+    const response = await loader(new Request(`${appOrigin}/history`));
+    const payload = await response.json();
+
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(repository.listForOwner).toHaveBeenCalledWith(user.id);
+    expect(payload).toEqual({ records: [record] });
+    expect(JSON.stringify(payload)).not.toContain(user.id);
+  });
 });

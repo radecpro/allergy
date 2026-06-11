@@ -23,6 +23,12 @@ export function AccountNav() {
       <span className="max-w-64 truncate text-slate-700">
         {rootData.viewer.email}
       </span>
+      <Link
+        to="/history"
+        className="font-medium text-emerald-800 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-950"
+      >
+        Historia
+      </Link>
       <Form action="/logout" method="post">
         <input type="hidden" name="returnTo" value={returnTo} />
         <button

@@ -6,6 +6,7 @@ export default [
   route("/register", "routes/register.tsx"),
   route("/login", "routes/login.tsx"),
   route("/logout", "routes/logout.ts"),
+  route("/history", "routes/history.tsx"),
   route("/history/:checkId", "routes/history.$checkId.tsx"),
   route("/api/city-search", "routes/api.city-search.ts"),
   route("/api/current-pollen", "routes/api.current-pollen.ts"),

@@ -33,6 +33,10 @@ export type SymptomCheckDetailLoaderData = {
   requestId: string | null;
 };
 
+export type SymptomCheckListLoaderData = {
+  records: SymptomCheckRecord[];
+};
+
 class SaveRequestError extends Error {
   constructor(readonly status: 413 | 415) {
     super("Invalid symptom-check save request.");
@@ -219,6 +223,26 @@ export function createSymptomCheckDetailLoader(
         saved: url.searchParams.get("saved") === "1",
         requestId: requestId && isUuid(requestId) ? requestId : null,
       } satisfies SymptomCheckDetailLoaderData,
+      {
+        headers: {
+          "Cache-Control": "private, no-store",
+        },
+      },
+    );
+  };
+}
+
+export function createSymptomCheckListLoader(
+  dependencies: SymptomCheckRouteDependencies,
+) {
+  return async function symptomCheckListLoader(
+    request: Request,
+  ): Promise<Response> {
+    const user = await dependencies.sessions.requireUser(request);
+    const records = await dependencies.repository.listForOwner(user.id);
+
+    return Response.json(
+      { records } satisfies SymptomCheckListLoaderData,
       {
         headers: {
           "Cache-Control": "private, no-store",

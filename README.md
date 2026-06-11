@@ -160,3 +160,20 @@ and remove this acceptance when upstream packages resolve the chains.
 
 Review `context/deployment/deploy-plan.md` before applying migrations or moving
 Cloud Run traffic.
+
+## Saved Symptom History
+
+Saved checks contain private symptom and city-label context. The history
+migration remains an explicit release action and must run before traffic moves
+to the history-enabled revision. Before treating this data as durable:
+
+- verify Cloud SQL automated-backup retention;
+- restore the latest backup into a non-production database and record the
+  successful restore evidence;
+- run `npm run test:db` against a disposable database;
+- run the deterministic tests, typecheck, build, and approved auth preflight;
+- confirm application logs contain no symptom snapshot, city label, record
+  content, session cookie, token, or owner identifier.
+
+The previous account-enabled revision ignores the additive
+`symptom_checks` table and remains compatible for application rollback.
