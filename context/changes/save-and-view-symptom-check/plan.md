@@ -603,11 +603,11 @@ data operation is part of this plan.
 
 #### Manual
 
-- [ ] 3.6 Signed-in Save is explicit and idempotent
-- [ ] 3.7 Guest check survives registration or sign-in and final confirmation
-- [ ] 3.8 Cancelled or expired pending saves create no record
-- [ ] 3.9 Both guest product flows remain complete on mobile and desktop
-- [ ] 3.11 Successful save clears matching pending state and one-time URL status
+- [x] 3.6 Signed-in Save is explicit and idempotent — 924acb5
+- [x] 3.7 Guest check survives registration or sign-in and final confirmation — 924acb5
+- [x] 3.8 Cancelled or expired pending saves create no record — 924acb5
+- [x] 3.9 Both guest product flows remain complete on mobile and desktop — 924acb5
+- [x] 3.11 Successful save clears matching pending state and one-time URL status — 924acb5
 
 ### Phase 4: Private History List, Detail, And Release Verification
 
@@ -625,8 +625,8 @@ data operation is part of this plan.
 
 #### Manual
 
-- [ ] 4.10 Two authenticated users cannot view each other's records
-- [ ] 4.11 History empty, one-record, and multi-record states render responsively
-- [ ] 4.12 Detail reproduces saved inputs, unknown pollen, ranking, and safety copy
+- [x] 4.10 Two authenticated users cannot view each other's records — 924acb5
+- [x] 4.11 History empty, one-record, and multi-record states render responsively — 924acb5
+- [x] 4.12 Detail reproduces saved inputs, unknown pollen, ranking, and safety copy — 924acb5
 - [ ] 4.13 Production migration order, backup retention, and restore drill are verified
 - [ ] 4.14 Runtime logs contain no private check, credential, token, or owner data

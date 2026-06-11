@@ -15,7 +15,7 @@ Code findings: 0 unresolved
 | Safety & Quality | PASS | Trusted owner scoping, hardened origin checks, bounded parsing, strict idempotency, private caching, and additive migration behavior are covered. |
 | Architecture | PASS | Snapshot, persistence, route-handler, and UI responsibilities remain separated behind typed contracts. |
 | Pattern Consistency | PASS | Routes, tests, naming, error handling, and colocated module structure follow repository conventions. |
-| Success Criteria | WARNING | All automated checks pass; ten browser, production, and runtime-log checks remain unchecked in Progress. |
+| Success Criteria | WARNING | All automated and local browser checks pass; two production release checks remain unchecked in Progress. |
 
 Overall code verdict: **APPROVED**
 
@@ -23,12 +23,24 @@ Overall change verdict: **NEEDS MANUAL VERIFICATION**
 
 ## Automated Evidence
 
-- `npm test`: 8 files, 129 tests passed.
+- `npm test`: 9 files, 130 tests passed.
 - `npm run typecheck`: passed.
 - `npm run build`: passed.
 - `TEST_DATABASE_URL=... npm run test:db`: 2 files, 7 PostgreSQL integration tests passed.
 - `git diff --check`: passed.
 - Two independent implementation reviewers found no unresolved substantive code findings.
+- Headless Chromium verification passed at 390x844 and 1280x900 against the
+  real React Router server, Firebase Auth emulator, live local Maps-backed
+  routes, and disposable PostgreSQL 17 database.
+- Registration and sign-in pending-save handoffs preserved the exact stored
+  snapshot and inserted only after final confirmation.
+- Direct double-click created one row; cancellation and expiry created none.
+- Two users saw only their own empty, one-record, and multi-record histories;
+  foreign and random detail identifiers produced the same not-found page.
+- Detail reproduced city, symptoms, intensity, unknown pollen, ranking, and
+  non-diagnostic copy without horizontal overflow at either viewport.
+- Successful detail navigation removed the one-time URL status and matching
+  pending storage; refresh did not repeat the message.
 
 ## Review Fixes Verified
 
@@ -40,16 +52,11 @@ Overall change verdict: **NEEDS MANUAL VERIFICATION**
 - Explicit-consent integration coverage proves pollen lookup and check completion do not insert; only Save inserts.
 - Direct retry idempotency fingerprints the validated submitted snapshot before server completion-time replacement.
 - Repository calls without the trusted action fingerprint treat the full snapshot, including completion time, as canonical content.
+- Browser verification found and fixed an index-route submission defect:
+  `useFetcher` now targets `/?index`, so React Router invokes the home action
+  rather than the actionless root layout.
 
 ## Pending Manual Evidence
 
-- `3.6` Signed-in Save is explicit and idempotent.
-- `3.7` Guest check survives registration or sign-in and final confirmation.
-- `3.8` Cancelled or expired pending saves create no record.
-- `3.9` Both guest product flows remain complete on mobile and desktop.
-- `3.11` Successful save clears matching pending state and one-time URL status.
-- `4.10` Two authenticated users cannot view each other's records.
-- `4.11` History empty, one-record, and multi-record states render responsively.
-- `4.12` Detail reproduces saved inputs, unknown pollen, ranking, and safety copy.
 - `4.13` Production migration order, backup retention, and restore drill are verified.
 - `4.14` Runtime logs contain no private check, credential, token, or owner data.
