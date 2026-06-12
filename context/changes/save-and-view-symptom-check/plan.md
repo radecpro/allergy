@@ -458,6 +458,11 @@ account-enabled revision, and required database/auth smoke checks before
 traffic movement. No production migration or traffic change is executed
 without human approval.
 
+**Implementation review correction**: Public city-search and pollen-provider
+inputs use bounded JSON POST bodies with no-store responses. This keeps city
+queries and place IDs out of Cloud Run request URLs while preserving unguarded,
+non-mutating guest access.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -628,5 +633,5 @@ data operation is part of this plan.
 - [x] 4.10 Two authenticated users cannot view each other's records — 924acb5
 - [x] 4.11 History empty, one-record, and multi-record states render responsively — 924acb5
 - [x] 4.12 Detail reproduces saved inputs, unknown pollen, ranking, and safety copy — 924acb5
-- [ ] 4.13 Production migration order, backup retention, and restore drill are verified
-- [ ] 4.14 Runtime logs contain no private check, credential, token, or owner data
+- [x] 4.13 Production migration order, backup retention, and restore drill are verified — 2e946cc
+- [x] 4.14 Runtime logs contain no private check, credential, token, or owner data — 2b205b5

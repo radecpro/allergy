@@ -2,7 +2,7 @@
 
 # Implementation Review: Save and view private symptom checks
 
-Date: 2026-06-11
+Date: 2026-06-12
 Scope: Full plan, phases 1-4
 Code findings: 0 unresolved
 
@@ -15,15 +15,15 @@ Code findings: 0 unresolved
 | Safety & Quality | PASS | Trusted owner scoping, hardened origin checks, bounded parsing, strict idempotency, private caching, and additive migration behavior are covered. |
 | Architecture | PASS | Snapshot, persistence, route-handler, and UI responsibilities remain separated behind typed contracts. |
 | Pattern Consistency | PASS | Routes, tests, naming, error handling, and colocated module structure follow repository conventions. |
-| Success Criteria | WARNING | All automated and local browser checks pass; two production release checks remain unchecked in Progress. |
+| Success Criteria | PASS | Automated, local browser, backup/restore, migration, no-traffic browser, and runtime-log checks pass. |
 
 Overall code verdict: **APPROVED**
 
-Overall change verdict: **NEEDS MANUAL VERIFICATION**
+Overall change verdict: **APPROVED**
 
 ## Automated Evidence
 
-- `npm test`: 9 files, 130 tests passed.
+- `npm test`: 10 files, 133 tests passed.
 - `npm run typecheck`: passed.
 - `npm run build`: passed.
 - `TEST_DATABASE_URL=... npm run test:db`: 2 files, 7 PostgreSQL integration tests passed.
@@ -41,6 +41,30 @@ Overall change verdict: **NEEDS MANUAL VERIFICATION**
   non-diagnostic copy without horizontal overflow at either viewport.
 - Successful detail navigation removed the one-time URL status and matching
   pending storage; refresh did not repeat the message.
+- Cloud SQL retains seven automated backups and seven days of transaction logs
+  with PITR and deletion protection enabled.
+- The first restore correctly exposed that the only automated backup predated
+  account-database provisioning. On-demand backup `1781209818491` then
+  completed successfully and restored into a temporary PostgreSQL 17 instance.
+- The restored database contained `public.users`, the
+  `identity_platform_uid` column, and two user rows. The temporary instance was
+  deleted after verification.
+- Migration execution `allergen-finder-migrate-bxc5k` completed successfully;
+  read-only verification found `symptom_checks`, both planned indexes, and zero
+  pre-exposure rows.
+- Managed auth execution `allergen-finder-auth-preflight-4v5sh` passed under
+  the production runtime service account.
+- No-traffic revision `allergen-finder-00011-dug` passed rendered-browser
+  checks on the `s02` tag. Canonical traffic remained 100% on
+  `allergen-finder-00005-cpg`.
+- Preview and current release-job runtime logs contained no email, city,
+  symptoms, snapshot content, owner identity, credential values, tokens, or
+  cookies. Provider requests appeared only as clean POST paths with no city
+  query, place ID, or other location value in the URL. Standard history
+  request logs contained route/request UUIDs but no private record content or
+  account identity.
+- All dedicated smoke-account symptom-check rows were deleted after
+  verification, leaving zero saved checks for that account.
 
 ## Review Fixes Verified
 
@@ -55,8 +79,15 @@ Overall change verdict: **NEEDS MANUAL VERIFICATION**
 - Browser verification found and fixed an index-route submission defect:
   `useFetcher` now targets `/?index`, so React Router invokes the home action
   rather than the actionless root layout.
+- No-traffic verification found and fixed SSR/client date text drift by using
+  the explicit `Europe/Warsaw` product timezone.
+- Final privacy review found that Cloud Run request logs retained GET query
+  strings for city search and pollen lookup. Both public non-mutating APIs now
+  use bounded JSON POST bodies and no-store responses. Revision `00011-dug`
+  repeated the full browser smoke with zero errors; its 71 log entries
+  contained no query strings, encoded city names, place IDs, or private
+  payload values.
 
 ## Pending Manual Evidence
 
-- `4.13` Production migration order, backup retention, and restore drill are verified.
-- `4.14` Runtime logs contain no private check, credential, token, or owner data.
+None.
