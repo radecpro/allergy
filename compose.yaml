@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: allergen_finder
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - allergen-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d allergen_finder"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  firebase-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.firebase-emulator
+    environment:
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+    ports:
+      - "127.0.0.1:9099:9099"
+    volumes:
+      - allergen-firebase-data:/data
+
+volumes:
+  allergen-postgres-data:
+  allergen-firebase-data:

@@ -5,40 +5,20 @@ allergen checks and optional email/password accounts.
 
 ## Local Setup
 
-Install dependencies:
+For the complete local stack, including PostgreSQL, database migrations,
+Firebase Authentication emulator, environment configuration, and browser
+verification, follow
+[`context/development/local-setup.md`](context/development/local-setup.md).
+
+After the prerequisites and local services are configured, the normal startup
+command is:
 
 ```bash
 npm install
-```
-
-Copy the variable names from `.env.example` into a local `.env`. Required
-runtime settings are:
-
-- `GOOGLE_MAPS_API_KEY`: server-side Maps Platform key.
-- `DATABASE_URL`: application PostgreSQL connection string.
-- `GOOGLE_CLOUD_PROJECT`: explicit Identity Platform/Firebase project ID.
-- `IDENTITY_PLATFORM_API_KEY`: server-side Identity Toolkit REST API key.
-- `APP_ORIGIN`: exact public origin, such as `http://localhost:5173`. It must
-  contain a scheme, host, optional port, and no path.
-- `FIREBASE_AUTH_EMULATOR_HOST`: local-only Auth emulator host such as
-  `127.0.0.1:9099`, without a protocol. Production rejects this variable.
-
-Start the app:
-
-```bash
 npm run dev
 ```
 
-The supported local authentication path is the Firebase Authentication
-emulator using the same `GOOGLE_CLOUD_PROJECT` in the Firebase CLI and Admin
-SDK. Do not use downloaded service-account keys or ordinary end-user
-`gcloud auth application-default login` credentials for this flow.
-
-Start the local emulator with:
-
-```bash
-firebase emulators:start --only auth --project allergen-finder-local
-```
+Open `http://localhost:5173`.
 
 ## Database
 
