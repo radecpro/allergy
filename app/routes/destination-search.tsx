@@ -107,7 +107,10 @@ export default function DestinationSearch() {
     setPollenMessage("");
     setPollenActivity(emptyPollenActivity);
 
-    fetch(`/api/current-pollen?placeId=${encodeURIComponent(selectedCity.placeId)}`, {
+    fetch("/api/current-pollen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ placeId: selectedCity.placeId }),
       signal: controller.signal,
     })
       .then(async (response) => {

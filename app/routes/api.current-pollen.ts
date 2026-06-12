@@ -3,6 +3,8 @@ import { lookupGooglePollen } from "~/domain/current-location/google-pollen.serv
 import {
   currentPollenResponse,
   isValidPlaceId,
+  methodNotAllowedResponse,
+  readCurrentLocationRequestBody,
   sanitizePlaceId,
   unknownPollenResponse,
 } from "~/domain/current-location/http";
@@ -13,38 +15,47 @@ type CurrentPollenDependencies = {
   lookupPollen: typeof lookupGooglePollen;
 };
 
-export function createCurrentPollenLoader(
+export function createCurrentPollenAction(
   dependencies: CurrentPollenDependencies,
 ) {
-  return async function currentPollenLoader(request: Request) {
-  const url = new URL(request.url);
-  const placeId = sanitizePlaceId(url.searchParams.get("placeId"));
+  return async function currentPollenAction(request: Request) {
+    if (request.method !== "POST") {
+      return methodNotAllowedResponse();
+    }
 
-  if (!isValidPlaceId(placeId)) {
-    return unknownPollenResponse(
-      "invalid-input",
-      "Nieprawidłowy identyfikator wybranego miasta.",
+    const body = await readCurrentLocationRequestBody(request);
+    const placeId = sanitizePlaceId(
+      typeof body?.placeId === "string" ? body.placeId : null,
     );
-  }
 
-  const geocodingResult = await dependencies.geocode(placeId);
+    if (!isValidPlaceId(placeId)) {
+      return unknownPollenResponse(
+        "invalid-input",
+        "Nieprawidłowy identyfikator wybranego miasta.",
+      );
+    }
 
-  if (geocodingResult.status !== "ok") {
-    return unknownPollenResponse(geocodingResult.status, geocodingResult.message);
-  }
+    const geocodingResult = await dependencies.geocode(placeId);
 
-  const pollenResult = await dependencies.lookupPollen(geocodingResult.city);
+    if (geocodingResult.status !== "ok") {
+      return unknownPollenResponse(
+        geocodingResult.status,
+        geocodingResult.message,
+      );
+    }
 
-  return currentPollenResponse({
-    status: pollenResult.status,
-    pollenActivity: pollenResult.pollenActivity,
-    message: pollenResult.message,
-  });
+    const pollenResult = await dependencies.lookupPollen(geocodingResult.city);
+
+    return currentPollenResponse({
+      status: pollenResult.status,
+      pollenActivity: pollenResult.pollenActivity,
+      message: pollenResult.message,
+    });
   };
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-  return createCurrentPollenLoader({
+export async function action({ request }: Route.ActionArgs) {
+  return createCurrentPollenAction({
     geocode: geocodeGooglePlace,
     lookupPollen: lookupGooglePollen,
   })(request);

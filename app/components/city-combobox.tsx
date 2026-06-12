@@ -77,7 +77,10 @@ export function CityCombobox({
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
-      fetch(`/api/city-search?q=${encodeURIComponent(trimmedQuery)}`, {
+      fetch("/api/city-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: trimmedQuery }),
         signal: controller.signal,
       })
         .then(async (response) => {

@@ -7,7 +7,7 @@ import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import * as schema from "~/db/schema.server";
-import { createCurrentPollenLoader } from "~/routes/api.current-pollen";
+import { createCurrentPollenAction } from "~/routes/api.current-pollen";
 
 import { buildCurrentSymptomSnapshot } from "./snapshot";
 import {
@@ -201,7 +201,7 @@ describe("PostgreSQL symptom-check repository", () => {
       .select({ value: count() })
       .from(schema.symptomChecks)
       .where(eq(schema.symptomChecks.ownerId, ownerId));
-    const currentPollenLoader = createCurrentPollenLoader({
+    const currentPollenAction = createCurrentPollenAction({
       geocode: async () => ({
         status: "ok",
         city: {
@@ -222,10 +222,12 @@ describe("PostgreSQL symptom-check repository", () => {
         },
       }),
     });
-    const pollenResponse = await currentPollenLoader(
-      new Request(
-        "http://localhost/api/current-pollen?placeId=place-wroclaw",
-      ),
+    const pollenResponse = await currentPollenAction(
+      new Request("http://localhost/api/current-pollen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ placeId: "place-wroclaw" }),
+      }),
     );
     const completedCheck = snapshot(
       "Wrocław",

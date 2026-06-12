@@ -3,13 +3,21 @@ import {
   citySearchResponse,
   emptyCitySearchResponse,
   isValidCitySearchInput,
+  methodNotAllowedResponse,
+  readCurrentLocationRequestBody,
   sanitizeCitySearchInput,
 } from "~/domain/current-location/http";
 import type { Route } from "./+types/api.city-search";
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const query = sanitizeCitySearchInput(url.searchParams.get("q"));
+export async function action({ request }: Route.ActionArgs) {
+  if (request.method !== "POST") {
+    return methodNotAllowedResponse();
+  }
+
+  const body = await readCurrentLocationRequestBody(request);
+  const query = sanitizeCitySearchInput(
+    typeof body?.query === "string" ? body.query : null,
+  );
 
   if (!isValidCitySearchInput(query)) {
     return emptyCitySearchResponse();
