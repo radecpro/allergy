@@ -11,6 +11,16 @@ type SymptomCheckSummaryProps = {
   compact?: boolean;
 };
 
+const symptomCheckDateFormatter = new Intl.DateTimeFormat("pl-PL", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Europe/Warsaw",
+});
+
+export function formatSymptomCheckCompletedAt(completedAt: string): string {
+  return symptomCheckDateFormatter.format(new Date(completedAt));
+}
+
 export function SymptomCheckSummary({
   snapshot,
   compact = false,
@@ -20,10 +30,7 @@ export function SymptomCheckSummary({
       <div>
         <p className="font-medium text-slate-950">{snapshot.city.label}</p>
         <p className="text-slate-600">
-          {new Intl.DateTimeFormat("pl-PL", {
-            dateStyle: "medium",
-            timeStyle: "short",
-          }).format(new Date(snapshot.completedAt))}
+          {formatSymptomCheckCompletedAt(snapshot.completedAt)}
         </p>
       </div>
 
