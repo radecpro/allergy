@@ -158,19 +158,6 @@ http://localhost:5173
 Keep the PostgreSQL container, Firebase emulator, and application server
 running while using authenticated features.
 
-## 6. Verify the Complete Flow
-
-1. Open `http://localhost:5173`.
-2. Register with an email and a password between 10 and 128 characters.
-3. Confirm the signed-in email appears in the application.
-4. Complete a current-symptoms check and explicitly save it.
-5. Open history and confirm the saved check appears.
-6. Sign out, sign back in, and confirm the history is still available.
-
-Firebase stores the local credential in its Compose volume. PostgreSQL stores
-the local user mapping and saved checks in a separate Compose volume. Preserve
-or reset both together so credentials and application records remain aligned.
-
 ## Optional Verification
 
 Run deterministic tests and type checking:
