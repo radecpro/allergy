@@ -1,5 +1,9 @@
 import { allergenCatalog, symptomCatalog } from "./catalog";
-import { likelihoodLabels, pollenActivityLabels } from "./labels";
+import {
+  likelihoodLabels,
+  pollenActivityLabels,
+  symptomIntensityLabels,
+} from "./labels";
 import { createCurrentSymptomExplanation } from "./explanations";
 import type {
   CurrentSymptomRankedResult,
@@ -40,28 +44,43 @@ function getSymptomLabel(symptomId: SymptomId): string {
 }
 
 export function rankCurrentSymptomAllergens({
-  selectedSymptomIds,
-  intensity,
+  symptoms,
   pollenActivity,
 }: CurrentSymptomRankingInput): CurrentSymptomRankedResult[] {
-  const selectedSymptoms = new Set(selectedSymptomIds);
-  const intensityMultiplier = intensityMultipliers[intensity];
+  const selectedSymptoms = new Map(
+    symptoms.map((symptom) => [symptom.symptomId, symptom.intensity]),
+  );
 
   return allergenCatalog
     .map((allergen, catalogIndex) => {
-      const matchedSymptomIds = allergen.symptomIds.filter((symptomId) =>
-        selectedSymptoms.has(symptomId),
-      );
-      const matchedSymptomLabels = matchedSymptomIds.map(getSymptomLabel);
+      const matchedSymptoms = allergen.symptomIds.flatMap((symptomId) => {
+        const intensity = selectedSymptoms.get(symptomId);
+
+        return intensity
+          ? [{
+              symptomId,
+              label: getSymptomLabel(symptomId),
+              intensity,
+              intensityLabel: symptomIntensityLabels[intensity],
+            }]
+          : [];
+      });
+      const matchedSymptomIds = matchedSymptoms.map(({ symptomId }) => symptomId);
+      const matchedSymptomLabels = matchedSymptoms.map(({ label }) => label);
       const activity = pollenActivity[allergen.id] ?? "unknown";
       const pollenActivityScore = pollenActivityScores[activity];
-      const score = matchedSymptomIds.length * intensityMultiplier + pollenActivityScore;
+      const score =
+        matchedSymptoms.reduce(
+          (total, symptom) => total + intensityMultipliers[symptom.intensity],
+          0,
+        ) + pollenActivityScore;
       const likelihood = getLikelihood(score);
 
       return {
         result: {
           allergenId: allergen.id,
           allergenLabel: allergen.label,
+          matchedSymptoms,
           matchedSymptomIds,
           matchedSymptomLabels,
           likelihood,

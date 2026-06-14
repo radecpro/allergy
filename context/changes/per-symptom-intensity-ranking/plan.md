@@ -407,16 +407,16 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Automated
 
-- [ ] 1.1 Mixed low/high ranking tests pass with explicit score and ordering oracles
-- [ ] 1.2 Selection-state tests pass for assignment, readiness, deselection, and reselection
-- [ ] 1.3 Uniform inputs retain previous scoring outcomes
-- [ ] 1.4 Type checking passes
+- [x] 1.1 Mixed low/high ranking tests pass with explicit score and ordering oracles
+- [x] 1.2 Selection-state tests pass for assignment, readiness, deselection, and reselection
+- [x] 1.3 Uniform inputs retain previous scoring outcomes
+- [x] 1.4 Type checking passes
 
 #### Manual
 
-- [ ] 1.5 Ranking contract has no shared intensity field
-- [ ] 1.6 State transitions cannot create default or cached intensity
-- [ ] 1.7 Result metadata exposes labeled intensities without numeric arithmetic
+- [x] 1.5 Ranking contract has no shared intensity field
+- [x] 1.6 State transitions cannot create default or cached intensity
+- [x] 1.7 Result metadata exposes labeled intensities without numeric arithmetic
 
 ### Phase 2: Current-V2 Snapshots And Destructive Reset
 

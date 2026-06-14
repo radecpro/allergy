@@ -51,15 +51,25 @@ export type PollenActivityByAllergen = Partial<
   Record<AllergenId, PollenActivityLevel>
 >;
 
-export type CurrentSymptomRankingInput = {
-  selectedSymptomIds: readonly SymptomId[];
+export type CurrentSymptomEntry = {
+  symptomId: SymptomId;
   intensity: SymptomIntensity;
+};
+
+export type MatchedSymptomEntry = CurrentSymptomEntry & {
+  label: string;
+  intensityLabel: string;
+};
+
+export type CurrentSymptomRankingInput = {
+  symptoms: readonly CurrentSymptomEntry[];
   pollenActivity: PollenActivityByAllergen;
 };
 
 export type CurrentSymptomRankedResult = {
   allergenId: AllergenId;
   allergenLabel: string;
+  matchedSymptoms: readonly MatchedSymptomEntry[];
   matchedSymptomIds: readonly SymptomId[];
   matchedSymptomLabels: readonly string[];
   likelihood: LikelihoodLevel;

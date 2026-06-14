@@ -10,8 +10,11 @@ import {
 
 function collectUserFacingStrings(): string[] {
   const rankingResults = rankCurrentSymptomAllergens({
-    selectedSymptomIds: ["sneezing", "runny-nose", "itchy-eyes"],
-    intensity: "high",
+    symptoms: [
+      { symptomId: "sneezing", intensity: "high" },
+      { symptomId: "runny-nose", intensity: "high" },
+      { symptomId: "itchy-eyes", intensity: "high" },
+    ],
     pollenActivity: {
       "grass-pollen": "high",
       "tree-pollen": "moderate",
@@ -50,8 +53,10 @@ function collectUserFacingStrings(): string[] {
 describe("current symptom allergen ranking", () => {
   test("ranks a strong grass-pollen match first with high likelihood", () => {
     const results = rankCurrentSymptomAllergens({
-      selectedSymptomIds: ["sneezing", "runny-nose"],
-      intensity: "high",
+      symptoms: [
+        { symptomId: "sneezing", intensity: "high" },
+        { symptomId: "runny-nose", intensity: "high" },
+      ],
       pollenActivity: {
         "grass-pollen": "high",
         "tree-pollen": "low",
@@ -71,8 +76,7 @@ describe("current symptom allergen ranking", () => {
 
   test("keeps a low-intensity single match at low likelihood", () => {
     const results = rankCurrentSymptomAllergens({
-      selectedSymptomIds: ["watery-eyes"],
-      intensity: "low",
+      symptoms: [{ symptomId: "watery-eyes", intensity: "low" }],
       pollenActivity: {
         "grass-pollen": "moderate",
         "tree-pollen": "low",
@@ -90,8 +94,10 @@ describe("current symptom allergen ranking", () => {
 
   test("preserves unknown pollen activity and explains reduced confidence", () => {
     const results = rankCurrentSymptomAllergens({
-      selectedSymptomIds: ["blocked-nose", "scratchy-throat"],
-      intensity: "high",
+      symptoms: [
+        { symptomId: "blocked-nose", intensity: "high" },
+        { symptomId: "scratchy-throat", intensity: "high" },
+      ],
       pollenActivity: {
         "weed-pollen": "unknown",
         "ragweed-pollen": "unknown",
@@ -106,6 +112,65 @@ describe("current symptom allergen ranking", () => {
     expect(weedResult?.explanation).toContain(
       "Brak danych o aktualnej aktywności pyłków obniża pewność oceny.",
     );
+  });
+
+  test("scores mixed symptom intensities independently", () => {
+    const results = rankCurrentSymptomAllergens({
+      symptoms: [
+        { symptomId: "blocked-nose", intensity: "high" },
+        { symptomId: "watery-eyes", intensity: "low" },
+      ],
+      pollenActivity: {
+        "grass-pollen": "low",
+        "tree-pollen": "low",
+        "weed-pollen": "low",
+        "ragweed-pollen": "low",
+      },
+    });
+
+    expect(results.map(({ allergenId, score }) => ({ allergenId, score }))).toEqual([
+      { allergenId: "weed-pollen", score: 2 },
+      { allergenId: "ragweed-pollen", score: 2 },
+      { allergenId: "grass-pollen", score: 1 },
+      { allergenId: "tree-pollen", score: 1 },
+    ]);
+    expect(results[0]?.matchedSymptoms).toEqual([
+      {
+        symptomId: "blocked-nose",
+        label: "Zatkany nos",
+        intensity: "high",
+        intensityLabel: "Wysoka",
+      },
+    ]);
+    expect(results[2]?.matchedSymptoms).toEqual([
+      {
+        symptomId: "watery-eyes",
+        label: "Łzawienie oczu",
+        intensity: "low",
+        intensityLabel: "Niska",
+      },
+    ]);
+  });
+
+  test.each([
+    {
+      intensity: "low" as const,
+      expectedScores: [2, 2, 2, 2],
+    },
+    {
+      intensity: "high" as const,
+      expectedScores: [4, 4, 4, 4],
+    },
+  ])("retains uniform $intensity scoring outcomes", ({ intensity, expectedScores }) => {
+    const results = rankCurrentSymptomAllergens({
+      symptoms: [
+        { symptomId: "sneezing", intensity },
+        { symptomId: "runny-nose", intensity },
+      ],
+      pollenActivity: {},
+    });
+
+    expect(results.map((result) => result.score)).toEqual(expectedScores);
   });
 });
 

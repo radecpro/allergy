@@ -21,15 +21,28 @@ export {
   pollenActivityScores,
   rankCurrentSymptomAllergens,
 } from "./ranking";
+export {
+  assignSymptomIntensity,
+  deselectSymptom,
+  getCompleteSymptomEntries,
+  hasCompleteSymptomSelection,
+  selectSymptom,
+} from "./current-symptom-selection";
+export type {
+  CurrentSymptomSelection,
+  SelectedSymptom,
+} from "./current-symptom-selection";
 export type {
   AllergenCatalogItem,
   AllergenId,
+  CurrentSymptomEntry,
   CurrentSymptomRankedResult,
   CurrentSymptomRankingInput,
   DestinationPollenActivityInput,
   DestinationPollenActivitySummary,
   DisplayLabel,
   LikelihoodLevel,
+  MatchedSymptomEntry,
   PollenActivityByAllergen,
   PollenActivityLevel,
   SymptomCatalogItem,

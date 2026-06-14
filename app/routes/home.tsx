@@ -81,8 +81,10 @@ export default function Home() {
     }
 
     return rankCurrentSymptomAllergens({
-      selectedSymptomIds,
-      intensity,
+      symptoms: selectedSymptomIds.map((symptomId) => ({
+        symptomId,
+        intensity,
+      })),
       pollenActivity,
     });
   }, [intensity, pollenActivity, resultsReady, selectedSymptomIds]);

@@ -244,10 +244,7 @@ export function reconstructSymptomCheck(
   return {
     snapshot,
     rankedResults: rankCurrentSymptomAllergens({
-      selectedSymptomIds: snapshot.symptoms.map(
-        (symptom) => symptom.symptomId,
-      ),
-      intensity: firstSymptom.intensity,
+      symptoms: snapshot.symptoms,
       pollenActivity: snapshot.pollenActivity,
     }),
   };
