@@ -139,7 +139,7 @@ describe("current symptom allergen ranking", () => {
         symptomId: "blocked-nose",
         label: "Zatkany nos",
         intensity: "high",
-        intensityLabel: "Wysoka",
+        intensityLabel: "Wysokie",
       },
     ]);
     expect(results[2]?.matchedSymptoms).toEqual([
@@ -147,7 +147,7 @@ describe("current symptom allergen ranking", () => {
         symptomId: "watery-eyes",
         label: "Łzawienie oczu",
         intensity: "low",
-        intensityLabel: "Niska",
+        intensityLabel: "Niskie",
       },
     ]);
   });

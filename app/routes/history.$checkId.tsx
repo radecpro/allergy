@@ -114,8 +114,14 @@ export default function SavedSymptomCheck() {
                   <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-emerald-950">
                     Prawdopodobieństwo: {result.likelihoodLabel}
                   </span>
-                  <span className="rounded-md bg-slate-100 px-2.5 py-1 text-slate-800">
-                    Pyłki: {result.pollenActivityLabel}
+                  <span
+                    className={`rounded-md px-2.5 py-1 ${
+                      result.pollenActivity === "unknown"
+                        ? "bg-amber-100 text-amber-950"
+                        : "bg-slate-100 text-slate-800"
+                    }`}
+                  >
+                    Aktywność pyłków: {result.pollenActivityLabel}
                   </span>
                 </div>
               </div>

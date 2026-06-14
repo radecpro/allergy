@@ -61,6 +61,10 @@ function formatResultExplanation(explanation: string): string {
     .replace(/^Zgłoszone objawy pasujące do tej grupy: .*?\. /, "")
     .replace("Zgłoszone objawy słabo pasują do tej grupy. ", "")
     .replace(/^Aktualna aktywność dla grupy .*?: .*?\. /, "")
+    .replace(
+      "Brak danych o aktualnej aktywności pyłków obniża pewność oceny. ",
+      "",
+    )
     .replace(resultGuardrailText, "")
     .trim();
 }
@@ -82,8 +86,6 @@ export default function Home() {
   const resultsReady = selectedCity !== null && completeSymptoms.length > 0;
   const saveReady =
     selectedCity !== null && hasCompleteSymptomSelection(symptomSelection);
-  const hasIncompleteSymptoms =
-    completeSymptoms.length < symptomSelection.length;
   const hasUnknownPollen = allergenIds.some(
     (allergenId) => pollenActivity[allergenId] === "unknown",
   );
@@ -317,14 +319,6 @@ export default function Home() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {hasIncompleteSymptoms ? (
-                  <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-                    Ranking uwzględnia tylko objawy z wybranym nasileniem.
-                    Uzupełnij nasilenie nowego objawu, aby zaktualizować wynik
-                    i włączyć zapis.
-                  </div>
-                ) : null}
-
                 {pollenStatus === "unavailable" || hasUnknownPollen ? (
                   <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
                     {pollenMessage ||
@@ -361,8 +355,14 @@ export default function Home() {
                             <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-sm font-medium text-emerald-950">
                               Prawdopodobieństwo: {result.likelihoodLabel}
                             </span>
-                            <span className="rounded-md bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-800">
-                              Pyłki: {result.pollenActivityLabel}
+                            <span
+                              className={`rounded-md px-2.5 py-1 text-sm font-medium ${
+                                result.pollenActivity === "unknown"
+                                  ? "bg-amber-100 text-amber-950"
+                                  : "bg-slate-100 text-slate-800"
+                              }`}
+                            >
+                              Aktywność pyłków: {result.pollenActivityLabel}
                             </span>
                           </div>
                         </div>

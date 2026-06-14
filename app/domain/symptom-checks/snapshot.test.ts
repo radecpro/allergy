@@ -136,7 +136,7 @@ describe("symptom-check snapshot", () => {
         {
           symptomId: "watery-eyes",
           intensity: "low",
-          intensityLabel: "Niska",
+          intensityLabel: "Niskie",
         },
       ],
     });

@@ -6,8 +6,8 @@ import type {
 } from "./types";
 
 export const symptomIntensityLabels = {
-  low: "Niska",
-  high: "Wysoka",
+  low: "Niskie",
+  high: "Wysokie",
 } as const satisfies Record<SymptomIntensity, string>;
 
 export const likelihoodLabels = {
