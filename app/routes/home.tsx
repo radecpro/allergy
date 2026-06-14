@@ -206,8 +206,6 @@ export default function Home() {
           </div>
         </header>
 
-        <SymptomCheckSave snapshot={saveSnapshot} disabled={pollenStatus === "loading"} />
-
         <div className="grid gap-6 lg:grid-cols-[minmax(0,25rem)_1fr]">
           <section
             aria-labelledby="form-heading"
@@ -383,6 +381,11 @@ export default function Home() {
 
           </section>
         </div>
+
+        <SymptomCheckSave
+          snapshot={saveSnapshot}
+          disabled={pollenStatus === "loading"}
+        />
       </div>
     </main>
   );
