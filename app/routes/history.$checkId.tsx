@@ -125,9 +125,6 @@ export default function SavedSymptomCheck() {
                   </span>
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-700">
-                {result.explanation}
-              </p>
               {result.matchedSymptoms.length > 0 ? (
                 <div className="mt-3 grid gap-2">
                   <p className="text-sm font-medium text-slate-700">

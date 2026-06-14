@@ -13,7 +13,6 @@ import {
   hasCompleteSymptomSelection,
   pollenActivityLabels,
   rankCurrentSymptomAllergens,
-  resultGuardrailText,
   selectSymptom,
   symptomCatalog,
 } from "~/domain/allergen-ranking";
@@ -54,19 +53,6 @@ export async function action({ request }: Route.ActionArgs) {
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
-}
-
-function formatResultExplanation(explanation: string): string {
-  return explanation
-    .replace(/^Zgłoszone objawy pasujące do tej grupy: .*?\. /, "")
-    .replace("Zgłoszone objawy słabo pasują do tej grupy. ", "")
-    .replace(/^Aktualna aktywność dla grupy .*?: .*?\. /, "")
-    .replace(
-      "Brak danych o aktualnej aktywności pyłków obniża pewność oceny. ",
-      "",
-    )
-    .replace(resultGuardrailText, "")
-    .trim();
 }
 
 export default function Home() {
@@ -328,7 +314,6 @@ export default function Home() {
 
                 <div className="grid gap-3">
                   {rankedResults.map((result, index) => {
-                    const explanation = formatResultExplanation(result.explanation);
                     const isTopResult = index === 0;
 
                     return (
@@ -389,11 +374,6 @@ export default function Home() {
                           )}
                         </div>
 
-                        {explanation ? (
-                          <p className="mt-3 text-sm leading-6 text-slate-700">
-                            {explanation}
-                          </p>
-                        ) : null}
                       </article>
                     );
                   })}
