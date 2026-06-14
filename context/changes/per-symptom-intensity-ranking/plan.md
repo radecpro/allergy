@@ -441,10 +441,10 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Automated
 
-- [x] 3.1 Selection-state tests prove route readiness and reset behavior
-- [x] 3.2 Save action tests preserve exact mixed symptom entries
-- [x] 3.3 Default test suite passes
-- [x] 3.4 Type checking passes
+- [x] 3.1 Selection-state tests prove route readiness and reset behavior — e150aae
+- [x] 3.2 Save action tests preserve exact mixed symptom entries — e150aae
+- [x] 3.3 Default test suite passes — e150aae
+- [x] 3.4 Type checking passes — e150aae
 
 #### Manual
 
@@ -460,18 +460,18 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Automated
 
-- [ ] 4.1 Default deterministic suite passes
-- [ ] 4.2 Type checking passes
-- [ ] 4.3 Disposable PostgreSQL suite passes
-- [ ] 4.4 Repository tests prove exact mixed-entry round trips and owner isolation
-- [ ] 4.5 Production build completes
-- [ ] 4.6 Dependency audit is fixed or documented
+- [x] 4.1 Default deterministic suite passes
+- [x] 4.2 Type checking passes
+- [x] 4.3 Disposable PostgreSQL suite passes
+- [x] 4.4 Repository tests prove exact mixed-entry round trips and owner isolation
+- [x] 4.5 Production build completes
+- [x] 4.6 Dependency audit is fixed or documented
 
 #### Manual
 
 - [ ] 4.7 Live and saved-history rankings match for a mixed check
-- [ ] 4.8 Reset migration empties legacy history in a disposable database
-- [ ] 4.9 Reset migration preserves user accounts
+- [x] 4.8 Reset migration empties legacy history in a disposable database
+- [x] 4.9 Reset migration preserves user accounts
 - [ ] 4.10 Backup status and restore procedure are confirmed
 - [ ] 4.11 Reviewer acknowledges permanent removal of old checks and drafts
 - [ ] 4.12 Migration and no-traffic verification finish before traffic movement

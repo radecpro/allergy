@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -51,6 +52,26 @@ function snapshot(
     pollenActivity: {
       "grass-pollen": "high",
       "tree-pollen": "moderate",
+    },
+    completedAt: new Date(completedAt),
+  });
+}
+
+function mixedSnapshot(cityLabel: string, completedAt: string) {
+  return buildCurrentSymptomSnapshot({
+    city: {
+      placeId: `place-${cityLabel.toLowerCase()}`,
+      label: cityLabel,
+    },
+    symptoms: [
+      { symptomId: "blocked-nose", intensity: "high" },
+      { symptomId: "watery-eyes", intensity: "low" },
+    ],
+    pollenActivity: {
+      "grass-pollen": "low",
+      "tree-pollen": "moderate",
+      "weed-pollen": "high",
+      "ragweed-pollen": "unknown",
     },
     completedAt: new Date(completedAt),
   });
@@ -120,6 +141,31 @@ describe("PostgreSQL symptom-check repository", () => {
     await expect(
       repository.findForOwner(ownerA, randomUUID()),
     ).resolves.toBeNull();
+  });
+
+  it("round-trips exact mixed entries and current-v2 through list and detail", async () => {
+    const [ownerA, ownerB] = ownerIds;
+    const input = mixedSnapshot("Lublin", "2026-06-11T11:30:00.000Z");
+    const created = await repository.createForOwner(
+      ownerA,
+      randomUUID(),
+      input,
+    );
+    const listed = await repository.listForOwner(ownerA);
+
+    expect(created.snapshot).toEqual(input);
+    expect(created.snapshot).toMatchObject({
+      rankingVersion: "current-v2",
+      symptoms: [
+        { symptomId: "blocked-nose", intensity: "high" },
+        { symptomId: "watery-eyes", intensity: "low" },
+      ],
+    });
+    expect(listed).toContainEqual(created);
+    await expect(repository.findForOwner(ownerA, created.id)).resolves.toEqual(
+      created,
+    );
+    await expect(repository.findForOwner(ownerB, created.id)).resolves.toBeNull();
   });
 
   it("returns one stable record for concurrent same-content retries", async () => {
@@ -277,5 +323,31 @@ describe("PostgreSQL symptom-check repository", () => {
 
     expect(response.status).toBe(302);
     expect(afterSave?.value).toBe((before?.value ?? 0) + 1);
+  });
+
+  it("reset migration deletes symptom checks while preserving users", async () => {
+    const ownerId = ownerIds[0];
+    await repository.createForOwner(
+      ownerId,
+      randomUUID(),
+      mixedSnapshot("Rzeszów", "2026-06-11T15:00:00.000Z"),
+    );
+    const resetSql = await readFile(
+      "drizzle/0002_reset_symptom_checks_for_current_v2.sql",
+      "utf8",
+    );
+
+    await pool.query(resetSql);
+
+    const [remainingChecks] = await database
+      .select({ value: count() })
+      .from(schema.symptomChecks);
+    const [remainingOwner] = await database
+      .select({ value: count() })
+      .from(schema.users)
+      .where(eq(schema.users.id, ownerId));
+
+    expect(remainingChecks?.value).toBe(0);
+    expect(remainingOwner?.value).toBe(1);
   });
 });

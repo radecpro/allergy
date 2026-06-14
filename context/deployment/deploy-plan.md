@@ -294,3 +294,60 @@ history-enabled revision:
 The previous account-enabled revision remains rollback-compatible because it
 ignores the additive `symptom_checks` table. Production migration, restore,
 and traffic changes require explicit human approval.
+
+## Per-Symptom Intensity Rollout
+
+This release replaces the saved-check ranking contract with `current-v2`.
+Migration `0002_reset_symptom_checks_for_current_v2.sql` permanently deletes
+all existing `symptom_checks`; the new pending-save storage key also
+intentionally abandons browser drafts created by the previous revision.
+
+Before running the production migration:
+
+1. Confirm the latest automated Cloud SQL backup is successful and record its
+   timestamp and retention window.
+2. Confirm the documented restore procedure has been exercised against a
+   non-production database and retain evidence that user records are readable.
+3. Obtain explicit human approval for permanent removal of existing saved
+   checks and old pending drafts.
+4. Build the migration and application images from the same reviewed commit.
+
+Release sequence:
+
+1. Deploy the `current-v2` application revision with `--no-traffic`.
+2. Run the migration job before sending any requests to that revision.
+3. Verify the migration completed, saved history is empty, and existing user
+   accounts remain readable.
+4. Run deterministic tests, typecheck, production build, dependency audit, and
+   `npm run test:db` against a separate disposable database.
+5. Exercise a no-traffic `current-v2` smoke check: assign mixed intensities,
+   save directly and through login, and confirm live/history rankings match.
+6. Inspect logs for symptom snapshots, city labels, record content, owner
+   identifiers, credentials, tokens, and session cookies.
+7. Move traffic only after the migration and no-traffic verification pass and
+   a human explicitly approves traffic movement.
+
+Do not route traffic to `current-v2` before the reset migration. After the new
+revision writes any `current-v2` checks, the previous revision is not
+data-compatible. Rollback requires either restoring the verified pre-release
+backup or deleting all post-release `symptom_checks` before routing traffic
+back to the old revision.
+
+### Dependency Audit Acceptance
+
+The June 14, 2026 `npm audit --json` release check reports 13 advisories:
+5 high, 8 moderate, and 0 critical.
+
+- The React Router development chain (`@react-router/dev`, `vite-node`, Vite,
+  and esbuild) has no fix available in the current dependency graph.
+- The Drizzle Kit advisories affect migration/development tooling. The audit's
+  suggested `0.19.1` change is a downgrade from `0.31.10` and is not accepted
+  without a separately tested migration-tooling change.
+- The Firebase Admin/Google Cloud/UUID chain suggests downgrading
+  `firebase-admin` from `14.x` to `10.3.0`; that incompatible downgrade is not
+  accepted during this product change.
+
+These advisories are accepted for this release with no critical finding. Keep
+development servers private, run migration tooling only in trusted build/job
+environments, and re-run the audit before traffic movement. Dependency
+upgrades remain a separate reviewed change.

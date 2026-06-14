@@ -122,6 +122,23 @@ export default function SavedSymptomCheck() {
               <p className="mt-3 text-sm leading-6 text-slate-700">
                 {result.explanation}
               </p>
+              {result.matchedSymptoms.length > 0 ? (
+                <div className="mt-3 grid gap-2">
+                  <p className="text-sm font-medium text-slate-700">
+                    Pasujące objawy
+                  </p>
+                  <ul className="flex flex-wrap gap-2 text-sm text-slate-700">
+                    {result.matchedSymptoms.map((symptom) => (
+                      <li
+                        key={symptom.symptomId}
+                        className="rounded-md bg-slate-100 px-2.5 py-1"
+                      >
+                        {symptom.label}: {symptom.intensityLabel}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </article>
           ))}
         </section>
