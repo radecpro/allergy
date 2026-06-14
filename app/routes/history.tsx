@@ -47,6 +47,12 @@ export default function SymptomCheckHistory() {
               Widzisz tylko sprawdzenia zapisane na tym koncie.
             </p>
           </div>
+          <Link
+            to="/"
+            className="inline-flex w-fit text-sm font-medium text-emerald-800 underline underline-offset-4"
+          >
+            Wróć do strony głównej
+          </Link>
         </header>
 
         {data.records.length === 0 ? (
