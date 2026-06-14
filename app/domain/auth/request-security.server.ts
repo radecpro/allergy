@@ -47,6 +47,19 @@ function parseRefererOrigin(value: string): string | null {
   }
 }
 
+function isLoopbackHostname(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
+function isLocalhostAliasMatch(left: URL, right: URL): boolean {
+  return (
+    left.protocol === right.protocol &&
+    left.port === right.port &&
+    isLoopbackHostname(left.hostname) &&
+    isLoopbackHostname(right.hostname)
+  );
+}
+
 export function getAppOrigin(): string {
   const value = process.env.APP_ORIGIN;
 
@@ -72,9 +85,36 @@ export function hasTrustedRequestOrigin(
   const origin = request.headers.get("Origin");
 
   if (origin !== null) {
-    return parseOriginHeader(origin) === trustedOrigin;
+    const parsedOrigin = parseOriginHeader(origin);
+
+    if (parsedOrigin === trustedOrigin) {
+      return true;
+    }
+
+    try {
+      return isLocalhostAliasMatch(new URL(parsedOrigin ?? ""), new URL(trustedOrigin));
+    } catch {
+      return false;
+    }
   }
 
   const referer = request.headers.get("Referer");
-  return referer !== null && parseRefererOrigin(referer) === trustedOrigin;
+  if (referer === null) {
+    return false;
+  }
+
+  const parsedReferer = parseRefererOrigin(referer);
+
+  if (parsedReferer === trustedOrigin) {
+    return true;
+  }
+
+  try {
+    return isLocalhostAliasMatch(
+      new URL(parsedReferer ?? ""),
+      new URL(trustedOrigin),
+    );
+  } catch {
+    return false;
+  }
 }

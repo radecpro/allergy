@@ -184,6 +184,16 @@ describe("request origin protection", () => {
     expect(hasTrustedRequestOrigin(originWins, appOrigin)).toBe(false);
   });
 
+  it("accepts localhost loopback aliases during local development", () => {
+    const localOrigin = "http://localhost:5173";
+    const aliasRequest = new Request(`${localOrigin}/login`, {
+      method: "POST",
+      headers: { Origin: "http://127.0.0.1:5173" },
+    });
+
+    expect(hasTrustedRequestOrigin(aliasRequest, localOrigin)).toBe(true);
+  });
+
   it.each([
     [{}, false],
     [{ Origin: "null" }, false],
