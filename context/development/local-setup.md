@@ -215,6 +215,8 @@ docker compose build --no-cache firebase-auth
 
 Stop the process using the port. `APP_ORIGIN` must exactly match the browser
 origin, so changing the app port also requires changing `APP_ORIGIN`.
+The dev server now uses `strictPort`, so it will fail fast instead of silently
+moving to another port.
 
 ### Registration or sign-in returns a generic error
 
