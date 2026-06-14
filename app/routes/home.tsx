@@ -245,41 +245,43 @@ export default function Home() {
               <legend className="text-sm font-medium">Aktualne objawy</legend>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
                 {symptomCatalog.map((symptom) => {
-                  const isSelected = symptomSelection.some(
+                  const selectedSymptom = symptomSelection.find(
                     (selected) => selected.symptomId === symptom.id,
                   );
+                  const isSelected = selectedSymptom !== undefined;
 
                   return (
-                    <label
+                    <div
                       key={symptom.id}
-                      className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-md border px-3 py-2 text-sm transition ${
+                      className={`overflow-hidden rounded-md border text-sm transition ${
                         isSelected
                           ? "border-emerald-600 bg-emerald-50 text-emerald-950"
                           : "border-slate-300 bg-white text-slate-800 hover:border-slate-400"
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSymptom(symptom.id)}
-                        className="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
-                      />
-                      <span>{symptom.label}</span>
-                    </label>
+                      <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSymptom(symptom.id)}
+                          className="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+                        />
+                        <span className="font-medium">{symptom.label}</span>
+                      </label>
+
+                      {selectedSymptom ? (
+                        <SymptomIntensitySelector
+                          symptomId={selectedSymptom.symptomId}
+                          symptomLabel={symptom.label}
+                          intensity={selectedSymptom.intensity}
+                          onAssign={handleIntensityAssign}
+                        />
+                      ) : null}
+                    </div>
                   );
                 })}
               </div>
             </fieldset>
-
-            <SymptomIntensitySelector
-              selection={symptomSelection}
-              onAssign={handleIntensityAssign}
-              onDeselect={(symptomId) =>
-                setSymptomSelection((current) =>
-                  deselectSymptom(current, symptomId),
-                )
-              }
-            />
           </section>
 
           <section aria-labelledby="results-heading" className="grid gap-4">

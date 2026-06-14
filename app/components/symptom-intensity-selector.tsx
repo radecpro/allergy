@@ -1,106 +1,65 @@
-import {
-  symptomCatalog,
-  symptomIntensityLabels,
-} from "~/domain/allergen-ranking";
+import { symptomIntensityLabels } from "~/domain/allergen-ranking";
 import type {
-  CurrentSymptomSelection,
   SymptomId,
   SymptomIntensity,
 } from "~/domain/allergen-ranking";
 
 type SymptomIntensitySelectorProps = {
-  selection: CurrentSymptomSelection;
+  symptomId: SymptomId;
+  symptomLabel: string;
+  intensity: SymptomIntensity | null;
   onAssign: (symptomId: SymptomId, intensity: SymptomIntensity) => void;
-  onDeselect: (symptomId: SymptomId) => void;
 };
 
 export function SymptomIntensitySelector({
-  selection,
+  symptomId,
+  symptomLabel,
+  intensity,
   onAssign,
-  onDeselect,
 }: SymptomIntensitySelectorProps) {
-  if (selection.length === 0) {
-    return null;
-  }
+  const helperId = `symptom-intensity-${symptomId}-helper`;
 
   return (
-    <section aria-labelledby="symptom-intensity-heading" className="grid gap-3">
-      <div>
-        <h3 id="symptom-intensity-heading" className="text-sm font-medium">
-          Nasilenie każdego objawu
-        </h3>
-        <p className="mt-1 text-xs leading-5 text-slate-600">
-          Wybierz niskie lub wysokie nasilenie dla każdego zaznaczonego objawu.
-        </p>
+    <fieldset
+      className="grid gap-2 border-t border-emerald-200 px-3 pb-3 pt-2"
+      aria-describedby={helperId}
+    >
+      <legend className="sr-only">Nasilenie objawu: {symptomLabel}</legend>
+      <p
+        id={helperId}
+        className={`text-xs ${
+          intensity === null
+            ? "font-medium text-amber-800"
+            : "text-emerald-900"
+        }`}
+      >
+        {intensity === null
+          ? "Wybierz nasilenie, aby uwzględnić objaw w rankingu."
+          : `Nasilenie: ${symptomIntensityLabels[intensity]}.`}
+      </p>
+
+      <div className="grid grid-cols-2 gap-2">
+        {(["low", "high"] as const).map((option) => (
+          <label
+            key={option}
+            className={`flex min-h-10 cursor-pointer items-center justify-center rounded-md border px-3 text-sm font-medium transition ${
+              intensity === option
+                ? "border-slate-950 bg-slate-950 text-white"
+                : "border-emerald-300 bg-white text-slate-700 hover:bg-emerald-100"
+            }`}
+          >
+            <input
+              type="radio"
+              name={`symptom-intensity-${symptomId}`}
+              value={option}
+              checked={intensity === option}
+              onChange={() => onAssign(symptomId, option)}
+              className="sr-only"
+            />
+            {symptomIntensityLabels[option]}
+          </label>
+        ))}
       </div>
-
-      <div className="grid gap-3">
-        {selection.map((selected) => {
-          const label =
-            symptomCatalog.find(
-              (symptom) => symptom.id === selected.symptomId,
-            )?.label ?? selected.symptomId;
-          const helperId = `symptom-intensity-${selected.symptomId}-helper`;
-
-          return (
-            <fieldset
-              key={selected.symptomId}
-              className="grid gap-3 rounded-md border border-slate-300 bg-white p-3"
-              aria-describedby={helperId}
-            >
-              <legend className="px-1 text-sm font-medium text-slate-950">
-                {label}
-              </legend>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => onDeselect(selected.symptomId)}
-                  className="text-xs font-medium text-slate-600 underline-offset-2 hover:underline"
-                  aria-label={`Usuń objaw: ${label}`}
-                >
-                  Usuń
-                </button>
-              </div>
-
-              <p
-                id={helperId}
-                className={`text-xs ${
-                  selected.intensity === null
-                    ? "font-medium text-amber-800"
-                    : "text-slate-600"
-                }`}
-              >
-                {selected.intensity === null
-                  ? "Wybierz nasilenie, aby uwzględnić objaw w rankingu."
-                  : `Wybrane nasilenie: ${symptomIntensityLabels[selected.intensity]}.`}
-              </p>
-
-              <div className="grid grid-cols-2 gap-2">
-                {(["low", "high"] as const).map((intensity) => (
-                  <label
-                    key={intensity}
-                    className={`flex min-h-10 cursor-pointer items-center justify-center rounded-md border px-3 text-sm font-medium transition ${
-                      selected.intensity === intensity
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : "border-slate-300 text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`symptom-intensity-${selected.symptomId}`}
-                      value={intensity}
-                      checked={selected.intensity === intensity}
-                      onChange={() => onAssign(selected.symptomId, intensity)}
-                      className="sr-only"
-                    />
-                    {symptomIntensityLabels[intensity]}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          );
-        })}
-      </div>
-    </section>
+    </fieldset>
   );
 }
