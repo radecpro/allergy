@@ -14,8 +14,10 @@ function validSnapshot() {
       placeId: "place-warsaw",
       label: "Warszawa, Polska",
     },
-    selectedSymptomIds: ["sneezing", "itchy-eyes"],
-    intensity: "high",
+    symptoms: [
+      { symptomId: "blocked-nose", intensity: "high" },
+      { symptomId: "watery-eyes", intensity: "low" },
+    ],
     pollenActivity: {
       "grass-pollen": "high",
       "tree-pollen": "moderate",
@@ -25,11 +27,18 @@ function validSnapshot() {
 }
 
 describe("symptom-check snapshot", () => {
-  it("copies the current shared intensity onto each symptom", () => {
+  it("preserves each symptom intensity", () => {
     expect(validSnapshot().symptoms).toEqual([
-      { symptomId: "sneezing", intensity: "high" },
-      { symptomId: "itchy-eyes", intensity: "high" },
+      { symptomId: "blocked-nose", intensity: "high" },
+      { symptomId: "watery-eyes", intensity: "low" },
     ]);
+  });
+
+  it("uses snapshot version 1 with the current-v2 ranking contract", () => {
+    expect(validSnapshot()).toMatchObject({
+      snapshotVersion: 1,
+      rankingVersion: "current-v2",
+    });
   });
 
   it("canonicalizes missing pollen values to unknown", () => {
@@ -61,7 +70,8 @@ describe("symptom-check snapshot", () => {
       },
     ],
     ["unknown snapshot version", { snapshotVersion: 2 }],
-    ["unknown ranking version", { rankingVersion: "future-v2" }],
+    ["legacy ranking version", { rankingVersion: "current-v1" }],
+    ["unknown ranking version", { rankingVersion: "future-v3" }],
     ["owner data", { ownerId: "user-1" }],
     [
       "invalid pollen level",
@@ -108,22 +118,27 @@ describe("symptom-check snapshot", () => {
   it("reconstructs ranking from the saved inputs", () => {
     const reconstructed = reconstructSymptomCheck(validSnapshot());
 
+    expect(
+      reconstructed.rankedResults.map(({ allergenId, score }) => ({
+        allergenId,
+        score,
+      })),
+    ).toEqual([
+      { allergenId: "grass-pollen", score: 3 },
+      { allergenId: "tree-pollen", score: 2 },
+      { allergenId: "weed-pollen", score: 2 },
+      { allergenId: "ragweed-pollen", score: 2 },
+    ]);
     expect(reconstructed.rankedResults[0]).toMatchObject({
       allergenId: "grass-pollen",
-      likelihood: "high",
-      pollenActivity: "high",
+      score: 3,
+      matchedSymptoms: [
+        {
+          symptomId: "watery-eyes",
+          intensity: "low",
+          intensityLabel: "Niska",
+        },
+      ],
     });
-  });
-
-  it("refuses mixed intensities under the current-v1 ranking contract", () => {
-    const snapshot = validSnapshot();
-    snapshot.symptoms[1] = {
-      symptomId: "itchy-eyes",
-      intensity: "low",
-    };
-
-    expect(() => reconstructSymptomCheck(snapshot)).toThrow(
-      "requires one shared symptom intensity",
-    );
   });
 });

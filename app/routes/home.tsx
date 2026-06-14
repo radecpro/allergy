@@ -98,8 +98,10 @@ export default function Home() {
         placeId: selectedCity.placeId,
         label: selectedCity.label,
       },
-      selectedSymptomIds,
-      intensity,
+      symptoms: selectedSymptomIds.map((symptomId) => ({
+        symptomId,
+        intensity,
+      })),
       pollenActivity,
     });
   }, [

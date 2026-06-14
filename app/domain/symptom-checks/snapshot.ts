@@ -179,10 +179,7 @@ export function buildCurrentSymptomSnapshot(
       placeId: input.city.placeId,
       label: input.city.label,
     },
-    symptoms: input.selectedSymptomIds.map((symptomId) => ({
-      symptomId,
-      intensity: input.intensity,
-    })),
+    symptoms: input.symptoms.map((symptom) => ({ ...symptom })),
     pollenActivity: canonicalizePollenActivity(input.pollenActivity),
   };
 }
@@ -228,19 +225,6 @@ export function parseSymptomCheckSnapshot(
 export function reconstructSymptomCheck(
   snapshot: SymptomCheckSnapshot,
 ): ReconstructedSymptomCheck {
-  const [firstSymptom] = snapshot.symptoms;
-
-  if (
-    !firstSymptom ||
-    snapshot.symptoms.some(
-      (symptom) => symptom.intensity !== firstSymptom.intensity,
-    )
-  ) {
-    throw new Error(
-      "The current-v1 ranking contract requires one shared symptom intensity.",
-    );
-  }
-
   return {
     snapshot,
     rankedResults: rankCurrentSymptomAllergens({

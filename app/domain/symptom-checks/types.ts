@@ -1,5 +1,6 @@
 import type {
   AllergenId,
+  CurrentSymptomEntry,
   CurrentSymptomRankedResult,
   PollenActivityLevel,
   SymptomId,
@@ -7,7 +8,7 @@ import type {
 } from "~/domain/allergen-ranking";
 
 export const symptomCheckSnapshotVersion = 1 as const;
-export const symptomCheckRankingVersion = "current-v1" as const;
+export const symptomCheckRankingVersion = "current-v2" as const;
 
 export type SavedSymptomEntry = {
   symptomId: SymptomId;
@@ -33,8 +34,7 @@ export type BuildCurrentSymptomSnapshotInput = {
     placeId: string;
     label: string;
   };
-  selectedSymptomIds: readonly SymptomId[];
-  intensity: SymptomIntensity;
+  symptoms: readonly CurrentSymptomEntry[];
   pollenActivity: Partial<SavedPollenActivity>;
   completedAt?: Date;
 };

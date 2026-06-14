@@ -28,8 +28,7 @@ const user: LocalUser = {
 };
 const snapshot = buildCurrentSymptomSnapshot({
   city: { placeId: "warsaw", label: "Warszawa, Polska" },
-  selectedSymptomIds: ["sneezing"],
-  intensity: "high",
+  symptoms: [{ symptomId: "sneezing", intensity: "high" }],
   pollenActivity: { "grass-pollen": "high" },
   completedAt: new Date("2026-06-11T12:00:00.000Z"),
 });

@@ -2,7 +2,7 @@ import { parseSymptomCheckSnapshot } from "./snapshot";
 import type { SymptomCheckSnapshot } from "./types";
 
 export const pendingSnapshotStorageKey =
-  "allergen-finder:pending-symptom-check:v1";
+  "allergen-finder:pending-symptom-check:v2";
 export const pendingSnapshotLifetimeMs = 60 * 60 * 1_000;
 
 export type PendingSymptomCheck = {

@@ -44,8 +44,10 @@ function snapshot(
       placeId: `place-${cityLabel.toLowerCase()}`,
       label: cityLabel,
     },
-    selectedSymptomIds: ["sneezing", "itchy-eyes"],
-    intensity,
+    symptoms: [
+      { symptomId: "sneezing", intensity },
+      { symptomId: "itchy-eyes", intensity },
+    ],
     pollenActivity: {
       "grass-pollen": "high",
       "tree-pollen": "moderate",

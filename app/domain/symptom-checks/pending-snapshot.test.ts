@@ -34,8 +34,10 @@ const now = new Date("2026-06-11T12:00:00.000Z");
 const requestId = "123e4567-e89b-42d3-a456-426614174000";
 const snapshot = buildCurrentSymptomSnapshot({
   city: { placeId: "warsaw", label: "Warszawa, Polska" },
-  selectedSymptomIds: ["sneezing"],
-  intensity: "high",
+  symptoms: [
+    { symptomId: "blocked-nose", intensity: "high" },
+    { symptomId: "watery-eyes", intensity: "low" },
+  ],
   pollenActivity: { "grass-pollen": "high" },
   completedAt: now,
 });
@@ -52,6 +54,20 @@ describe("pending symptom-check storage", () => {
         new Date(now.getTime() + pendingSnapshotLifetimeMs - 1),
       ),
     ).toEqual(pending);
+  });
+
+  it("does not read or migrate a legacy storage key", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      "allergen-finder:pending-symptom-check:v1",
+      JSON.stringify(createPendingSymptomCheck(requestId, snapshot, now)),
+    );
+
+    expect(loadPendingSymptomCheck(storage, now)).toBeNull();
+    expect(
+      storage.getItem("allergen-finder:pending-symptom-check:v1"),
+    ).not.toBeNull();
+    expect(storage.getItem(pendingSnapshotStorageKey)).toBeNull();
   });
 
   it("removes expired and malformed drafts", () => {

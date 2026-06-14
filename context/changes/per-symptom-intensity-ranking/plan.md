@@ -407,34 +407,34 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Automated
 
-- [x] 1.1 Mixed low/high ranking tests pass with explicit score and ordering oracles
-- [x] 1.2 Selection-state tests pass for assignment, readiness, deselection, and reselection
-- [x] 1.3 Uniform inputs retain previous scoring outcomes
-- [x] 1.4 Type checking passes
+- [x] 1.1 Mixed low/high ranking tests pass with explicit score and ordering oracles — ade5aab
+- [x] 1.2 Selection-state tests pass for assignment, readiness, deselection, and reselection — ade5aab
+- [x] 1.3 Uniform inputs retain previous scoring outcomes — ade5aab
+- [x] 1.4 Type checking passes — ade5aab
 
 #### Manual
 
-- [x] 1.5 Ranking contract has no shared intensity field
-- [x] 1.6 State transitions cannot create default or cached intensity
-- [x] 1.7 Result metadata exposes labeled intensities without numeric arithmetic
+- [x] 1.5 Ranking contract has no shared intensity field — ade5aab
+- [x] 1.6 State transitions cannot create default or cached intensity — ade5aab
+- [x] 1.7 Result metadata exposes labeled intensities without numeric arithmetic — ade5aab
 
 ### Phase 2: Current-V2 Snapshots And Destructive Reset
 
 #### Automated
 
-- [ ] 2.1 Snapshot tests pass for mixed current-v2 build, parse, and reconstruction
-- [ ] 2.2 Pending-save tests pass under the new storage key
-- [ ] 2.3 Current-v1 and unknown ranking versions are rejected
-- [ ] 2.4 Tracked custom reset migration is generated
-- [ ] 2.5 Reset SQL contains only the approved symptom-check deletion
-- [ ] 2.6 Database tests apply the complete migration chain
-- [ ] 2.7 Type checking passes
+- [x] 2.1 Snapshot tests pass for mixed current-v2 build, parse, and reconstruction
+- [x] 2.2 Pending-save tests pass under the new storage key
+- [x] 2.3 Current-v1 and unknown ranking versions are rejected
+- [x] 2.4 Tracked custom reset migration is generated
+- [x] 2.5 Reset SQL contains only the approved symptom-check deletion
+- [x] 2.6 Database tests apply the complete migration chain
+- [x] 2.7 Type checking passes
 
 #### Manual
 
-- [ ] 2.8 Snapshot version remains 1 and ranking version becomes current-v2
-- [ ] 2.9 Old pending-save keys are not read or migrated
-- [ ] 2.10 Migration deletes only symptom-check rows
+- [x] 2.8 Snapshot version remains 1 and ranking version becomes current-v2
+- [x] 2.9 Old pending-save keys are not read or migrated
+- [x] 2.10 Migration deletes only symptom-check rows
 - [ ] 2.11 Human approves destructive migration and rollback limitation
 
 ### Phase 3: Current-Check UI And Save Flow
