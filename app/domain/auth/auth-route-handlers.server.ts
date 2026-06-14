@@ -121,8 +121,7 @@ export function createAuthPageHandlers(
       if (!validateOrigin(request, dependencies.appOrigin)) {
         return Response.json(
           {
-            formError:
-              "Nie udało się potwierdzić miejsca wysłania formularza. Odśwież stronę i spróbuj ponownie.",
+            formError: "Nie udało się zalogować. Odśwież stronę i spróbuj ponownie.",
           } satisfies AuthActionData,
           { status: 403 },
         );

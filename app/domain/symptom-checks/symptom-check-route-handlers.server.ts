@@ -127,7 +127,7 @@ export function createSaveSymptomCheckAction(
 
     if (!validateOrigin(request, dependencies.appOrigin)) {
       return errorResponse(
-        "Nie udało się potwierdzić miejsca wysłania formularza. Odśwież stronę i spróbuj ponownie.",
+        "Nie udało się zapisać. Odśwież stronę i spróbuj ponownie.",
         403,
       );
     }
