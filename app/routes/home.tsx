@@ -79,8 +79,11 @@ export default function Home() {
     () => getCompleteSymptomEntries(symptomSelection),
     [symptomSelection],
   );
-  const resultsReady =
+  const resultsReady = selectedCity !== null && completeSymptoms.length > 0;
+  const saveReady =
     selectedCity !== null && hasCompleteSymptomSelection(symptomSelection);
+  const hasIncompleteSymptoms =
+    completeSymptoms.length < symptomSelection.length;
   const hasUnknownPollen = allergenIds.some(
     (allergenId) => pollenActivity[allergenId] === "unknown",
   );
@@ -96,7 +99,7 @@ export default function Home() {
     });
   }, [completeSymptoms, pollenActivity, resultsReady]);
   const saveSnapshot = useMemo(() => {
-    if (!resultsReady || !selectedCity) {
+    if (!saveReady || !selectedCity) {
       return null;
     }
 
@@ -111,7 +114,7 @@ export default function Home() {
   }, [
     completeSymptoms,
     pollenActivity,
-    resultsReady,
+    saveReady,
     selectedCity,
   ]);
 
@@ -255,7 +258,7 @@ export default function Home() {
                       key={symptom.id}
                       className={`overflow-hidden rounded-md border text-sm transition ${
                         isSelected
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-950"
+                          ? "border-emerald-600 bg-white text-slate-950"
                           : "border-slate-300 bg-white text-slate-800 hover:border-slate-400"
                       }`}
                     >
@@ -314,6 +317,14 @@ export default function Home() {
               </div>
             ) : (
               <div className="grid gap-4">
+                {hasIncompleteSymptoms ? (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+                    Ranking uwzględnia tylko objawy z wybranym nasileniem.
+                    Uzupełnij nasilenie nowego objawu, aby zaktualizować wynik
+                    i włączyć zapis.
+                  </div>
+                ) : null}
+
                 {pollenStatus === "unavailable" || hasUnknownPollen ? (
                   <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
                     {pollenMessage ||

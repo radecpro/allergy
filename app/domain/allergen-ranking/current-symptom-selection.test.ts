@@ -53,6 +53,33 @@ describe("current symptom selection", () => {
     ]);
   });
 
+  test("keeps assigned entries available while a new symptom is incomplete", () => {
+    const assigned = assignSymptomIntensity(
+      selectSymptom([], "blocked-nose"),
+      "blocked-nose",
+      "high",
+    );
+    const withIncompleteSymptom = selectSymptom(assigned, "watery-eyes");
+
+    expect(hasCompleteSymptomSelection(withIncompleteSymptom)).toBe(false);
+    expect(getCompleteSymptomEntries(withIncompleteSymptom)).toEqual([
+      { symptomId: "blocked-nose", intensity: "high" },
+    ]);
+
+    expect(
+      getCompleteSymptomEntries(
+        assignSymptomIntensity(
+          withIncompleteSymptom,
+          "watery-eyes",
+          "low",
+        ),
+      ),
+    ).toEqual([
+      { symptomId: "blocked-nose", intensity: "high" },
+      { symptomId: "watery-eyes", intensity: "low" },
+    ]);
+  });
+
   test("removes intensity on deselection and reselects as unassigned", () => {
     const assigned = [
       { symptomId: "blocked-nose", intensity: "high" },
