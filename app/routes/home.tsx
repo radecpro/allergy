@@ -4,15 +4,21 @@ import { AccountNav } from "~/components/account-nav";
 import { CityCombobox } from "~/components/city-combobox";
 import { ModeSwitch } from "~/components/mode-switch";
 import { SymptomCheckSave } from "~/components/symptom-check-save";
+import { SymptomIntensitySelector } from "~/components/symptom-intensity-selector";
 import {
   allergenIds,
+  assignSymptomIntensity,
+  deselectSymptom,
+  getCompleteSymptomEntries,
+  hasCompleteSymptomSelection,
   pollenActivityLabels,
   rankCurrentSymptomAllergens,
   resultGuardrailText,
+  selectSymptom,
   symptomCatalog,
-  symptomIntensityLabels,
 } from "~/domain/allergen-ranking";
 import type {
+  CurrentSymptomSelection,
   PollenActivityByAllergen,
   SymptomId,
   SymptomIntensity,
@@ -61,35 +67,36 @@ function formatResultExplanation(explanation: string): string {
 
 export default function Home() {
   const [selectedCity, setSelectedCity] = useState<CitySuggestion | null>(null);
-  const [selectedSymptomIds, setSelectedSymptomIds] = useState<SymptomId[]>([]);
-  const [intensity, setIntensity] = useState<SymptomIntensity | null>(null);
+  const [symptomSelection, setSymptomSelection] =
+    useState<CurrentSymptomSelection>([]);
   const [pollenActivity, setPollenActivity] =
     useState<PollenActivityByAllergen>(emptyPollenActivity);
   const [pollenStatus, setPollenStatus] = useState<AsyncStatus>("idle");
   const [pollenMessage, setPollenMessage] = useState("");
   const activePollenPlaceIdRef = useRef<string | null>(null);
 
+  const completeSymptoms = useMemo(
+    () => getCompleteSymptomEntries(symptomSelection),
+    [symptomSelection],
+  );
   const resultsReady =
-    selectedCity !== null && selectedSymptomIds.length > 0 && intensity !== null;
+    selectedCity !== null && hasCompleteSymptomSelection(symptomSelection);
   const hasUnknownPollen = allergenIds.some(
     (allergenId) => pollenActivity[allergenId] === "unknown",
   );
 
   const rankedResults = useMemo(() => {
-    if (!resultsReady || intensity === null) {
+    if (!resultsReady) {
       return [];
     }
 
     return rankCurrentSymptomAllergens({
-      symptoms: selectedSymptomIds.map((symptomId) => ({
-        symptomId,
-        intensity,
-      })),
+      symptoms: completeSymptoms,
       pollenActivity,
     });
-  }, [intensity, pollenActivity, resultsReady, selectedSymptomIds]);
+  }, [completeSymptoms, pollenActivity, resultsReady]);
   const saveSnapshot = useMemo(() => {
-    if (!resultsReady || !selectedCity || !intensity) {
+    if (!resultsReady || !selectedCity) {
       return null;
     }
 
@@ -98,18 +105,14 @@ export default function Home() {
         placeId: selectedCity.placeId,
         label: selectedCity.label,
       },
-      symptoms: selectedSymptomIds.map((symptomId) => ({
-        symptomId,
-        intensity,
-      })),
+      symptoms: completeSymptoms,
       pollenActivity,
     });
   }, [
-    intensity,
+    completeSymptoms,
     pollenActivity,
     resultsReady,
     selectedCity,
-    selectedSymptomIds,
   ]);
 
   useEffect(() => {
@@ -167,10 +170,19 @@ export default function Home() {
   }, []);
 
   function toggleSymptom(symptomId: SymptomId) {
-    setSelectedSymptomIds((current) =>
-      current.includes(symptomId)
-        ? current.filter((selectedId) => selectedId !== symptomId)
-        : [...current, symptomId],
+    setSymptomSelection((current) =>
+      current.some((symptom) => symptom.symptomId === symptomId)
+        ? deselectSymptom(current, symptomId)
+        : selectSymptom(current, symptomId),
+    );
+  }
+
+  function handleIntensityAssign(
+    symptomId: SymptomId,
+    intensity: SymptomIntensity,
+  ) {
+    setSymptomSelection((current) =>
+      assignSymptomIntensity(current, symptomId, intensity),
     );
   }
 
@@ -233,7 +245,9 @@ export default function Home() {
               <legend className="text-sm font-medium">Aktualne objawy</legend>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
                 {symptomCatalog.map((symptom) => {
-                  const isSelected = selectedSymptomIds.includes(symptom.id);
+                  const isSelected = symptomSelection.some(
+                    (selected) => selected.symptomId === symptom.id,
+                  );
 
                   return (
                     <label
@@ -257,31 +271,15 @@ export default function Home() {
               </div>
             </fieldset>
 
-            <fieldset className="grid gap-3">
-              <legend className="text-sm font-medium">Nasilenie objawów</legend>
-              <div className="grid grid-cols-2 gap-2 rounded-md border border-slate-300 bg-white p-1">
-                {(["low", "high"] as const).map((option) => (
-                  <label
-                    key={option}
-                    className={`flex h-10 cursor-pointer items-center justify-center rounded px-3 text-sm font-medium transition ${
-                      intensity === option
-                        ? "bg-slate-950 text-white"
-                        : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="intensity"
-                      value={option}
-                      checked={intensity === option}
-                      onChange={() => setIntensity(option)}
-                      className="sr-only"
-                    />
-                    {symptomIntensityLabels[option]}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <SymptomIntensitySelector
+              selection={symptomSelection}
+              onAssign={handleIntensityAssign}
+              onDeselect={(symptomId) =>
+                setSymptomSelection((current) =>
+                  deselectSymptom(current, symptomId),
+                )
+              }
+            />
           </section>
 
           <section aria-labelledby="results-heading" className="grid gap-4">
@@ -308,7 +306,8 @@ export default function Home() {
                 </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
                   Ranking pojawi się po wybraniu miasta, co najmniej jednego
-                  objawu i poziomu nasilenia. Nie trzeba wysyłać formularza.
+                  objawu i nasilenia dla każdego objawu. Nie trzeba wysyłać
+                  formularza.
                 </p>
               </div>
             ) : (
@@ -359,11 +358,22 @@ export default function Home() {
                           <p className="text-sm font-medium text-slate-700">
                             Pasujące objawy
                           </p>
-                          <p className="text-sm leading-6 text-slate-600">
-                            {result.matchedSymptomLabels.length > 0
-                              ? result.matchedSymptomLabels.join(", ")
-                              : "Brak silnego dopasowania do wybranych objawów."}
-                          </p>
+                          {result.matchedSymptoms.length > 0 ? (
+                            <ul className="flex flex-wrap gap-2 text-sm text-slate-700">
+                              {result.matchedSymptoms.map((symptom) => (
+                                <li
+                                  key={symptom.symptomId}
+                                  className="rounded-md bg-slate-100 px-2.5 py-1"
+                                >
+                                  {symptom.label}: {symptom.intensityLabel}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm leading-6 text-slate-600">
+                              Brak silnego dopasowania do wybranych objawów.
+                            </p>
+                          )}
                         </div>
 
                         {explanation ? (

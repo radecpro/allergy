@@ -422,29 +422,29 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Automated
 
-- [x] 2.1 Snapshot tests pass for mixed current-v2 build, parse, and reconstruction
-- [x] 2.2 Pending-save tests pass under the new storage key
-- [x] 2.3 Current-v1 and unknown ranking versions are rejected
-- [x] 2.4 Tracked custom reset migration is generated
-- [x] 2.5 Reset SQL contains only the approved symptom-check deletion
-- [x] 2.6 Database tests apply the complete migration chain
-- [x] 2.7 Type checking passes
+- [x] 2.1 Snapshot tests pass for mixed current-v2 build, parse, and reconstruction — 8ef66f9
+- [x] 2.2 Pending-save tests pass under the new storage key — 8ef66f9
+- [x] 2.3 Current-v1 and unknown ranking versions are rejected — 8ef66f9
+- [x] 2.4 Tracked custom reset migration is generated — 8ef66f9
+- [x] 2.5 Reset SQL contains only the approved symptom-check deletion — 8ef66f9
+- [x] 2.6 Database tests apply the complete migration chain — 8ef66f9
+- [x] 2.7 Type checking passes — 8ef66f9
 
 #### Manual
 
-- [x] 2.8 Snapshot version remains 1 and ranking version becomes current-v2
-- [x] 2.9 Old pending-save keys are not read or migrated
-- [x] 2.10 Migration deletes only symptom-check rows
+- [x] 2.8 Snapshot version remains 1 and ranking version becomes current-v2 — 8ef66f9
+- [x] 2.9 Old pending-save keys are not read or migrated — 8ef66f9
+- [x] 2.10 Migration deletes only symptom-check rows — 8ef66f9
 - [ ] 2.11 Human approves destructive migration and rollback limitation
 
 ### Phase 3: Current-Check UI And Save Flow
 
 #### Automated
 
-- [ ] 3.1 Selection-state tests prove route readiness and reset behavior
-- [ ] 3.2 Save action tests preserve exact mixed symptom entries
-- [ ] 3.3 Default test suite passes
-- [ ] 3.4 Type checking passes
+- [x] 3.1 Selection-state tests prove route readiness and reset behavior
+- [x] 3.2 Save action tests preserve exact mixed symptom entries
+- [x] 3.3 Default test suite passes
+- [x] 3.4 Type checking passes
 
 #### Manual
 

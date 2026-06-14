@@ -28,7 +28,10 @@ const user: LocalUser = {
 };
 const snapshot = buildCurrentSymptomSnapshot({
   city: { placeId: "warsaw", label: "Warszawa, Polska" },
-  symptoms: [{ symptomId: "sneezing", intensity: "high" }],
+  symptoms: [
+    { symptomId: "blocked-nose", intensity: "high" },
+    { symptomId: "watery-eyes", intensity: "low" },
+  ],
   pollenActivity: { "grass-pollen": "high" },
   completedAt: new Date("2026-06-11T12:00:00.000Z"),
 });
@@ -110,6 +113,37 @@ describe("save symptom-check action", () => {
       requestId,
       expect.objectContaining({
         completedAt: "2026-06-11T12:05:00.000Z",
+        symptoms: [
+          { symptomId: "blocked-nose", intensity: "high" },
+          { symptomId: "watery-eyes", intensity: "low" },
+        ],
+      }),
+      expect.any(String),
+    );
+  });
+
+  it("preserves mixed intensities from a pending authentication handoff", async () => {
+    const repository = createRepository();
+    const action = createSaveSymptomCheckAction({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+      originValidator: () => true,
+      now: () => new Date("2026-06-11T12:05:00.000Z"),
+    });
+
+    const response = await action(saveRequest({ source: "pending" }));
+
+    expect(response.status).toBe(302);
+    expect(repository.createForOwner).toHaveBeenCalledWith(
+      user.id,
+      requestId,
+      expect.objectContaining({
+        completedAt: "2026-06-11T12:00:00.000Z",
+        symptoms: [
+          { symptomId: "blocked-nose", intensity: "high" },
+          { symptomId: "watery-eyes", intensity: "low" },
+        ],
       }),
       expect.any(String),
     );
