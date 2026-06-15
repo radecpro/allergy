@@ -1,10 +1,10 @@
 ---
 change_id: email-password-account-access
 title: Add email and password account access
-status: impl_reviewed
+status: archived
 created: 2026-06-10
-updated: 2026-06-11
-archived_at: null
+updated: 2026-06-15
+archived_at: 2026-06-15T18:47:07Z
 ---
 
 ## Notes
