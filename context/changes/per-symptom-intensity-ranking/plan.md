@@ -448,11 +448,11 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Manual
 
-- [ ] 3.5 Newly selected symptoms remain incomplete until assigned
-- [ ] 3.6 Ranking and saving require every selected symptom assignment
+- [x] 3.5 Newly selected symptoms remain incomplete until assigned — 6b9d079
+- [ ] 3.6 Ranking remains based on assigned symptoms while saving requires every selected symptom assignment
 - [ ] 3.7 Intensity changes update ranking independently
 - [ ] 3.8 Deselection removes state and reselection requires a fresh choice
-- [ ] 3.9 Result cards show low/high labels for matched symptoms
+- [x] 3.9 Result cards show low/high labels for matched symptoms — 4f90ff9
 - [ ] 3.10 All-symptom layout works on mobile and desktop
 - [ ] 3.11 Guest login handoff preserves mixed assignments under the new key
 
@@ -460,18 +460,18 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Automated
 
-- [x] 4.1 Default deterministic suite passes
-- [x] 4.2 Type checking passes
-- [x] 4.3 Disposable PostgreSQL suite passes
-- [x] 4.4 Repository tests prove exact mixed-entry round trips and owner isolation
-- [x] 4.5 Production build completes
-- [x] 4.6 Dependency audit is fixed or documented
+- [x] 4.1 Default deterministic suite passes — 9fe5a21
+- [x] 4.2 Type checking passes — 9fe5a21
+- [x] 4.3 Disposable PostgreSQL suite passes — 9fe5a21
+- [x] 4.4 Repository tests prove exact mixed-entry round trips and owner isolation — 9fe5a21
+- [x] 4.5 Production build completes — 9fe5a21
+- [x] 4.6 Dependency audit is fixed or documented — 9fe5a21
 
 #### Manual
 
 - [ ] 4.7 Live and saved-history rankings match for a mixed check
-- [x] 4.8 Reset migration empties legacy history in a disposable database
-- [x] 4.9 Reset migration preserves user accounts
+- [x] 4.8 Reset migration empties legacy history in a disposable database — 9fe5a21
+- [x] 4.9 Reset migration preserves user accounts — 9fe5a21
 - [ ] 4.10 Backup status and restore procedure are confirmed
 - [ ] 4.11 Reviewer acknowledges permanent removal of old checks and drafts
 - [ ] 4.12 Migration and no-traffic verification finish before traffic movement
