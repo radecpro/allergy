@@ -33,7 +33,7 @@ In this roadmap, the north star means the smallest end-to-end capability that pr
 | S-01 | email-password-account-access | Register, sign in with email and password, and sign out while guest checks remain public | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005 | done |
 | S-02 | save-and-view-symptom-check | Explicitly save a completed current-symptoms check and view it in private history | F-01, S-01 | US-01, FR-005, FR-006, FR-007, FR-010 | done |
 | S-03 | manage-saved-symptom-check | Correct symptoms and per-symptom intensities in a saved check or delete the record | F-01, S-02 | US-02, FR-005, FR-008, FR-009, FR-010 | proposed |
-| S-04 | per-symptom-intensity-ranking | Assign low/high intensity to each selected symptom and receive the recalculated ranking | F-01 | US-04, FR-001, FR-003, FR-013 | proposed |
+| S-04 | per-symptom-intensity-ranking | Assign low/high intensity to each selected symptom and receive the recalculated ranking | F-01 | US-04, FR-001, FR-003, FR-013 | done |
 | S-05 | device-location-current-check | Use current device location for a symptom check with manual city selection preserved as fallback | F-01 | US-03, FR-001, FR-003, FR-011, FR-012 | proposed |
 | S-06 | missing-pollen-warning-label | Identify at first glance which current-symptoms result cards lack provider pollen data | F-01 | US-04, FR-001, FR-003, FR-014 | proposed |
 
@@ -102,7 +102,7 @@ Foundations below assume these are present and do not recreate them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Update and delete complete the required CRUD lifecycle; every mutation must repeat ownership checks rather than trusting record identifiers supplied by the user interface.
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Per-Symptom Intensity Ranking
 
@@ -176,3 +176,4 @@ No open roadmap questions.
 - **F-01: (foundation) A standard test command, focused test runner, and `test-plan.md` risk inventory are available before authentication or persistence behavior is added.** — Archived 2026-06-15 → `context/archive/2026-06-10-risk-based-test-foundation/`. Lesson: —.
 - **S-01: User can register, sign in with email and password, and sign out while both existing allergen checks remain fully usable as a guest.** — Archived 2026-06-15 → `context/archive/2026-06-10-email-password-account-access/`. Lesson: —.
 - **S-02: Authenticated user can explicitly save a completed current-symptoms check and view it in a history list and detail view that contains only their records.** — Archived 2026-06-15 → `context/archive/2026-06-11-save-and-view-symptom-check/`. Lesson: —.
+- **S-04: User can assign low/high intensity to each selected symptom and receive an automatically updated allergen ranking that uses those individual intensities.** — Archived 2026-06-15 → `context/archive/2026-06-14-per-symptom-intensity-ranking/`. Lesson: —.

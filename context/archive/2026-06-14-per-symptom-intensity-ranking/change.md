@@ -1,10 +1,10 @@
 ---
 change_id: per-symptom-intensity-ranking
 title: Add per-symptom intensity ranking
-status: implemented
+status: archived
 created: 2026-06-14
 updated: 2026-06-15
-archived_at: null
+archived_at: 2026-06-15T18:47:07Z
 ---
 
 ## Notes
