@@ -435,7 +435,7 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 - [x] 2.8 Snapshot version remains 1 and ranking version becomes current-v2 — 8ef66f9
 - [x] 2.9 Old pending-save keys are not read or migrated — 8ef66f9
 - [x] 2.10 Migration deletes only symptom-check rows — 8ef66f9
-- [x] 2.11 Human approves destructive migration and rollback limitation
+- [x] 2.11 Human approves destructive migration and rollback limitation — 5a011a6
 
 ### Phase 3: Current-Check UI And Save Flow
 
@@ -449,12 +449,12 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 #### Manual
 
 - [x] 3.5 Newly selected symptoms remain incomplete until assigned — 6b9d079
-- [x] 3.6 Ranking remains based on assigned symptoms while saving requires every selected symptom assignment
-- [x] 3.7 Intensity changes update ranking independently
-- [x] 3.8 Deselection removes state and reselection requires a fresh choice
+- [x] 3.6 Ranking remains based on assigned symptoms while saving requires every selected symptom assignment — 5a011a6
+- [x] 3.7 Intensity changes update ranking independently — 5a011a6
+- [x] 3.8 Deselection removes state and reselection requires a fresh choice — 5a011a6
 - [x] 3.9 Result cards show low/high labels for matched symptoms — 4f90ff9
-- [x] 3.10 All-symptom layout works on mobile and desktop
-- [x] 3.11 Guest login handoff preserves mixed assignments under the new key
+- [x] 3.10 All-symptom layout works on mobile and desktop — 5a011a6
+- [x] 3.11 Guest login handoff preserves mixed assignments under the new key — 5a011a6
 
 ### Phase 4: Persistence, History, And Release Verification
 
@@ -469,9 +469,9 @@ The normal expand-and-contract rollback guarantee is explicitly waived for this 
 
 #### Manual
 
-- [x] 4.7 Live and saved-history rankings match for a mixed check
+- [x] 4.7 Live and saved-history rankings match for a mixed check — 5a011a6
 - [x] 4.8 Reset migration empties legacy history in a disposable database — 9fe5a21
 - [x] 4.9 Reset migration preserves user accounts — 9fe5a21
-- [x] 4.10 Backup status and restore procedure are confirmed
-- [x] 4.11 Reviewer acknowledges permanent removal of old checks and drafts
-- [x] 4.12 Migration and no-traffic verification finish before traffic movement
+- [x] 4.10 Backup status and restore procedure are confirmed — 5a011a6
+- [x] 4.11 Reviewer acknowledges permanent removal of old checks and drafts — 5a011a6
+- [x] 4.12 Migration and no-traffic verification finish before traffic movement — 5a011a6
