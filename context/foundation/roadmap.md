@@ -31,7 +31,7 @@ In this roadmap, the north star means the smallest end-to-end capability that pr
 |---|---|---|---|---|---|
 | F-01 | risk-based-test-foundation | (foundation) Standard automated verification and a named risk plan are available for every expansion slice | — | Success Criteria, Guardrails, NFRs | done |
 | S-01 | email-password-account-access | Register, sign in with email and password, and sign out while guest checks remain public | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005 | done |
-| S-02 | save-and-view-symptom-check | Explicitly save a completed current-symptoms check and view it in private history | F-01, S-01 | US-01, FR-005, FR-006, FR-007, FR-010 | proposed |
+| S-02 | save-and-view-symptom-check | Explicitly save a completed current-symptoms check and view it in private history | F-01, S-01 | US-01, FR-005, FR-006, FR-007, FR-010 | done |
 | S-03 | manage-saved-symptom-check | Correct symptoms and per-symptom intensities in a saved check or delete the record | F-01, S-02 | US-02, FR-005, FR-008, FR-009, FR-010 | proposed |
 | S-04 | per-symptom-intensity-ranking | Assign low/high intensity to each selected symptom and receive the recalculated ranking | F-01 | US-04, FR-001, FR-003, FR-013 | proposed |
 | S-05 | device-location-current-check | Use current device location for a symptom check with manual city selection preserved as fallback | F-01 | US-03, FR-001, FR-003, FR-011, FR-012 | proposed |
@@ -90,7 +90,7 @@ Foundations below assume these are present and do not recreate them.
 - **Unknowns:**
   - Which minimum snapshot fields are required to reproduce the saved check while preserving the PRD's explicit-consent boundary? — Owner: team. Block: no.
 - **Risk:** This slice combines account identity, persistence, ownership, and an existing completed check; ownership verification must be built into the first record path rather than added later.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Manage A Saved Symptom Check
 
@@ -175,3 +175,4 @@ No open roadmap questions.
 (Empty. `/10x-archive` appends entries here when roadmap items are archived.)
 - **F-01: (foundation) A standard test command, focused test runner, and `test-plan.md` risk inventory are available before authentication or persistence behavior is added.** — Archived 2026-06-15 → `context/archive/2026-06-10-risk-based-test-foundation/`. Lesson: —.
 - **S-01: User can register, sign in with email and password, and sign out while both existing allergen checks remain fully usable as a guest.** — Archived 2026-06-15 → `context/archive/2026-06-10-email-password-account-access/`. Lesson: —.
+- **S-02: Authenticated user can explicitly save a completed current-symptoms check and view it in a history list and detail view that contains only their records.** — Archived 2026-06-15 → `context/archive/2026-06-11-save-and-view-symptom-check/`. Lesson: —.
