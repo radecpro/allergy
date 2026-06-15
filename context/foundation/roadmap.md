@@ -102,7 +102,7 @@ Foundations below assume these are present and do not recreate them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Update and delete complete the required CRUD lifecycle; every mutation must repeat ownership checks rather than trusting record identifiers supplied by the user interface.
-- **Status:** done
+- **Status:** proposed
 
 ### S-04: Per-Symptom Intensity Ranking
 
@@ -114,7 +114,7 @@ Foundations below assume these are present and do not recreate them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** The domain rule and current-check interface change together; preserving one overall-intensity assumption anywhere would make results inconsistent.
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Device Location For Current Check
 
