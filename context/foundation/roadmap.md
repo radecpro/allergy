@@ -3,7 +3,7 @@ project: Allergen Finder
 version: 2
 status: draft
 created: 2026-06-09
-updated: 2026-06-09
+updated: 2026-06-15
 prd_version: 3
 main_goal: speed
 top_blocker: time
@@ -29,7 +29,7 @@ In this roadmap, the north star means the smallest end-to-end capability that pr
 
 | ID | Change ID | Outcome (user can ...) | Prerequisites | PRD refs | Status |
 |---|---|---|---|---|---|
-| F-01 | risk-based-test-foundation | (foundation) Standard automated verification and a named risk plan are available for every expansion slice | — | Success Criteria, Guardrails, NFRs | ready |
+| F-01 | risk-based-test-foundation | (foundation) Standard automated verification and a named risk plan are available for every expansion slice | — | Success Criteria, Guardrails, NFRs | done |
 | S-01 | email-password-account-access | Register, sign in with email and password, and sign out while guest checks remain public | F-01 | FR-001, FR-002, FR-003, FR-004, FR-005 | proposed |
 | S-02 | save-and-view-symptom-check | Explicitly save a completed current-symptoms check and view it in private history | F-01, S-01 | US-01, FR-005, FR-006, FR-007, FR-010 | proposed |
 | S-03 | manage-saved-symptom-check | Correct symptoms and per-symptom intensities in a saved check or delete the record | F-01, S-02 | US-02, FR-005, FR-008, FR-009, FR-010 | proposed |
@@ -62,7 +62,7 @@ Foundations below assume these are present and do not recreate them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This foundation must stay limited to executable verification and the required risk plan; broad test-suite expansion would consume the fixed delivery window before user-visible work starts.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -173,3 +173,4 @@ No open roadmap questions.
 ## Done
 
 (Empty. `/10x-archive` appends entries here when roadmap items are archived.)
+- **F-01: (foundation) A standard test command, focused test runner, and `test-plan.md` risk inventory are available before authentication or persistence behavior is added.** — Archived 2026-06-15 → `context/archive/2026-06-10-risk-based-test-foundation/`. Lesson: —.
