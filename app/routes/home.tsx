@@ -297,7 +297,7 @@ export default function Home() {
                 </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
                   Ranking pojawi się po wybraniu miasta, co najmniej jednego
-                  objawu i jego nasilenia. Nie trzeba wysyłać formularza.
+                  objawu i jego nasilenia.
                 </p>
               </div>
             ) : (
