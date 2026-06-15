@@ -335,7 +335,7 @@ back to the old revision.
 
 ### Dependency Audit Acceptance
 
-The June 14, 2026 `npm audit --json` release check reports 13 advisories:
+The June 15, 2026 `npm audit --json` release check reports 13 advisories:
 5 high, 8 moderate, and 0 critical.
 
 - The React Router development chain (`@react-router/dev`, `vite-node`, Vite,
