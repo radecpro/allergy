@@ -10,7 +10,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "~/db/schema.server";
 import { createCurrentPollenAction } from "~/routes/api.current-pollen";
 
-import { buildCurrentSymptomSnapshot } from "./snapshot";
+import {
+  buildCurrentSymptomSnapshot,
+  reconstructSymptomCheck,
+} from "./snapshot";
 import {
   createSymptomCheckRepository,
   fingerprintSymptomCheckSnapshot,
@@ -71,6 +74,26 @@ function mixedSnapshot(cityLabel: string, completedAt: string) {
       "grass-pollen": "low",
       "tree-pollen": "moderate",
       "weed-pollen": "high",
+      "ragweed-pollen": "unknown",
+    },
+    completedAt: new Date(completedAt),
+  });
+}
+
+function editedSnapshot(cityLabel: string, completedAt: string) {
+  return buildCurrentSymptomSnapshot({
+    city: {
+      placeId: `place-${cityLabel.toLowerCase()}`,
+      label: cityLabel,
+    },
+    symptoms: [
+      { symptomId: "sneezing", intensity: "low" },
+      { symptomId: "blocked-nose", intensity: "high" },
+    ],
+    pollenActivity: {
+      "grass-pollen": "high",
+      "tree-pollen": "moderate",
+      "weed-pollen": "low",
       "ragweed-pollen": "unknown",
     },
     completedAt: new Date(completedAt),
@@ -166,6 +189,153 @@ describe("PostgreSQL symptom-check repository", () => {
       created,
     );
     await expect(repository.findForOwner(ownerB, created.id)).resolves.toBeNull();
+  });
+
+  it("updates only the owner's saved symptoms and advances updatedAt", async () => {
+    const [ownerA, ownerB] = ownerIds;
+    const original = await repository.createForOwner(
+      ownerA,
+      randomUUID(),
+      snapshot("Sopot", "2026-06-11T11:45:00.000Z"),
+    );
+    await repository.createForOwner(
+      ownerB,
+      randomUUID(),
+      snapshot("Toruń", "2026-06-11T11:50:00.000Z"),
+    );
+
+    const originalRow = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, original.id),
+    });
+
+    expect(originalRow).not.toBeUndefined();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const editedSymptoms = editedSnapshot(
+      "Sopot",
+      "2026-06-11T11:45:00.000Z",
+    ).symptoms;
+    const updated = await repository.updateForOwner(
+      ownerA,
+      original.id,
+      editedSymptoms,
+    );
+    const updatedRow = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, original.id),
+    });
+    const reconstructed = reconstructSymptomCheck(updated!.snapshot);
+
+    expect(updated).not.toBeNull();
+    expect(updated?.snapshot.symptoms).toEqual(editedSymptoms);
+    expect(
+      reconstructed.rankedResults.some((result) =>
+        result.matchedSymptoms.some(
+          (symptom) =>
+            symptom.symptomId === "sneezing" && symptom.intensity === "low",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      reconstructed.rankedResults.some((result) =>
+        result.matchedSymptoms.some(
+          (symptom) =>
+            symptom.symptomId === "blocked-nose" &&
+            symptom.intensity === "high",
+        ),
+      ),
+    ).toBe(true);
+    expect(updatedRow).toMatchObject({
+      id: original.id,
+      ownerId: ownerA,
+      clientRequestId: originalRow?.clientRequestId,
+      snapshotFingerprint: originalRow?.snapshotFingerprint,
+      snapshotVersion: originalRow?.snapshotVersion,
+      rankingVersion: originalRow?.rankingVersion,
+      cityPlaceId: originalRow?.cityPlaceId,
+      cityLabel: originalRow?.cityLabel,
+      symptoms: editedSymptoms,
+      pollenActivity: originalRow?.pollenActivity,
+      completedAt: originalRow?.completedAt,
+      createdAt: originalRow?.createdAt,
+    });
+    expect(updatedRow?.updatedAt.getTime()).toBeGreaterThan(
+      originalRow?.updatedAt.getTime() ?? 0,
+    );
+    expect(updatedRow?.updatedAt.getTime()).not.toBe(
+      originalRow?.updatedAt.getTime(),
+    );
+  });
+
+  it("rejects foreign and missing mutation targets without changing the owner row", async () => {
+    const [ownerA, ownerB] = ownerIds;
+    const original = await repository.createForOwner(
+      ownerA,
+      randomUUID(),
+      snapshot("Białystok", "2026-06-11T12:15:00.000Z"),
+    );
+    const before = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, original.id),
+    });
+
+    const editedSymptoms = editedSnapshot(
+      "Białystok",
+      "2026-06-11T12:15:00.000Z",
+    ).symptoms;
+    const missingUpdate = await repository.updateForOwner(
+      ownerA,
+      randomUUID(),
+      editedSymptoms,
+    );
+    const foreignUpdate = await repository.updateForOwner(
+      ownerB,
+      original.id,
+      editedSymptoms,
+    );
+    const missingDelete = await repository.deleteForOwner(
+      ownerA,
+      randomUUID(),
+    );
+    const foreignDelete = await repository.deleteForOwner(ownerB, original.id);
+    const after = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, original.id),
+    });
+
+    expect(missingUpdate).toBeNull();
+    expect(foreignUpdate).toBeNull();
+    expect(missingDelete).toBeNull();
+    expect(foreignDelete).toBeNull();
+    expect(after).toEqual(before);
+  });
+
+  it("deletes only the owner's saved check and leaves other users untouched", async () => {
+    const [ownerA, ownerB] = ownerIds;
+    const deleted = await repository.createForOwner(
+      ownerA,
+      randomUUID(),
+      snapshot("Gdynia", "2026-06-11T13:00:00.000Z"),
+    );
+    const kept = await repository.createForOwner(
+      ownerB,
+      randomUUID(),
+      snapshot("Olsztyn", "2026-06-11T13:05:00.000Z"),
+    );
+
+    const result = await repository.deleteForOwner(ownerA, deleted.id);
+    const deletedRow = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, deleted.id),
+    });
+    const keptRow = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, kept.id),
+    });
+
+    expect(result).toBe(deleted.id);
+    expect(deletedRow).toBeUndefined();
+    expect(keptRow).toMatchObject({
+      id: kept.id,
+      ownerId: ownerB,
+    });
+    await expect(repository.findForOwner(ownerA, deleted.id)).resolves.toBeNull();
+    await expect(repository.findForOwner(ownerB, kept.id)).resolves.toEqual(kept);
   });
 
   it("returns one stable record for concurrent same-content retries", async () => {
@@ -323,6 +493,33 @@ describe("PostgreSQL symptom-check repository", () => {
 
     expect(response.status).toBe(302);
     expect(afterSave?.value).toBe((before?.value ?? 0) + 1);
+  });
+
+  it("retries the original explicit save after editing and resolves to the existing record", async () => {
+    const ownerId = ownerIds[0];
+    const requestId = randomUUID();
+    const original = snapshot("Kalisz", "2026-06-11T14:00:00.000Z");
+    const created = await repository.createForOwner(
+      ownerId,
+      requestId,
+      original,
+    );
+    await repository.updateForOwner(
+      ownerId,
+      created.id,
+      editedSnapshot("Kalisz", "2026-06-11T14:00:00.000Z").symptoms,
+    );
+    const retried = await repository.createForOwner(
+      ownerId,
+      requestId,
+      original,
+      fingerprintSymptomCheckSnapshot(original),
+    );
+
+    expect(retried.id).toBe(created.id);
+    expect(retried.snapshot.symptoms).toEqual(
+      editedSnapshot("Kalisz", "2026-06-11T14:00:00.000Z").symptoms,
+    );
   });
 
   it("reset migration deletes symptom checks while preserving users", async () => {

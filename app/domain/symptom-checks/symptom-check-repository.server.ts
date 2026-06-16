@@ -10,6 +10,7 @@ import type {
   SymptomCheckRecord,
   SymptomCheckRepository,
   SymptomCheckSnapshot,
+  SavedSymptomEntry,
 } from "./types";
 
 const HISTORY_LIST_LIMIT = 100;
@@ -143,6 +144,38 @@ export function createSymptomCheckRepository(
         .limit(1);
 
       return row ? toRecord(row) : null;
+    },
+
+    async updateForOwner(ownerId, checkId, symptoms) {
+      const [updated] = await database
+        .update(symptomChecks)
+        .set({
+          symptoms,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(symptomChecks.ownerId, ownerId),
+            eq(symptomChecks.id, checkId),
+          ),
+        )
+        .returning();
+
+      return updated ? toRecord(updated) : null;
+    },
+
+    async deleteForOwner(ownerId, checkId) {
+      const [deleted] = await database
+        .delete(symptomChecks)
+        .where(
+          and(
+            eq(symptomChecks.ownerId, ownerId),
+            eq(symptomChecks.id, checkId),
+          ),
+        )
+        .returning({ id: symptomChecks.id });
+
+      return deleted?.id ?? null;
     },
   };
 }

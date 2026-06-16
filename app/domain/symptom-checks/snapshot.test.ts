@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildCurrentSymptomSnapshot,
+  parseSavedSymptomEntries,
   parseSymptomCheckSnapshot,
   reconstructSymptomCheck,
 } from "./snapshot";
@@ -27,6 +28,42 @@ function validSnapshot() {
 }
 
 describe("symptom-check snapshot", () => {
+  it("parses valid mixed saved symptom entries", () => {
+    expect(
+      parseSavedSymptomEntries([
+        { symptomId: "blocked-nose", intensity: "high" },
+        { symptomId: "watery-eyes", intensity: "low" },
+      ]),
+    ).toEqual([
+      { symptomId: "blocked-nose", intensity: "high" },
+      { symptomId: "watery-eyes", intensity: "low" },
+    ]);
+  });
+
+  it.each([
+    ["empty symptoms", []],
+    [
+      "oversized symptoms",
+      Array.from({ length: 12 }, (_, index) => ({
+        symptomId:
+          index % 2 === 0 ? "blocked-nose" : "watery-eyes",
+        intensity: "high",
+      })),
+    ],
+    ["malformed entry", [{ symptomId: "blocked-nose" }]],
+    ["unknown symptom", [{ symptomId: "unknown", intensity: "high" }]],
+    ["unknown intensity", [{ symptomId: "blocked-nose", intensity: "medium" }]],
+    [
+      "duplicate symptoms",
+      [
+        { symptomId: "blocked-nose", intensity: "high" },
+        { symptomId: "blocked-nose", intensity: "low" },
+      ],
+    ],
+  ])("rejects %s", (_label, entries) => {
+    expect(parseSavedSymptomEntries(entries)).toBeNull();
+  });
+
   it("preserves each symptom intensity", () => {
     expect(validSnapshot().symptoms).toEqual([
       { symptomId: "blocked-nose", intensity: "high" },

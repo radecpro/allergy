@@ -69,4 +69,10 @@ export interface SymptomCheckRepository {
     ownerId: string,
     checkId: string,
   ): Promise<SymptomCheckRecord | null>;
+  updateForOwner(
+    ownerId: string,
+    checkId: string,
+    symptoms: SavedSymptomEntry[],
+  ): Promise<SymptomCheckRecord | null>;
+  deleteForOwner(ownerId: string, checkId: string): Promise<string | null>;
 }

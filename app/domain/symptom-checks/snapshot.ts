@@ -120,7 +120,9 @@ function parseCompletedAt(
   return completedAt.toISOString();
 }
 
-function parseSymptoms(value: unknown): SavedSymptomEntry[] | null {
+export function parseSavedSymptomEntries(
+  value: unknown,
+): SavedSymptomEntry[] | null {
   if (!Array.isArray(value) || value.length === 0 || value.length > symptomIds.length) {
     return null;
   }
@@ -202,7 +204,7 @@ export function parseSymptomCheckSnapshot(
   }
 
   const completedAt = parseCompletedAt(value.completedAt, options);
-  const symptoms = parseSymptoms(value.symptoms);
+  const symptoms = parseSavedSymptomEntries(value.symptoms);
   const pollenActivity = parsePollenActivity(value.pollenActivity);
 
   if (!completedAt || !symptoms || !pollenActivity) {

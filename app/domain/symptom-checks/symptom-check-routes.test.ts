@@ -47,6 +47,8 @@ function createRepository(): SymptomCheckRepository {
     createForOwner: vi.fn(async () => record),
     listForOwner: vi.fn(async () => []),
     findForOwner: vi.fn(async () => record),
+    updateForOwner: vi.fn(async () => record),
+    deleteForOwner: vi.fn(async () => checkId),
   };
 }
 
