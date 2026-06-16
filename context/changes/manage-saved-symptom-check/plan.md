@@ -554,18 +554,18 @@ coordination or data backfill.
 
 #### Automated
 
-- [x] 4.1 Full deterministic test suite passes
-- [x] 4.2 Complete PostgreSQL integration suite passes
-- [x] 4.3 Typecheck passes
-- [x] 4.4 Production build passes
-- [x] 4.5 Dependency audit is fixed or documented
-- [x] 4.6 Public guest routes and APIs remain unguarded
+- [x] 4.1 Full deterministic test suite passes — 1f3d769
+- [x] 4.2 Complete PostgreSQL integration suite passes — 1f3d769
+- [x] 4.3 Typecheck passes — 1f3d769
+- [x] 4.4 Production build passes — 1f3d769
+- [x] 4.5 Dependency audit is fixed or documented — 1f3d769
+- [x] 4.6 Public guest routes and APIs remain unguarded — 1f3d769
 
 #### Manual
 
-- [x] 4.7 Two users cannot update or delete each other's records
-- [x] 4.8 Editing preserves immutable saved context and metadata
-- [x] 4.9 Successful deletion removes history and detail access
-- [x] 4.10 New checks remain independent of saved history
-- [x] 4.11 Runtime logs contain no private check, owner, credential, or token data
-- [x] 4.12 S-03 roadmap metadata is synchronized during closeout
+- [x] 4.7 Two users cannot update or delete each other's records — 1f3d769
+- [x] 4.8 Editing preserves immutable saved context and metadata — 1f3d769
+- [x] 4.9 Successful deletion removes history and detail access — 1f3d769
+- [x] 4.10 New checks remain independent of saved history — 1f3d769
+- [x] 4.11 Runtime logs contain no private check, owner, credential, or token data — 1f3d769
+- [x] 4.12 S-03 roadmap metadata is synchronized during closeout — 1f3d769
