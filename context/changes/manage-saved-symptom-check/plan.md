@@ -504,10 +504,10 @@ coordination or data backfill.
 
 #### Automated
 
-- [x] 1.1 Symptom-entry parser tests pass for valid and rejected inputs
-- [x] 1.2 PostgreSQL proves owner-scoped update/delete and immutable-field preservation
-- [x] 1.3 Original explicit-save retry remains idempotent after editing
-- [x] 1.4 Typecheck passes with repository mutation contracts
+- [x] 1.1 Symptom-entry parser tests pass for valid and rejected inputs — 692eb11
+- [x] 1.2 PostgreSQL proves owner-scoped update/delete and immutable-field preservation — 692eb11
+- [x] 1.3 Original explicit-save retry remains idempotent after editing — 692eb11
+- [x] 1.4 Typecheck passes with repository mutation contracts — 692eb11
 
 #### Manual
 
