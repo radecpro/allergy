@@ -511,9 +511,9 @@ coordination or data backfill.
 
 #### Manual
 
-- [ ] 1.5 Mutation APIs derive owner identity outside browser data
-- [ ] 1.6 Update SQL changes only symptoms and updatedAt
-- [ ] 1.7 Delete is a hard owner-and-record scoped operation
+- [x] 1.5 Mutation APIs derive owner identity outside browser data — 692eb11
+- [x] 1.6 Update SQL changes only symptoms and updatedAt — 692eb11
+- [x] 1.7 Delete is a hard owner-and-record scoped operation — 692eb11
 
 ### Phase 2: Protected Detail Action
 
@@ -535,20 +535,20 @@ coordination or data backfill.
 
 #### Automated
 
-- [ ] 3.1 Pure edit-state tests pass for initialization, transitions, reset, and submission
-- [ ] 3.2 Focused symptom-check route tests remain green with UI contracts
-- [ ] 3.3 Full deterministic test suite passes
-- [ ] 3.4 Typecheck passes
+- [x] 3.1 Pure edit-state tests pass for initialization, transitions, reset, and submission — 2884ed0
+- [x] 3.2 Focused symptom-check route tests remain green with UI contracts — 2884ed0
+- [x] 3.3 Full deterministic test suite passes — 2884ed0
+- [x] 3.4 Typecheck passes — 2884ed0
 
 #### Manual
 
-- [ ] 3.5 Detail uses explicit read and edit modes
-- [ ] 3.6 Unsaved ranking preview recalculates against preserved pollen context
-- [ ] 3.7 Save readiness and cancel restore persisted values
-- [ ] 3.8 Failed update preserves the draft and supports retry
-- [ ] 3.9 Inline delete confirmation supports cancel, failure, and retry
-- [ ] 3.10 Pending controls prevent duplicate or conflicting mutations
-- [ ] 3.11 Edit and delete layouts work on mobile and desktop
+- [x] 3.5 Detail uses explicit read and edit modes — 2884ed0
+- [x] 3.6 Unsaved ranking preview recalculates against preserved pollen context — 2884ed0
+- [x] 3.7 Save readiness and cancel restore persisted values — 2884ed0
+- [x] 3.8 Failed update preserves the draft and supports retry — 2884ed0
+- [x] 3.9 Inline delete confirmation supports cancel, failure, and retry — 2884ed0
+- [x] 3.10 Pending controls prevent duplicate or conflicting mutations — 2884ed0
+- [x] 3.11 Edit and delete layouts work on mobile and desktop — 2884ed0
 
 ### Phase 4: Integrated Verification And Handoff
 
