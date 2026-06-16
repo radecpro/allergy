@@ -519,17 +519,17 @@ coordination or data backfill.
 
 #### Automated
 
-- [x] 2.1 Detail action passes method, origin, content-type, body-bound, and auth tests
-- [x] 2.2 Invalid UUID, intent, and symptom payloads are rejected before persistence
-- [x] 2.3 Authenticated owner derivation and update/delete redirects are correct
-- [x] 2.4 Missing and foreign mutations share private not-found behavior
-- [x] 2.5 Rejected requests do not call repository mutations
-- [x] 2.6 Typecheck passes with the detail route action
+- [x] 2.1 Detail action passes method, origin, content-type, body-bound, and auth tests — 79c6f0b
+- [x] 2.2 Invalid UUID, intent, and symptom payloads are rejected before persistence — 79c6f0b
+- [x] 2.3 Authenticated owner derivation and update/delete redirects are correct — 79c6f0b
+- [x] 2.4 Missing and foreign mutations share private not-found behavior — 79c6f0b
+- [x] 2.5 Rejected requests do not call repository mutations — 79c6f0b
+- [x] 2.6 Typecheck passes with the detail route action — 79c6f0b
 
 #### Manual
 
-- [ ] 2.7 Mutations reuse revocation-aware session and trusted-origin boundaries
-- [ ] 2.8 Mutation errors disclose no private record or owner data
+- [x] 2.7 Mutations reuse revocation-aware session and trusted-origin boundaries — 79c6f0b
+- [x] 2.8 Mutation errors disclose no private record or owner data — 79c6f0b
 
 ### Phase 3: Edit And Delete Experience
 
