@@ -9,6 +9,7 @@ type SymptomIntensitySelectorProps = {
   symptomLabel: string;
   intensity: SymptomIntensity | null;
   onAssign: (symptomId: SymptomId, intensity: SymptomIntensity) => void;
+  disabled?: boolean;
 };
 
 export function SymptomIntensitySelector({
@@ -16,6 +17,7 @@ export function SymptomIntensitySelector({
   symptomLabel,
   intensity,
   onAssign,
+  disabled = false,
 }: SymptomIntensitySelectorProps) {
   const helperId = `symptom-intensity-${symptomId}-helper`;
 
@@ -23,6 +25,7 @@ export function SymptomIntensitySelector({
     <fieldset
       className="grid gap-2 border-t border-emerald-200 px-3 pb-3 pt-2"
       aria-describedby={helperId}
+      disabled={disabled}
     >
       <legend className="sr-only">Nasilenie objawu: {symptomLabel}</legend>
       <p
@@ -54,6 +57,7 @@ export function SymptomIntensitySelector({
               value={option}
               checked={intensity === option}
               onChange={() => onAssign(symptomId, option)}
+              disabled={disabled}
               className="sr-only"
             />
             {symptomIntensityLabels[option]}

@@ -1,4 +1,5 @@
-import { Link, useLoaderData } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, useLoaderData, useSearchParams } from "react-router";
 
 import { AccountNav } from "~/components/account-nav";
 import { SymptomCheckSummary } from "~/components/symptom-check-summary";
@@ -30,6 +31,27 @@ export function headers({ loaderHeaders }: Route.HeadersArgs) {
 
 export default function SymptomCheckHistory() {
   const data = useLoaderData() as SymptomCheckListLoaderData;
+  const [searchParams] = useSearchParams();
+  const [flashMessage, setFlashMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const deleted = searchParams.get("deleted") === "1";
+
+    if (!deleted) {
+      setFlashMessage(null);
+      return;
+    }
+
+    setFlashMessage("Sprawdzenie zostało usunięte.");
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("deleted");
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}`,
+    );
+  }, [searchParams]);
 
   return (
     <main className="min-h-screen bg-stone-50 px-4 py-6 text-slate-950">
@@ -54,6 +76,12 @@ export default function SymptomCheckHistory() {
             Wróć do strony głównej
           </Link>
         </header>
+
+        {flashMessage ? (
+          <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+            {flashMessage}
+          </p>
+        ) : null}
 
         {data.records.length === 0 ? (
           <section className="rounded-md border border-dashed border-slate-300 bg-white p-8">
