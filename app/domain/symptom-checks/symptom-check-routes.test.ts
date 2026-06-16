@@ -5,6 +5,7 @@ import type { LocalUser } from "~/domain/auth/types";
 
 import { buildCurrentSymptomSnapshot } from "./snapshot";
 import {
+  createSymptomCheckDetailAction,
   createSaveSymptomCheckAction,
   createSymptomCheckDetailLoader,
   createSymptomCheckListLoader,
@@ -68,6 +69,20 @@ function saveRequest(
       snapshot: JSON.stringify(snapshot),
       ...values,
     }),
+  });
+}
+
+function detailRequest(
+  values: Record<string, string> = {},
+  headers: HeadersInit = { Origin: appOrigin },
+) {
+  return new Request(`${appOrigin}/history/${checkId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...headers,
+    },
+    body: new URLSearchParams(values),
   });
 }
 
@@ -249,6 +264,294 @@ describe("save symptom-check action", () => {
         )
       ).status,
     ).toBe(413);
+  });
+});
+
+describe("symptom-check detail action", () => {
+  it.each([
+    ["GET", 405],
+    ["POST", 403],
+  ])("rejects %s and bad origins before persistence", async (method, expectedStatus) => {
+    const repository = createRepository();
+    const action = createSymptomCheckDetailAction({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+      originValidator: () => false,
+    });
+    const response = await action(
+      new Request(`${appOrigin}/history/${checkId}`, {
+        method,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      }),
+      checkId,
+    );
+
+    expect(response.status).toBe(expectedStatus);
+    expect(repository.updateForOwner).not.toHaveBeenCalled();
+    expect(repository.deleteForOwner).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported content type and bounded bodies before parsing", async () => {
+    const repository = createRepository();
+    const action = createSymptomCheckDetailAction({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+      originValidator: () => true,
+    });
+
+    expect(
+      (
+        await action(
+          new Request(`${appOrigin}/history/${checkId}`, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain", Origin: appOrigin },
+          }),
+          checkId,
+        )
+      ).status,
+    ).toBe(415);
+    expect(
+      (
+        await action(
+          new Request(`${appOrigin}/history/${checkId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "Content-Length": "20000",
+              Origin: appOrigin,
+            },
+            body: "a=1",
+          }),
+          checkId,
+        )
+      ).status,
+    ).toBe(413);
+    expect(repository.updateForOwner).not.toHaveBeenCalled();
+    expect(repository.deleteForOwner).not.toHaveBeenCalled();
+  });
+
+  it("propagates signed-out redirects before repository work", async () => {
+    const repository = createRepository();
+    const action = createSymptomCheckDetailAction({
+      appOrigin,
+      sessions: {
+        requireUser: vi.fn(async () => {
+          throw redirect(`/login?returnTo=%2Fhistory%2F${checkId}`, {
+            headers: { "Set-Cookie": "cleared-session" },
+          });
+        }),
+      },
+      repository,
+      originValidator: () => true,
+    });
+
+    try {
+      await action(detailRequest({ intent: "delete" }), checkId);
+      throw new Error("Expected authentication redirect.");
+    } catch (error) {
+      const response = error as Response;
+      expect(response.status).toBe(302);
+      expect(response.headers.get("Location")).toBe(
+        `/login?returnTo=%2Fhistory%2F${checkId}`,
+      );
+      expect(response.headers.get("Set-Cookie")).toBe("cleared-session");
+    }
+    expect(repository.updateForOwner).not.toHaveBeenCalled();
+    expect(repository.deleteForOwner).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["not-a-uuid", 404],
+    [undefined, 404],
+  ])("treats invalid identifiers as private 404s", async (candidate, expectedStatus) => {
+    const repository = createRepository();
+    const action = createSymptomCheckDetailAction({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+      originValidator: () => true,
+    });
+
+    try {
+      await action(detailRequest({ intent: "delete" }), candidate);
+      throw new Error("Expected a not-found response.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Response);
+      expect((error as Response).status).toBe(expectedStatus);
+      expect((error as Response).headers.get("Cache-Control")).toBe(
+        "private, no-store",
+      );
+    }
+    expect(repository.updateForOwner).not.toHaveBeenCalled();
+    expect(repository.deleteForOwner).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      "update",
+      new URLSearchParams({
+        intent: "update",
+        symptoms: "not-json",
+      }),
+      400,
+    ],
+    [
+      "update-empty",
+      new URLSearchParams({
+        intent: "update",
+        symptoms: JSON.stringify([]),
+      }),
+      400,
+    ],
+    [
+      "update-duplicate",
+      new URLSearchParams({
+        intent: "update",
+        symptoms: JSON.stringify([
+          { symptomId: "sneezing", intensity: "high" },
+          { symptomId: "sneezing", intensity: "low" },
+        ]),
+      }),
+      400,
+    ],
+    [
+      "update-extra",
+      new URLSearchParams({
+        intent: "update",
+        symptoms: JSON.stringify([
+          { symptomId: "sneezing", intensity: "high" },
+        ]),
+        city: "Warszawa, Polska",
+      }),
+      400,
+    ],
+    [
+      "unknown",
+      new URLSearchParams({
+        intent: "archive",
+      }),
+      400,
+    ],
+  ])(
+    "rejects %s update payloads before persistence",
+    async (_label, body, expectedStatus) => {
+      const repository = createRepository();
+      const action = createSymptomCheckDetailAction({
+        appOrigin,
+        sessions: { requireUser: vi.fn(async () => user) },
+        repository,
+        originValidator: () => true,
+      });
+
+      const response = await action(
+        new Request(`${appOrigin}/history/${checkId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded", Origin: appOrigin },
+          body,
+        }),
+        checkId,
+      );
+
+      expect(response.status).toBe(expectedStatus);
+      expect(repository.updateForOwner).not.toHaveBeenCalled();
+      expect(repository.deleteForOwner).not.toHaveBeenCalled();
+    },
+  );
+
+  it("uses the authenticated owner and redirects to detail after update", async () => {
+    const repository = createRepository();
+    const updatedRecord = {
+      ...record,
+      snapshot: buildCurrentSymptomSnapshot({
+        city: record.snapshot.city,
+        symptoms: [{ symptomId: "sneezing", intensity: "low" }],
+        pollenActivity: record.snapshot.pollenActivity,
+        completedAt: new Date(record.snapshot.completedAt),
+      }),
+    };
+    vi.mocked(repository.updateForOwner).mockResolvedValue(updatedRecord);
+    const action = createSymptomCheckDetailAction({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+      originValidator: () => true,
+    });
+    const response = await action(
+      detailRequest({
+        intent: "update",
+        symptoms: JSON.stringify([
+          { symptomId: "sneezing", intensity: "low" },
+        ]),
+      }),
+      checkId,
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("Location")).toBe(
+      `/history/${checkId}?updated=1`,
+    );
+    expect(repository.updateForOwner).toHaveBeenCalledWith(user.id, checkId, [
+      { symptomId: "sneezing", intensity: "low" },
+    ]);
+  });
+
+  it("uses the authenticated owner and redirects to history after delete", async () => {
+    const repository = createRepository();
+    vi.mocked(repository.deleteForOwner).mockResolvedValue(checkId);
+    const action = createSymptomCheckDetailAction({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+      originValidator: () => true,
+    });
+    const response = await action(
+      detailRequest({ intent: "delete" }),
+      checkId,
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("Location")).toBe("/history?deleted=1");
+    expect(repository.deleteForOwner).toHaveBeenCalledWith(user.id, checkId);
+  });
+
+  it.each([
+    ["update", "missing"],
+    ["delete", "foreign"],
+  ])("returns the same private 404 for missing and foreign %s targets", async (intent, kind) => {
+    const repository = createRepository();
+    vi.mocked(repository.updateForOwner).mockResolvedValue(null);
+    vi.mocked(repository.deleteForOwner).mockResolvedValue(null);
+    const action = createSymptomCheckDetailAction({
+      appOrigin,
+      sessions: { requireUser: vi.fn(async () => user) },
+      repository,
+      originValidator: () => true,
+    });
+
+    try {
+      await action(
+        detailRequest(
+          intent === "update"
+            ? {
+                intent,
+                symptoms: JSON.stringify([
+                  { symptomId: "sneezing", intensity: "low" },
+                ]),
+              }
+            : { intent },
+        ),
+        kind === "missing" ? "not-a-uuid" : checkId,
+      );
+      throw new Error("Expected a not-found response.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Response);
+      expect((error as Response).status).toBe(404);
+      expect((error as Response).headers.get("Cache-Control")).toBe(
+        "private, no-store",
+      );
+    }
   });
 });
 

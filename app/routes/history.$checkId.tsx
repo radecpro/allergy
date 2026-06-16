@@ -11,6 +11,7 @@ import { clearPendingSymptomCheck } from "~/domain/symptom-checks/pending-snapsh
 import { reconstructSymptomCheck } from "~/domain/symptom-checks/snapshot";
 import { createProductionSymptomCheckDependencies } from "~/domain/symptom-checks/dependencies.server";
 import {
+  createSymptomCheckDetailAction,
   createSymptomCheckDetailLoader,
 } from "~/domain/symptom-checks/symptom-check-route-handlers.server";
 import type { SymptomCheckDetailLoaderData } from "~/domain/symptom-checks/symptom-check-route-handlers.server";
@@ -23,6 +24,12 @@ export function meta() {
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   return createSymptomCheckDetailLoader(
+    createProductionSymptomCheckDependencies(),
+  )(request, params.checkId);
+}
+
+export async function action({ request, params }: Route.ActionArgs) {
+  return createSymptomCheckDetailAction(
     createProductionSymptomCheckDependencies(),
   )(request, params.checkId);
 }

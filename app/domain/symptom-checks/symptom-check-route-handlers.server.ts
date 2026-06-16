@@ -8,7 +8,7 @@ import {
   SymptomCheckRequestConflictError,
 } from "./symptom-check-repository.server";
 import { isUuid, pendingSnapshotLifetimeMs } from "./pending-snapshot";
-import { parseSymptomCheckSnapshot } from "./snapshot";
+import { parseSavedSymptomEntries, parseSymptomCheckSnapshot } from "./snapshot";
 import type {
   SymptomCheckRecord,
   SymptomCheckRepository,
@@ -25,6 +25,10 @@ export type SymptomCheckRouteDependencies = {
 };
 
 export type SaveSymptomCheckActionData = {
+  error: string;
+};
+
+export type SymptomCheckDetailActionData = {
   error: string;
 };
 
@@ -96,6 +100,13 @@ async function readBoundedForm(request: Request): Promise<URLSearchParams> {
 function errorResponse(error: string, status: number): Response {
   return Response.json(
     { error } satisfies SaveSymptomCheckActionData,
+    { status },
+  );
+}
+
+function detailErrorResponse(error: string, status: number): Response {
+  return Response.json(
+    { error } satisfies SymptomCheckDetailActionData,
     { status },
   );
 }
@@ -241,6 +252,138 @@ export function createSymptomCheckDetailLoader(
           "Cache-Control": "private, no-store",
         },
       },
+    );
+  };
+}
+
+function hasOnlyFormKeys(form: URLSearchParams, allowedKeys: readonly string[]) {
+  const allowed = new Set(allowedKeys);
+
+  for (const key of form.keys()) {
+    if (!allowed.has(key)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function createSymptomCheckDetailAction(
+  dependencies: SymptomCheckRouteDependencies,
+) {
+  const validateOrigin =
+    dependencies.originValidator ?? hasTrustedRequestOrigin;
+
+  return async function symptomCheckDetailAction(
+    request: Request,
+    checkId: string | undefined,
+  ): Promise<Response> {
+    if (request.method !== "POST") {
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { Allow: "POST" },
+      });
+    }
+
+    if (!validateOrigin(request, dependencies.appOrigin)) {
+      return detailErrorResponse(
+        "Nie udało się zapisać zmian. Odśwież stronę i spróbuj ponownie.",
+        403,
+      );
+    }
+
+    const user = await dependencies.sessions.requireUser(request);
+
+    if (!checkId || !isUuid(checkId)) {
+      throw notFoundResponse();
+    }
+
+    let form: URLSearchParams;
+
+    try {
+      form = await readBoundedForm(request);
+    } catch (error) {
+      if (error instanceof SaveRequestError) {
+        return new Response("Invalid request body.", { status: error.status });
+      }
+      throw error;
+    }
+
+    const intent = form.get("intent");
+
+    if (intent === "update") {
+      if (
+        !hasOnlyFormKeys(form, ["intent", "symptoms"]) ||
+        typeof form.get("symptoms") !== "string"
+      ) {
+        return detailErrorResponse(
+          "Dane edycji są nieprawidłowe. Spróbuj ponownie.",
+          400,
+        );
+      }
+
+      let rawSymptoms: unknown;
+
+      try {
+        rawSymptoms = JSON.parse(form.get("symptoms") ?? "");
+      } catch {
+        return detailErrorResponse(
+          "Dane edycji są nieprawidłowe. Spróbuj ponownie.",
+          400,
+        );
+      }
+
+      const symptoms = parseSavedSymptomEntries(rawSymptoms);
+
+      if (!symptoms) {
+        return detailErrorResponse(
+          "Dane edycji są nieprawidłowe. Spróbuj ponownie.",
+          400,
+        );
+      }
+
+      const record = await dependencies.repository.updateForOwner(
+        user.id,
+        checkId,
+        symptoms,
+      );
+
+      if (!record) {
+        throw notFoundResponse();
+      }
+
+      const target = new URL(`/history/${record.id}`, dependencies.appOrigin);
+      target.searchParams.set("updated", "1");
+
+      return redirect(`${target.pathname}${target.search}`);
+    }
+
+    if (intent === "delete") {
+      if (!hasOnlyFormKeys(form, ["intent"])) {
+        return detailErrorResponse(
+          "Nie udało się usunąć sprawdzenia. Spróbuj ponownie.",
+          400,
+        );
+      }
+
+      const deletedId = await dependencies.repository.deleteForOwner(
+        user.id,
+        checkId,
+      );
+
+      if (!deletedId) {
+        throw notFoundResponse();
+      }
+
+      const target = new URL("/history", dependencies.appOrigin);
+      target.searchParams.set("deleted", "1");
+
+      return redirect(`${target.pathname}${target.search}`);
+    }
+
+    return detailErrorResponse(
+      "Nieznany typ operacji. Odśwież stronę i spróbuj ponownie.",
+      400,
     );
   };
 }
