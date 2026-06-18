@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLoaderData, useSearchParams } from "react-router";
+import {
+  Form,
+  Link,
+  useLoaderData,
+  useNavigation,
+  useSearchParams,
+} from "react-router";
 
 import { AccountNav } from "~/components/account-nav";
 import { SymptomCheckSummary } from "~/components/symptom-check-summary";
@@ -31,9 +37,15 @@ export function headers({ loaderHeaders }: Route.HeadersArgs) {
 
 export default function SymptomCheckHistory() {
   const data = useLoaderData() as SymptomCheckListLoaderData;
+  const navigation = useNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
+  const [deletePromptRecordId, setDeletePromptRecordId] = useState<string | null>(
+    null,
+  );
   const deletionFlashShownRef = useRef(false);
+  const isSubmitting = navigation.state !== "idle";
+  const pendingIntent = navigation.formData?.get("intent");
 
   useEffect(() => {
     const deleted = searchParams.get("deleted") === "1";
@@ -106,25 +118,77 @@ export default function SymptomCheckHistory() {
             {data.records.map((record) => {
               const topResult =
                 reconstructSymptomCheck(record.snapshot).rankedResults[0];
+              const deletePromptOpen = deletePromptRecordId === record.id;
 
               return (
                 <article
                   key={record.id}
-                  className="rounded-md border border-slate-200 bg-white p-5 shadow-sm"
+                  className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm"
                 >
-                  <SymptomCheckSummary snapshot={record.snapshot} compact />
-                  {topResult ? (
-                    <p className="mt-3 text-sm text-slate-700">
-                      Najwyżej w zapisanym rankingu:{" "}
-                      <strong>{topResult.allergenLabel}</strong>
-                    </p>
+                  <div>
+                    <SymptomCheckSummary snapshot={record.snapshot} compact />
+                    {topResult ? (
+                      <p className="mt-3 text-sm text-slate-700">
+                        Najwyżej w zapisanym rankingu:{" "}
+                        <strong>{topResult.allergenLabel}</strong>
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Link
+                      to={`/history/${record.id}`}
+                      className="inline-block text-sm font-semibold text-emerald-800 underline underline-offset-4"
+                    >
+                      Otwórz szczegóły
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setDeletePromptRecordId(record.id)}
+                      disabled={isSubmitting}
+                      className="text-sm font-semibold text-rose-800 underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Usuń zapis
+                    </button>
+                  </div>
+
+                  {deletePromptOpen ? (
+                    <Form
+                      method="post"
+                      action={`/history/${record.id}`}
+                      className="grid gap-3 rounded-md border border-rose-200 bg-rose-50 p-4"
+                    >
+                      <input type="hidden" name="intent" value="delete" />
+                      <div>
+                        <h2 className="text-base font-semibold text-rose-950">
+                          Potwierdź usunięcie
+                        </h2>
+                        <p className="mt-1 text-sm leading-6 text-rose-900">
+                          To usunie ten zapis na stałe. Nie będzie już widoczny
+                          w historii ani dostępny w szczegółach.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setDeletePromptRecordId(null)}
+                          disabled={isSubmitting}
+                          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Anuluj
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="rounded-md bg-rose-700 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {pendingIntent === "delete"
+                            ? "Usuwam..."
+                            : "Potwierdź usunięcie"}
+                        </button>
+                      </div>
+                    </Form>
                   ) : null}
-                  <Link
-                    to={`/history/${record.id}`}
-                    className="mt-4 inline-block text-sm font-semibold text-emerald-800 underline underline-offset-4"
-                  >
-                    Otwórz szczegóły
-                  </Link>
                 </article>
               );
             })}
