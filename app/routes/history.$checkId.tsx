@@ -479,6 +479,11 @@ export default function SavedSymptomCheck() {
                   nie będą już dostępne.
                 </p>
               </div>
+              {errorMessage ? (
+                <p role="alert" className="rounded-md border border-rose-200 bg-white px-4 py-3 text-sm text-rose-900">
+                  {errorMessage}
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"

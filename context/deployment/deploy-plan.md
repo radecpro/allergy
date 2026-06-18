@@ -335,13 +335,17 @@ back to the old revision.
 
 ### Dependency Audit Acceptance
 
-The June 15, 2026 `npm audit --json` release check reports 13 advisories:
-5 high, 8 moderate, and 0 critical.
+The June 18, 2026 `npm audit --json` release check reports 12 advisories:
+2 high, 10 moderate, and 0 critical.
 
-- The React Router development chain (`@react-router/dev`, `vite-node`, Vite,
-  and esbuild) has no fix available in the current dependency graph.
+- The direct Vite advisories affect development-server behavior. Keep
+  development servers private; update Vite in a separately tested dependency
+  change.
+- The `form-data` advisory is transitive through Google/Firebase request
+  tooling. Verify any non-breaking remediation separately because the affected
+  packages sit under authentication/provider dependencies.
 - The Drizzle Kit advisories affect migration/development tooling. The audit's
-  suggested `0.19.1` change is a downgrade from `0.31.10` and is not accepted
+  suggested `0.18.1` change is a downgrade from `0.31.10` and is not accepted
   without a separately tested migration-tooling change.
 - The Firebase Admin/Google Cloud/UUID chain suggests downgrading
   `firebase-admin` from `14.x` to `10.3.0`; that incompatible downgrade is not

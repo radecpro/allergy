@@ -125,18 +125,21 @@ npm run test:auth-live
 
 ### Accepted Audit Advisories
 
-On June 10, 2026, `npm audit --json` reported 10 moderate advisories and no
-high or critical advisories. `npm audit fix` found no non-breaking update.
-The remaining paths are:
+On June 18, 2026, `npm audit --json` reported 12 advisories: 2 high,
+10 moderate, and 0 critical. The remaining paths are:
 
-- a development-only legacy `esbuild` under current `drizzle-kit`;
-- `uuid` through Firebase Admin's Google Cloud Storage dependencies.
+- Vite development-server advisories in the direct `vite` dependency;
+- `form-data` through transitive Google/Firebase request tooling;
+- a development-only legacy `esbuild` chain under current `drizzle-kit`;
+- `uuid`, `gaxios`, `teeny-request`, `retry-request`, and
+  `@google-cloud/storage` through Firebase Admin's Google Cloud dependencies.
 
-`npm audit fix --force` recommends downgrading `drizzle-kit` and
-`firebase-admin` across major versions, so it is not an accepted remediation.
-The application does not expose the Drizzle Kit development server and does
-not call the affected UUID buffer APIs. Re-run the audit on dependency updates
-and remove this acceptance when upstream packages resolve the chains.
+The direct Vite fix and transitive request-tooling fixes require dependency
+updates that should be tested as a separate change. `npm audit` also suggests
+downgrading `drizzle-kit` and `firebase-admin` across major versions, so those
+are not accepted remediations in this product change. Keep development servers
+private, run migration tooling only in trusted local or build-job environments,
+and re-run the audit before traffic movement.
 
 Review `context/deployment/deploy-plan.md` before applying migrations or moving
 Cloud Run traffic.
