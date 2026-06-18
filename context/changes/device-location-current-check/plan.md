@@ -296,10 +296,10 @@ No database migration is required. Saved symptom snapshot shape remains unchange
 
 #### Manual
 
-- [ ] 2.3 Clicking locate me with permission granted resolves a city, fills the selected-city state, and triggers the existing pollen loading indicator
-- [ ] 2.4 Manual city typing, suggestion selection, and keyboard behavior still work after a successful locate-me selection
-- [ ] 2.5 Manual city typing, suggestion selection, and keyboard behavior still work after locate-me denial, unsupported geolocation, timeout, or server failure
-- [ ] 2.6 Saving a completed check created from locate-me stores only city label/place ID plus symptoms and pollen activity
+- [x] 2.3 Clicking locate me with permission granted resolves a city, fills the selected-city state, and triggers the existing pollen loading indicator
+- [x] 2.4 Manual city typing, suggestion selection, and keyboard behavior still work after a successful locate-me selection
+- [x] 2.5 Manual city typing, suggestion selection, and keyboard behavior still work after locate-me denial, unsupported geolocation, timeout, or server failure
+- [x] 2.6 Saving a completed check created from locate-me stores only city label/place ID plus symptoms and pollen activity
 
 ### Phase 3: Fallback Regression Coverage And Handoff Verification
 
@@ -312,7 +312,7 @@ No database migration is required. Saved symptom snapshot shape remains unchange
 
 #### Manual
 
-- [ ] 3.5 Browser smoke test passes for permission granted, denied, and skipped manual-selection paths
-- [ ] 3.6 Existing guest current-symptoms flow remains complete without login
-- [ ] 3.7 Existing destination flow still works and was not changed
-- [ ] 3.8 The browser network panel shows coordinates only in the `/api/current-location` POST body and not in URLs
+- [x] 3.5 Browser smoke test passes for permission granted, denied, and skipped manual-selection paths
+- [x] 3.6 Existing guest current-symptoms flow remains complete without login
+- [x] 3.7 Existing destination flow still works and was not changed
+- [x] 3.8 The browser network panel shows coordinates only in the `/api/current-location` POST body and not in URLs
