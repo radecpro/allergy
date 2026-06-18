@@ -1,7 +1,7 @@
 ---
 change_id: device-location-current-check
 title: Add device location for current symptom checks
-status: planned
+status: implementing
 created: 2026-06-18
 updated: 2026-06-18
 ---

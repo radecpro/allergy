@@ -9,5 +9,6 @@ export default [
   route("/history", "routes/history.tsx"),
   route("/history/:checkId", "routes/history.$checkId.tsx"),
   route("/api/city-search", "routes/api.city-search.ts"),
+  route("/api/current-location", "routes/api.current-location.ts"),
   route("/api/current-pollen", "routes/api.current-pollen.ts"),
 ] satisfies RouteConfig;

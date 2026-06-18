@@ -24,6 +24,16 @@ export type CitySearchResult = {
   message?: string;
 };
 
+export type CurrentLocationResolutionResult =
+  | {
+      status: "ok";
+      city: CitySuggestion;
+    }
+  | {
+      status: Exclude<CurrentLocationProviderStatus, "ok" | "empty">;
+      message: string;
+    };
+
 export type SelectedCity = {
   placeId: string;
   label: string;

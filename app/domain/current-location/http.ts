@@ -3,6 +3,7 @@ import { allergenIds } from "~/domain/allergen-ranking";
 import type {
   CitySearchResult,
   CitySuggestion,
+  CurrentLocationResolutionResult,
   CurrentLocationProviderStatus,
   SelectedCity,
 } from "./types";
@@ -25,6 +26,17 @@ export type CurrentPollenResponse = {
   status: CurrentLocationProviderStatus;
   pollenActivity: PollenActivityByAllergen;
   message?: string;
+};
+
+export type CurrentLocationResponse = {
+  status: CurrentLocationProviderStatus;
+  city?: CitySuggestion;
+  message?: string;
+};
+
+export type CurrentLocationCoordinates = {
+  latitude: number;
+  longitude: number;
 };
 
 const jsonHeaders = {
@@ -129,6 +141,45 @@ export function sanitizePlaceId(input: string | null): string {
   return (input ?? "").trim().slice(0, currentLocationRequestGuards.maxPlaceIdLength);
 }
 
+export function sanitizeCurrentLocationCoordinates(
+  latitude: unknown,
+  longitude: unknown,
+): CurrentLocationCoordinates | null {
+  const parsedLatitude =
+    typeof latitude === "number"
+      ? latitude
+      : typeof latitude === "string"
+        ? Number(latitude.trim())
+        : Number.NaN;
+  const parsedLongitude =
+    typeof longitude === "number"
+      ? longitude
+      : typeof longitude === "string"
+        ? Number(longitude.trim())
+        : Number.NaN;
+
+  if (!Number.isFinite(parsedLatitude) || !Number.isFinite(parsedLongitude)) {
+    return null;
+  }
+
+  return {
+    latitude: parsedLatitude,
+    longitude: parsedLongitude,
+  };
+}
+
+export function isValidCurrentLocationCoordinates(
+  coordinates: CurrentLocationCoordinates | null,
+): coordinates is CurrentLocationCoordinates {
+  return (
+    coordinates !== null &&
+    coordinates.latitude >= -90 &&
+    coordinates.latitude <= 90 &&
+    coordinates.longitude >= -180 &&
+    coordinates.longitude <= 180
+  );
+}
+
 export function emptyCitySearchResponse(): Response {
   return Response.json(
     {
@@ -178,6 +229,26 @@ export function unknownPollenResponse(
 }
 
 export function currentPollenResponse(payload: CurrentPollenResponse): Response {
+  return Response.json(payload, {
+    status: 200,
+    headers: responseHeaders("no-store"),
+  });
+}
+
+export function currentLocationResponse(
+  result: CurrentLocationResolutionResult,
+): Response {
+  const payload: CurrentLocationResponse =
+    result.status === "ok"
+      ? {
+          status: result.status,
+          city: result.city,
+        }
+      : {
+          status: result.status,
+          message: result.message,
+        };
+
   return Response.json(payload, {
     status: 200,
     headers: responseHeaders("no-store"),

@@ -1,12 +1,20 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { action as citySearchAction } from "~/routes/api.city-search";
+import {
+  action as currentLocationAction,
+  createCurrentLocationAction,
+} from "~/routes/api.current-location";
 import { action as currentPollenAction } from "~/routes/api.current-pollen";
 import {
   createUnknownPollenActivity,
   normalizeGooglePollenForecast,
 } from "./google-pollen.server";
-import type { CitySearchResponse, CurrentPollenResponse } from "./http";
+import type {
+  CitySearchResponse,
+  CurrentLocationResponse,
+  CurrentPollenResponse,
+} from "./http";
 
 function routeActionArgs(request: Request) {
   return {
@@ -113,6 +121,54 @@ describe("current-location resource routes", () => {
     expect(payload.pollenActivity["grass-pollen"]).toBe("unknown");
   });
 
+  test("rejects malformed and missing device coordinates", async () => {
+    const malformedResponse = await currentLocationAction(
+      routeActionArgs(
+        postJson("/api/current-location", {
+          latitude: "abc",
+          longitude: 19.94498,
+        }),
+      ),
+    );
+    const missingResponse = await currentLocationAction(
+      routeActionArgs(postJson("/api/current-location", {})),
+    );
+
+    expect(malformedResponse.status).toBe(200);
+    expect(
+      (await readJsonResponse<CurrentLocationResponse>(malformedResponse)).status,
+    ).toBe("invalid-input");
+    expect(
+      (await readJsonResponse<CurrentLocationResponse>(missingResponse)).status,
+    ).toBe("invalid-input");
+  });
+
+  test("rejects out-of-range device coordinates", async () => {
+    const latitudeResponse = await currentLocationAction(
+      routeActionArgs(
+        postJson("/api/current-location", {
+          latitude: 91,
+          longitude: 19.94498,
+        }),
+      ),
+    );
+    const longitudeResponse = await currentLocationAction(
+      routeActionArgs(
+        postJson("/api/current-location", {
+          latitude: 50.06465,
+          longitude: -181,
+        }),
+      ),
+    );
+
+    expect(
+      (await readJsonResponse<CurrentLocationResponse>(latitudeResponse)).status,
+    ).toBe("invalid-input");
+    expect(
+      (await readJsonResponse<CurrentLocationResponse>(longitudeResponse)).status,
+    ).toBe("invalid-input");
+  });
+
   test("returns a safe unknown-pollen fallback when the API key is absent", async () => {
     vi.stubEnv("GOOGLE_MAPS_API_KEY", "");
 
@@ -131,19 +187,94 @@ describe("current-location resource routes", () => {
     expect(JSON.stringify(payload)).not.toContain("GOOGLE_MAPS_API_KEY");
   });
 
+  test("returns a safe current-location fallback when the API key is absent", async () => {
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "");
+
+    const response = await currentLocationAction(
+      routeActionArgs(
+        postJson("/api/current-location", {
+          latitude: 50.06465,
+          longitude: 19.94498,
+        }),
+      ),
+    );
+    const payload = await readJsonResponse<CurrentLocationResponse>(response);
+
+    expect(response.status).toBe(200);
+    expect(payload.status).toBe("missing-api-key");
+    expect(payload.city).toBeUndefined();
+    expect(JSON.stringify(payload)).not.toContain("GOOGLE_MAPS_API_KEY");
+  });
+
+  test("resolves device coordinates through an injected dependency", async () => {
+    const action = createCurrentLocationAction({
+      resolveCity: async ({ latitude, longitude }) => {
+        expect(latitude).toBe(50.06465);
+        expect(longitude).toBe(19.94498);
+
+        return {
+          status: "ok",
+          city: {
+            placeId: "place-krakow",
+            label: "Kraków, Małopolskie, Polska",
+            mainText: "Kraków",
+            secondaryText: "Małopolskie, Polska",
+            country: "Polska",
+            adminArea: "Małopolskie",
+            isPolandPriority: true,
+          },
+        };
+      },
+    });
+
+    const response = await action(
+      postJson("/api/current-location", {
+        latitude: 50.06465,
+        longitude: 19.94498,
+      }),
+    );
+    const payload = await readJsonResponse<CurrentLocationResponse>(response);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(payload).toMatchObject({
+      status: "ok",
+      city: {
+        placeId: "place-krakow",
+        label: "Kraków, Małopolskie, Polska",
+      },
+    });
+  });
+
   test("keeps location input out of request URLs and rejects GET requests", async () => {
     const cityRequest = postJson("/api/city-search", { query: "Kraków" });
+    const currentLocationRequest = postJson("/api/current-location", {
+      latitude: 50.06465,
+      longitude: 19.94498,
+    });
     const pollenRequest = postJson("/api/current-pollen", {
       placeId: "place-krakow",
     });
 
     expect(cityRequest.url).toBe("http://localhost/api/city-search");
+    expect(currentLocationRequest.url).toBe("http://localhost/api/current-location");
     expect(pollenRequest.url).toBe("http://localhost/api/current-pollen");
     expect(
       (
         await citySearchAction(
           routeActionArgs(
             new Request("http://localhost/api/city-search?q=Kraków"),
+          ),
+        )
+      ).status,
+    ).toBe(405);
+    expect(
+      (
+        await currentLocationAction(
+          routeActionArgs(
+            new Request(
+              "http://localhost/api/current-location?latitude=50.06465&longitude=19.94498",
+            ),
           ),
         )
       ).status,
@@ -171,10 +302,21 @@ describe("current-location resource routes", () => {
       headers: { "Content-Length": "2048" },
       body: JSON.stringify({ placeId: "place-krakow" }),
     });
+    const oversizedCurrentLocation = new Request(
+      "http://localhost/api/current-location",
+      {
+        method: "POST",
+        headers: { "Content-Length": "2048" },
+        body: JSON.stringify({ latitude: 50.06465, longitude: 19.94498 }),
+      },
+    );
 
     const cityResponse = await citySearchAction(routeActionArgs(malformed));
     const pollenResponse = await currentPollenAction(
       routeActionArgs(oversized),
+    );
+    const currentLocationResponse = await currentLocationAction(
+      routeActionArgs(oversizedCurrentLocation),
     );
 
     expect(
@@ -183,5 +325,43 @@ describe("current-location resource routes", () => {
     expect(
       (await readJsonResponse<CurrentPollenResponse>(pollenResponse)).status,
     ).toBe("invalid-input");
+    expect(
+      (
+        await readJsonResponse<CurrentLocationResponse>(
+          currentLocationResponse,
+        )
+      ).status,
+    ).toBe("invalid-input");
+  });
+
+  test("keeps precise coordinates out of current-location responses", async () => {
+    const action = createCurrentLocationAction({
+      resolveCity: async () => ({
+        status: "ok",
+        city: {
+          placeId: "place-krakow",
+          label: "Kraków, Małopolskie, Polska",
+          mainText: "Kraków",
+          secondaryText: "Małopolskie, Polska",
+          country: "Polska",
+          adminArea: "Małopolskie",
+          isPolandPriority: true,
+        },
+      }),
+    });
+    const response = await action(
+      postJson("/api/current-location", {
+        latitude: 50.06465,
+        longitude: 19.94498,
+      }),
+    );
+    const serializedPayload = JSON.stringify(
+      await readJsonResponse<CurrentLocationResponse>(response),
+    );
+
+    expect(serializedPayload).not.toContain("50.06465");
+    expect(serializedPayload).not.toContain("19.94498");
+    expect(serializedPayload).not.toContain("latitude");
+    expect(serializedPayload).not.toContain("longitude");
   });
 });

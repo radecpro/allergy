@@ -284,8 +284,8 @@ No database migration is required. Saved symptom snapshot shape remains unchange
 
 #### Automated
 
-- [ ] 1.1 Current-location tests pass: `npm test -- app/domain/current-location/current-location.test.ts`
-- [ ] 1.2 Type checking passes: `npm run typecheck`
+- [x] 1.1 Current-location tests pass: `npm test -- app/domain/current-location/current-location.test.ts`
+- [x] 1.2 Type checking passes: `npm run typecheck`
 
 ### Phase 2: Locate-Me UI Integration
 
