@@ -221,21 +221,17 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid gap-2">
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                <CityCombobox
-                  selectedCity={selectedCity}
-                  onSelect={handleCitySelect}
-                  inputId="city-search"
-                  listboxId="city-suggestions"
-                  label="Aktualne miasto"
-                  helperText="Wpisz minimum 2 znaki, aby zobaczyć sugestie."
-                  placeholder="np. Warszawa"
-                />
-                <div className="sm:pt-7">
-                  <CurrentLocationControl onResolve={handleCitySelect} />
-                </div>
-              </div>
+            <div className="grid gap-3">
+              <CityCombobox
+                selectedCity={selectedCity}
+                onSelect={handleCitySelect}
+                inputId="city-search"
+                listboxId="city-suggestions"
+                label="Aktualne miasto"
+                helperText="Wpisz minimum 2 znaki, aby zobaczyć sugestie."
+                placeholder="np. Warszawa"
+              />
+              <CurrentLocationControl onResolve={handleCitySelect} />
             </div>
 
             <fieldset className="grid gap-3">

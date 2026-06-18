@@ -149,7 +149,7 @@ export function CurrentLocationControl({
         type="button"
         onClick={handleLocateClick}
         disabled={isDisabled}
-        className="h-11 rounded-md border border-emerald-700 bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
+        className="h-11 w-full rounded-md border border-emerald-700 bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500"
       >
         {status === "loading" ? "Ustalam..." : "Użyj lokalizacji"}
       </button>
