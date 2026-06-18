@@ -49,6 +49,17 @@ export function CityCombobox({
     : undefined;
 
   useEffect(() => {
+    if (selectedCity) {
+      setCityQuery(selectedCity.label);
+      setSuggestions([]);
+      setCitySearchStatus("idle");
+      setCitySearchMessage("");
+      setIsSuggestionsOpen(false);
+      setActiveSuggestionIndex(-1);
+    }
+  }, [selectedCity]);
+
+  useEffect(() => {
     const trimmedQuery = cityQuery.trim();
 
     if (selectedCity?.label === cityQuery) {
@@ -57,10 +68,6 @@ export function CityCombobox({
       setCitySearchMessage("");
       setActiveSuggestionIndex(-1);
       return;
-    }
-
-    if (selectedCity !== null) {
-      onSelect(null);
     }
 
     if (trimmedQuery.length < minimumSearchLength) {
@@ -195,7 +202,11 @@ export function CityCombobox({
           value={cityQuery}
           onBlur={handleCityBlur}
           onChange={(event) => {
-            setCityQuery(event.target.value);
+            const nextValue = event.target.value;
+            setCityQuery(nextValue);
+            if (selectedCity !== null && nextValue !== selectedCity.label) {
+              onSelect(null);
+            }
             setActiveSuggestionIndex(-1);
             setIsSuggestionsOpen(true);
           }}

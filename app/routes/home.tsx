@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Route } from "./+types/home";
 import { AccountNav } from "~/components/account-nav";
 import { CityCombobox } from "~/components/city-combobox";
+import { CurrentLocationControl } from "~/components/current-location-control";
 import { ModeSwitch } from "~/components/mode-switch";
 import { SymptomCheckSave } from "~/components/symptom-check-save";
 import { SymptomIntensitySelector } from "~/components/symptom-intensity-selector";
@@ -220,15 +221,22 @@ export default function Home() {
               </p>
             </div>
 
-            <CityCombobox
-              selectedCity={selectedCity}
-              onSelect={handleCitySelect}
-              inputId="city-search"
-              listboxId="city-suggestions"
-              label="Aktualne miasto"
-              helperText="Wpisz minimum 2 znaki, aby zobaczyć sugestie."
-              placeholder="np. Warszawa"
-            />
+            <div className="grid gap-2">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                <CityCombobox
+                  selectedCity={selectedCity}
+                  onSelect={handleCitySelect}
+                  inputId="city-search"
+                  listboxId="city-suggestions"
+                  label="Aktualne miasto"
+                  helperText="Wpisz minimum 2 znaki, aby zobaczyć sugestie."
+                  placeholder="np. Warszawa"
+                />
+                <div className="sm:pt-7">
+                  <CurrentLocationControl onResolve={handleCitySelect} />
+                </div>
+              </div>
+            </div>
 
             <fieldset className="grid gap-3">
               <legend className="text-sm font-medium">Aktualne objawy</legend>
