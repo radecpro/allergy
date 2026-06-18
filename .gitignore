@@ -10,3 +10,6 @@
 
 # Playwright CLI artifacts
 /.playwright-cli/
+
+# Screenshots
+/screenshots/
