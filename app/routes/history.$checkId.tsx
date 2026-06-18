@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   isRouteErrorResponse,
   Form,
@@ -66,20 +66,19 @@ export function headers({ loaderHeaders, errorHeaders }: Route.HeadersArgs) {
   };
 }
 
-function getSymptomLabel(symptomId: string) {
-  return symptomCatalog.find((symptom) => symptom.id === symptomId)?.label ?? symptomId;
-}
-
 export default function SavedSymptomCheck() {
   const data = useLoaderData() as SymptomCheckDetailLoaderData;
   const actionData = useActionData() as SymptomCheckDetailActionData | undefined;
   const navigation = useNavigation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [deletePromptOpen, setDeletePromptOpen] = useState(false);
   const [editState, setEditState] = useState(() =>
     initializeSavedCheckEditState(data.record.snapshot.symptoms),
+  );
+  const [previewResults, setPreviewResults] = useState(() =>
+    reconstructSymptomCheck(data.record.snapshot).rankedResults,
   );
 
   const isSubmitting = navigation.state !== "idle";
@@ -87,12 +86,16 @@ export default function SavedSymptomCheck() {
   const draftEntries = getSavedCheckEditSubmissionEntries(editState);
   const draftComplete = hasCompleteSavedCheckEditState(editState);
   const draftDirty = isSavedCheckEditStateDirty(editState);
-  const previewResults = draftComplete
-    ? reconstructSymptomCheck({
-        ...data.record.snapshot,
-        symptoms: draftEntries,
-      }).rankedResults
-    : [];
+  const nextPreviewResults = useMemo(
+    () =>
+      draftComplete
+        ? reconstructSymptomCheck({
+            ...data.record.snapshot,
+            symptoms: getSavedCheckEditSubmissionEntries(editState),
+          }).rankedResults
+        : [],
+    [data.record.snapshot, draftComplete, editState],
+  );
   const errorMessage = actionData?.error ?? null;
   const canSave = isEditing && draftComplete && draftDirty && !isSubmitting && !deletePromptOpen;
   const formDisabled = isSubmitting || deletePromptOpen;
@@ -102,7 +105,14 @@ export default function SavedSymptomCheck() {
     setIsEditing(false);
     setDeletePromptOpen(false);
     setFlashMessage(null);
-  }, [data.record.id, data.record.snapshot.symptoms]);
+    setPreviewResults(reconstructSymptomCheck(data.record.snapshot).rankedResults);
+  }, [data.record.id, data.record.updatedAt, data.record.snapshot.symptoms]);
+
+  useEffect(() => {
+    if (draftComplete) {
+      setPreviewResults(nextPreviewResults);
+    }
+  }, [draftComplete, nextPreviewResults]);
 
   useEffect(() => {
     const saved = searchParams.get("saved") === "1";
@@ -122,17 +132,15 @@ export default function SavedSymptomCheck() {
 
     if (updated) {
       setFlashMessage("Zmiany w zapisanym sprawdzeniu zostały zapisane.");
+      setIsEditing(false);
+      setDeletePromptOpen(false);
     }
 
-    const url = new URL(window.location.href);
-    url.searchParams.delete("saved");
-    url.searchParams.delete("requestId");
-    url.searchParams.delete("updated");
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${url.pathname}${url.search}`,
-    );
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("saved");
+    nextSearchParams.delete("requestId");
+    nextSearchParams.delete("updated");
+    setSearchParams(nextSearchParams, { replace: true });
   }, [data.requestId, searchParams]);
 
   function handleStartEdit() {
@@ -389,48 +397,47 @@ export default function SavedSymptomCheck() {
                   <p className="mt-1 text-sm leading-6 text-emerald-900">
                     Podgląd pokazuje, co zostanie zapisane przy obecnym wyborze.
                   </p>
-                  {draftComplete ? (
-                    <div className="mt-3 grid gap-3">
-                      {previewResults.map((result, index) => (
-                        <article
-                          key={result.allergenId}
-                          className={`rounded-md border p-4 ${
-                            index === 0
-                              ? "border-emerald-400 bg-white"
-                              : "border-emerald-200 bg-white"
-                          }`}
-                        >
-                          {index === 0 ? (
-                            <p className="text-xs font-semibold uppercase text-emerald-800">
-                              Najwyżej w podglądzie
-                            </p>
-                          ) : null}
-                          <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-                            <h4 className="text-base font-semibold">
-                              {result.allergenLabel}
-                            </h4>
-                            <div className="flex flex-wrap gap-2 text-sm">
-                              <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-emerald-950">
-                                Prawdopodobieństwo: {result.likelihoodLabel}
-                              </span>
-                              <span
-                                className={`rounded-md px-2.5 py-1 ${
-                                  result.pollenActivity === "unknown"
-                                    ? "bg-amber-100 text-amber-950"
-                                    : "bg-slate-100 text-slate-800"
-                                }`}
-                              >
-                                Aktywność pyłków: {result.pollenActivityLabel}
-                              </span>
-                            </div>
+                  <div className="mt-3 grid gap-3">
+                    {previewResults.map((result, index) => (
+                      <article
+                        key={result.allergenId}
+                        className={`rounded-md border p-4 ${
+                          index === 0
+                            ? "border-emerald-400 bg-white"
+                            : "border-emerald-200 bg-white"
+                        }`}
+                      >
+                        {index === 0 ? (
+                          <p className="text-xs font-semibold uppercase text-emerald-800">
+                            Najwyżej w podglądzie
+                          </p>
+                        ) : null}
+                        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+                          <h4 className="text-base font-semibold">
+                            {result.allergenLabel}
+                          </h4>
+                          <div className="flex flex-wrap gap-2 text-sm">
+                            <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-emerald-950">
+                              Prawdopodobieństwo: {result.likelihoodLabel}
+                            </span>
+                            <span
+                              className={`rounded-md px-2.5 py-1 ${
+                                result.pollenActivity === "unknown"
+                                  ? "bg-amber-100 text-amber-950"
+                                  : "bg-slate-100 text-slate-800"
+                              }`}
+                            >
+                              Aktywność pyłków: {result.pollenActivityLabel}
+                            </span>
                           </div>
-                        </article>
-                      ))}
-                    </div>
-                  ) : (
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                  {draftComplete ? null : (
                     <p className="mt-3 rounded-md border border-dashed border-emerald-200 bg-white px-4 py-3 text-sm leading-6 text-emerald-950">
-                      Uzupełnij wszystkie wybrane objawy, aby zobaczyć pełny
-                      podgląd.
+                      Uzupełnij wszystkie wybrane objawy, aby odświeżyć
+                      ranking. Ostatni pełny podgląd pozostaje widoczny.
                     </p>
                   )}
                 </section>

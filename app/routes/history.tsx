@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLoaderData, useSearchParams } from "react-router";
 
 import { AccountNav } from "~/components/account-nav";
@@ -31,26 +31,31 @@ export function headers({ loaderHeaders }: Route.HeadersArgs) {
 
 export default function SymptomCheckHistory() {
   const data = useLoaderData() as SymptomCheckListLoaderData;
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
+  const deletionFlashShownRef = useRef(false);
 
   useEffect(() => {
     const deleted = searchParams.get("deleted") === "1";
 
     if (!deleted) {
-      setFlashMessage(null);
       return;
     }
 
-    setFlashMessage("Sprawdzenie zostało usunięte.");
+    if (!deletionFlashShownRef.current) {
+      setFlashMessage("Sprawdzenie zostało usunięte.");
+      deletionFlashShownRef.current = true;
+    }
 
-    const url = new URL(window.location.href);
-    url.searchParams.delete("deleted");
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${url.pathname}${url.search}`,
-    );
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("deleted");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("deleted") !== "1") {
+      deletionFlashShownRef.current = false;
+    }
   }, [searchParams]);
 
   return (

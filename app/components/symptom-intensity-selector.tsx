@@ -53,7 +53,6 @@ export function SymptomIntensitySelector({
           >
             <input
               type="radio"
-              name={`symptom-intensity-${symptomId}`}
               value={option}
               checked={intensity === option}
               onChange={() => onAssign(symptomId, option)}

@@ -1,4 +1,4 @@
-import { redirect } from "react-router";
+import { redirectDocument } from "react-router";
 
 import { hasTrustedRequestOrigin } from "~/domain/auth/request-security.server";
 import type { AuthSessionManager } from "~/domain/auth/session.server";
@@ -206,7 +206,7 @@ export function createSaveSymptomCheckAction(
       );
       target.searchParams.set("saved", "1");
       target.searchParams.set("requestId", requestId);
-      return redirect(`${target.pathname}${target.search}`);
+      return redirectDocument(`${target.pathname}${target.search}`);
     } catch (error) {
       if (error instanceof SymptomCheckRequestConflictError) {
         return errorResponse(
@@ -355,7 +355,7 @@ export function createSymptomCheckDetailAction(
       const target = new URL(`/history/${record.id}`, dependencies.appOrigin);
       target.searchParams.set("updated", "1");
 
-      return redirect(`${target.pathname}${target.search}`);
+      return redirectDocument(`${target.pathname}${target.search}`);
     }
 
     if (intent === "delete") {
@@ -378,7 +378,7 @@ export function createSymptomCheckDetailAction(
       const target = new URL("/history", dependencies.appOrigin);
       target.searchParams.set("deleted", "1");
 
-      return redirect(`${target.pathname}${target.search}`);
+      return redirectDocument(`${target.pathname}${target.search}`);
     }
 
     return detailErrorResponse(
