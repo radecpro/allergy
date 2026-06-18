@@ -35,7 +35,7 @@ In this roadmap, the north star means the smallest end-to-end capability that pr
 | S-03 | manage-saved-symptom-check | Correct symptoms and per-symptom intensities in a saved check or delete the record | F-01, S-02 | US-02, FR-005, FR-008, FR-009, FR-010 | done |
 | S-04 | per-symptom-intensity-ranking | Assign low/high intensity to each selected symptom and receive the recalculated ranking | F-01 | US-04, FR-001, FR-003, FR-013 | done |
 | S-05 | device-location-current-check | Use current device location for a symptom check with manual city selection preserved as fallback | F-01 | US-03, FR-001, FR-003, FR-011, FR-012 | proposed |
-| S-06 | missing-pollen-warning-label | Identify at first glance which current-symptoms result cards lack provider pollen data | F-01 | US-04, FR-001, FR-003, FR-014 | proposed |
+| S-06 | cohesive-ui-ux-polish | Use a consistent, polished interface across pages with clearer spacing, aligned controls, smooth feedback animations, and reduced duplicated UI logic | F-01, S-01, S-02, S-03, S-04 | US-01, US-02, US-03, US-04, FR-001, FR-002, FR-003, FR-004, FR-006, FR-007, FR-008, FR-009, FR-011, FR-012, FR-013, FR-014, FR-015 | ready |
 
 ## Baseline
 
@@ -72,7 +72,7 @@ Foundations below assume these are present and do not recreate them.
 - **Change ID:** email-password-account-access
 - **PRD refs:** FR-001, FR-002, FR-003, FR-004, FR-005
 - **Prerequisites:** F-01
-- **Parallel with:** S-04, S-05, S-06
+- **Parallel with:** S-04, S-05
 - **Blockers:** —
 - **Unknowns:**
   - Which minimum password policy and session lifetime fit the MVP safety boundary? — Owner: team. Block: no.
@@ -85,7 +85,7 @@ Foundations below assume these are present and do not recreate them.
 - **Change ID:** save-and-view-symptom-check
 - **PRD refs:** US-01, FR-005, FR-006, FR-007, FR-010
 - **Prerequisites:** F-01, S-01
-- **Parallel with:** S-04, S-05, S-06
+- **Parallel with:** S-04, S-05
 - **Blockers:** —
 - **Unknowns:**
   - Which minimum snapshot fields are required to reproduce the saved check while preserving the PRD's explicit-consent boundary? — Owner: team. Block: no.
@@ -98,7 +98,7 @@ Foundations below assume these are present and do not recreate them.
 - **Change ID:** manage-saved-symptom-check
 - **PRD refs:** US-02, FR-005, FR-008, FR-009, FR-010
 - **Prerequisites:** F-01, S-02
-- **Parallel with:** S-04, S-05, S-06
+- **Parallel with:** S-04, S-05
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Update and delete complete the required CRUD lifecycle; every mutation must repeat ownership checks rather than trusting record identifiers supplied by the user interface.
@@ -110,7 +110,7 @@ Foundations below assume these are present and do not recreate them.
 - **Change ID:** per-symptom-intensity-ranking
 - **PRD refs:** US-04, FR-001, FR-003, FR-013
 - **Prerequisites:** F-01
-- **Parallel with:** S-01, S-02, S-03, S-05, S-06
+- **Parallel with:** S-01, S-02, S-03, S-05
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** The domain rule and current-check interface change together; preserving one overall-intensity assumption anywhere would make results inconsistent.
@@ -129,17 +129,18 @@ Foundations below assume these are present and do not recreate them.
 - **Risk:** Permission denial and unavailable location are normal outcomes, so the manual path must remain equally complete rather than becoming an error-only fallback.
 - **Status:** proposed
 
-### S-06: Missing Pollen Data Warning Label
+### S-06: Cohesive UI And UX Polish
 
-- **Outcome:** User can identify at first glance which current-symptoms result cards lack provider pollen data while still seeing the available symptom-based context.
-- **Change ID:** missing-pollen-warning-label
-- **PRD refs:** US-04, FR-001, FR-003, FR-014
-- **Prerequisites:** F-01
-- **Parallel with:** S-01, S-02, S-03, S-04, S-05
+- **Outcome:** User can move through current checks, destination checks, account access, and saved-history screens with consistent element positioning, spacing, button states, message presentation, and smooth feedback animations for selections and status changes.
+- **Change ID:** cohesive-ui-ux-polish
+- **PRD refs:** US-01, US-02, US-03, US-04, FR-001, FR-002, FR-003, FR-004, FR-006, FR-007, FR-008, FR-009, FR-011, FR-012, FR-013, FR-014, FR-015
+- **Prerequisites:** F-01, S-01, S-02, S-03, S-04
+- **Parallel with:** S-05
 - **Blockers:** —
-- **Unknowns:** —
-- **Risk:** The warning must distinguish unknown data from low activity without making the entire ranking appear invalid or diagnostic.
-- **Status:** proposed
+- **Unknowns:**
+  - Which repeated UI helpers, formatting functions, and interaction-state patterns can be consolidated without changing route behavior? — Owner: team. Block: no.
+- **Risk:** This slice should modernize consistency, motion, and duplicated UI logic after the core flows are stable; polishing too early would churn screens that earlier slices are still changing.
+- **Status:** ready
 
 ## Backlog Handoff
 
@@ -151,7 +152,7 @@ Foundations below assume these are present and do not recreate them.
 | S-03 | manage-saved-symptom-check | Let users update or delete saved symptom checks | no | Implemented in `manage-saved-symptom-check` |
 | S-04 | per-symptom-intensity-ranking | Rank with intensity selected per symptom | no | Depends on F-01 |
 | S-05 | device-location-current-check | Add device location with manual fallback | no | Depends on F-01 |
-| S-06 | missing-pollen-warning-label | Add visible missing-pollen warning labels | no | Depends on F-01 |
+| S-06 | cohesive-ui-ux-polish | Polish UI consistency, interaction feedback, and duplicated UI logic | yes | Run `/10x-plan cohesive-ui-ux-polish` |
 
 ## Open Roadmap Questions
 

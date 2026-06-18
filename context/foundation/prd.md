@@ -46,7 +46,7 @@ This change additionally serves returning users who want a private record of che
 ### Secondary
 
 - A user can use current device location in the current-symptoms flow and fall back to manual city selection when permission is denied or location is unavailable.
-- Current-symptoms result cards make missing provider pollen data immediately visible through a warning label.
+- The expanded app feels cohesive across guest checks, account access, and saved-history workflows, with consistent spacing, aligned controls, smooth feedback for selections and status messages, and no unnecessary duplication in shared UI behavior.
 
 ### Guardrails
 
@@ -94,17 +94,18 @@ This change additionally serves returning users who want a private record of che
 - Denied, unavailable, or failed location lookup does not block the check.
 - Device location is not stored unless the user explicitly saves the completed check.
 
-### US-04: User sets symptom-specific intensity and sees missing-data warnings
+### US-04: User sets symptom-specific intensity and receives clear result feedback
 
 - **Given** a user is completing a current-symptoms check
 - **When** they select symptoms
-- **Then** each selected symptom has its own low/high intensity and any result lacking provider pollen data has a warning visible at first glance
+- **Then** each selected symptom has its own low/high intensity, result feedback remains clear, and existing missing-provider-data warnings remain visible
 
 #### Acceptance Criteria
 
 - The previous single overall intensity control is replaced.
 - Ranking consumes the intensity assigned to each selected symptom.
 - Missing provider pollen data remains distinguishable from low pollen activity.
+- Selecting controls and displaying result/status messages uses consistent, smooth feedback across the expanded app.
 
 ## Scope of Change
 
@@ -145,8 +146,10 @@ This change additionally serves returning users who want a private record of che
   > Socrates: Removing manual selection would simplify the interface but make the flow dependent on permission and device support. Resolution: preserve the fallback.
 - [modified] FR-013: User can set low/high intensity separately for every selected symptom. Priority: must-have.
   > Socrates: Per-symptom intensity increases interaction cost and ranking complexity. Resolution: accept the cost because one overall intensity cannot represent mixed symptoms accurately.
-- [modified] FR-014: User can identify at first glance when a result card lacks provider pollen data. Priority: must-have.
-  > Socrates: Existing fallback copy already communicates uncertainty, but it is easy to miss. Resolution: add a prominent warning label without hiding the result.
+- [preserved] FR-014: User can identify at first glance when a result card lacks provider pollen data. Priority: must-have.
+  > Socrates: This distinction was already implemented before this remaining slice, and it remains part of the product safety boundary. Resolution: preserve the visible warning while improving the surrounding UI consistency.
+- [new] FR-015: User experiences consistent layout, spacing, control positioning, button states, and status-message presentation across current checks, destination checks, account access, and saved-history screens. Priority: must-have.
+  > Socrates: Leaving each page to evolve separately is faster in the moment but makes the app feel stitched together as the MVP expands. Resolution: consolidate repeated UI behavior and polish the interaction model without changing the underlying product flows.
 
 ## Constraints & Compatibility
 
