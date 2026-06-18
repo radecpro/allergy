@@ -291,8 +291,8 @@ No database migration is required. Saved symptom snapshot shape remains unchange
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run typecheck`
-- [x] 2.2 Existing current-location tests still pass: `npm test -- app/domain/current-location/current-location.test.ts`
+- [x] 2.1 Type checking passes: `npm run typecheck` — 86985dc
+- [x] 2.2 Existing current-location tests still pass: `npm test -- app/domain/current-location/current-location.test.ts` — 86985dc
 
 #### Manual
 
@@ -305,10 +305,10 @@ No database migration is required. Saved symptom snapshot shape remains unchange
 
 #### Automated
 
-- [ ] 3.1 Locate-me component tests pass: `npm test -- app/components/current-location-control.test.tsx`
-- [ ] 3.2 Full test suite passes: `npm test`
-- [ ] 3.3 Type checking passes: `npm run typecheck`
-- [ ] 3.4 Dependency audit completes for release handoff: `npm audit --json`
+- [x] 3.1 Locate-me component tests pass: `npm test -- app/components/current-location-control.test.tsx`
+- [x] 3.2 Full test suite passes: `npm test`
+- [x] 3.3 Type checking passes: `npm run typecheck`
+- [x] 3.4 Dependency audit completes for release handoff: `npm audit --json`
 
 #### Manual
 
