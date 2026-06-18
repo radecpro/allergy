@@ -88,7 +88,7 @@ function toCitySuggestion(
 
   return {
     placeId,
-    label: secondaryText ? `${mainText}, ${secondaryText}` : mainText,
+    label: mainText,
     mainText,
     secondaryText,
     country,

@@ -9,7 +9,7 @@ import {
 
 const resolvedCity: CitySuggestion = {
   placeId: "place-krakow",
-  label: "Kraków, Małopolskie, Polska",
+  label: "Kraków",
   mainText: "Kraków",
   secondaryText: "Małopolskie, Polska",
   country: "Polska",

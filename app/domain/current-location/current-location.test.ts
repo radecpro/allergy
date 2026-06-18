@@ -216,7 +216,7 @@ describe("current-location resource routes", () => {
           status: "ok",
           city: {
             placeId: "place-krakow",
-            label: "Kraków, Małopolskie, Polska",
+            label: "Kraków",
             mainText: "Kraków",
             secondaryText: "Małopolskie, Polska",
             country: "Polska",
@@ -241,7 +241,7 @@ describe("current-location resource routes", () => {
       status: "ok",
       city: {
         placeId: "place-krakow",
-        label: "Kraków, Małopolskie, Polska",
+        label: "Kraków",
       },
     });
   });
@@ -340,7 +340,7 @@ describe("current-location resource routes", () => {
         status: "ok",
         city: {
           placeId: "place-krakow",
-          label: "Kraków, Małopolskie, Polska",
+          label: "Kraków",
           mainText: "Kraków",
           secondaryText: "Małopolskie, Polska",
           country: "Polska",
