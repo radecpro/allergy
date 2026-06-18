@@ -3,7 +3,7 @@ project: Allergen Finder
 version: 2
 status: draft
 created: 2026-06-09
-updated: 2026-06-15
+updated: 2026-06-18
 prd_version: 3
 main_goal: speed
 top_blocker: time
@@ -177,3 +177,4 @@ No open roadmap questions.
 - **S-01: User can register, sign in with email and password, and sign out while both existing allergen checks remain fully usable as a guest.** — Archived 2026-06-15 → `context/archive/2026-06-10-email-password-account-access/`. Lesson: —.
 - **S-02: Authenticated user can explicitly save a completed current-symptoms check and view it in a history list and detail view that contains only their records.** — Archived 2026-06-15 → `context/archive/2026-06-11-save-and-view-symptom-check/`. Lesson: —.
 - **S-04: User can assign low/high intensity to each selected symptom and receive an automatically updated allergen ranking that uses those individual intensities.** — Archived 2026-06-15 → `context/archive/2026-06-14-per-symptom-intensity-ranking/`. Lesson: —.
+- **S-03: Authenticated user can update symptoms and per-symptom intensities in a saved check or delete that check, without changing its saved location and pollen context.** — Archived 2026-06-18 → `context/archive/2026-06-15-manage-saved-symptom-check/`. Lesson: —.

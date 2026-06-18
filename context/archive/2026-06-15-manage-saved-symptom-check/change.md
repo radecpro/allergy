@@ -1,10 +1,10 @@
 ---
 change_id: manage-saved-symptom-check
 title: Let users update or delete saved symptom checks
-status: impl_reviewed
+status: archived
 created: 2026-06-15
 updated: 2026-06-18
-archived_at: null
+archived_at: 2026-06-18T14:19:34Z
 ---
 
 ## Notes
