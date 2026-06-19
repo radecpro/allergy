@@ -295,8 +295,8 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [x] 1.1 Shared shell and primitive components typecheck cleanly
-- [x] 1.2 Route modules compile after switching to the shared shell and primitives
+- [x] 1.1 Shared shell and primitive components typecheck cleanly — 662e627
+- [x] 1.2 Route modules compile after switching to the shared shell and primitives — 662e627
 
 #### Manual
 
@@ -306,8 +306,8 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [ ] 2.1 Shared result-card and selection-card tests pass
-- [ ] 2.2 Shared current-pollen behavior tests prove stale responses cannot repaint newer selections
+- [x] 2.1 Shared result-card and selection-card tests pass
+- [x] 2.2 Shared current-pollen behavior tests prove stale responses cannot repaint newer selections
 
 #### Manual
 

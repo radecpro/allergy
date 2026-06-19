@@ -13,8 +13,10 @@ import { AppShell } from "~/components/app-shell";
 import { Button } from "~/components/button";
 import { Notice } from "~/components/notice";
 import { Panel } from "~/components/panel";
+import { RankingResultCard } from "~/components/ranking-result-card";
 import { SymptomCheckSummary } from "~/components/symptom-check-summary";
 import { SymptomIntensitySelector } from "~/components/symptom-intensity-selector";
+import { SymptomSelectionCard } from "~/components/symptom-selection-card";
 import { TextLink } from "~/components/text-link";
 import {
   symptomCatalog,
@@ -231,56 +233,12 @@ export default function SavedSymptomCheck() {
             </div>
             {reconstructSymptomCheck(data.record.snapshot).rankedResults.map(
               (result, index) => (
-                <article
+                <RankingResultCard
                   key={result.allergenId}
-                  className={`rounded-md border p-4 ${
-                    index === 0
-                      ? "border-emerald-400 bg-emerald-50"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  {index === 0 ? (
-                    <p className="text-xs font-semibold uppercase text-emerald-800">
-                      Najwyżej w rankingu
-                    </p>
-                  ) : null}
-                  <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-                    <h3 className="text-lg font-semibold">
-                      {result.allergenLabel}
-                    </h3>
-                    <div className="flex flex-wrap gap-2 text-sm">
-                      <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-emerald-950">
-                        Prawdopodobieństwo: {result.likelihoodLabel}
-                      </span>
-                      <span
-                        className={`rounded-md px-2.5 py-1 ${
-                          result.pollenActivity === "unknown"
-                            ? "bg-amber-100 text-amber-950"
-                            : "bg-slate-100 text-slate-800"
-                        }`}
-                      >
-                        Aktywność pyłków: {result.pollenActivityLabel}
-                      </span>
-                    </div>
-                  </div>
-                  {result.matchedSymptoms.length > 0 ? (
-                    <div className="mt-3 grid gap-2">
-                      <p className="text-sm font-medium text-slate-700">
-                        Pasujące objawy
-                      </p>
-                      <ul className="flex flex-wrap gap-2 text-sm text-slate-700">
-                        {result.matchedSymptoms.map((symptom) => (
-                          <li
-                            key={symptom.symptomId}
-                            className="rounded-md bg-slate-100 px-2.5 py-1"
-                          >
-                            {symptom.label}: {symptom.intensityLabel}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                </article>
+                  result={result}
+                  isTopResult={index === 0}
+                  topLabel="Najwyżej w rankingu"
+                />
               ),
             )}
           </section>
@@ -336,30 +294,16 @@ export default function SavedSymptomCheck() {
                     );
 
                     return (
-                      <article
+                      <SymptomSelectionCard
                         key={symptom.id}
-                        className={`grid rounded-md border ${
-                          selected
-                            ? "border-emerald-300 bg-emerald-50"
-                            : "border-slate-200 bg-white"
-                        }`}
+                        label={symptom.label}
+                        selected={Boolean(selected)}
+                        disabled={formDisabled}
+                        onChange={(checked) =>
+                          handleToggleSymptom(symptom.id, checked)
+                        }
+                        helper="Wybierz objaw, aby dodać go do zapisu."
                       >
-                        <label className="flex items-start gap-3 p-3 text-sm font-medium text-slate-900">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(selected)}
-                            onChange={(event) =>
-                              handleToggleSymptom(
-                                symptom.id,
-                                event.currentTarget.checked,
-                              )
-                            }
-                            disabled={formDisabled}
-                            className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-700"
-                          />
-                          <span>{symptom.label}</span>
-                        </label>
-
                         {selected ? (
                           <SymptomIntensitySelector
                             symptomId={symptom.id}
@@ -370,12 +314,8 @@ export default function SavedSymptomCheck() {
                             }
                             disabled={formDisabled}
                           />
-                        ) : (
-                          <p className="border-t border-dashed border-slate-200 px-3 pb-3 pt-2 text-xs leading-5 text-slate-600">
-                            Wybierz objaw, aby dodać go do zapisu.
-                          </p>
-                        )}
-                      </article>
+                        ) : null}
+                      </SymptomSelectionCard>
                     );
                   })}
                 </div>
@@ -391,39 +331,13 @@ export default function SavedSymptomCheck() {
                   </p>
                   <div className="mt-3 grid gap-3">
                     {previewResults.map((result, index) => (
-                      <article
+                      <RankingResultCard
                         key={result.allergenId}
-                        className={`rounded-md border p-4 ${
-                          index === 0
-                            ? "border-emerald-400 bg-white"
-                            : "border-emerald-200 bg-white"
-                        }`}
-                      >
-                        {index === 0 ? (
-                          <p className="text-xs font-semibold uppercase text-emerald-800">
-                            Najwyżej w podglądzie
-                          </p>
-                        ) : null}
-                        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-                          <h4 className="text-base font-semibold">
-                            {result.allergenLabel}
-                          </h4>
-                          <div className="flex flex-wrap gap-2 text-sm">
-                            <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-emerald-950">
-                              Prawdopodobieństwo: {result.likelihoodLabel}
-                            </span>
-                            <span
-                              className={`rounded-md px-2.5 py-1 ${
-                                result.pollenActivity === "unknown"
-                                  ? "bg-amber-100 text-amber-950"
-                                  : "bg-slate-100 text-slate-800"
-                              }`}
-                            >
-                              Aktywność pyłków: {result.pollenActivityLabel}
-                            </span>
-                          </div>
-                        </div>
-                      </article>
+                        result={result}
+                        isTopResult={index === 0}
+                        topLabel="Najwyżej w podglądzie"
+                        headingLevel="h4"
+                      />
                     ))}
                   </div>
                   {draftComplete ? null : (

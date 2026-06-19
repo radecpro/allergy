@@ -5,22 +5,15 @@ import { CityCombobox } from "~/components/city-combobox";
 import { EmptyState } from "~/components/empty-state";
 import { ModeSwitch } from "~/components/mode-switch";
 import { Notice } from "~/components/notice";
-import {
-  allergenIds,
-  summarizeDestinationPollenActivity,
-} from "~/domain/allergen-ranking";
+import { summarizeDestinationPollenActivity } from "~/domain/allergen-ranking";
 import type {
   DestinationPollenActivitySummary,
-  PollenActivityByAllergen,
 } from "~/domain/allergen-ranking";
-import type { CurrentPollenResponse } from "~/domain/current-location/http";
+import {
+  createCurrentPollenLookup,
+  idleCurrentPollenState,
+} from "~/domain/current-location/current-pollen";
 import type { CitySuggestion } from "~/domain/current-location/types";
-
-const emptyPollenActivity = Object.fromEntries(
-  allergenIds.map((allergenId) => [allergenId, "unknown"]),
-) as PollenActivityByAllergen;
-
-type AsyncStatus = "idle" | "loading" | "unavailable";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -31,10 +24,6 @@ export function meta({}: Route.MetaArgs) {
         "Sprawdź aktualną aktywność pyłków i kontekst środowiskowy dla miasta docelowego.",
     },
   ];
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }
 
 function activityBadgeClass(
@@ -86,10 +75,8 @@ function DestinationCard({
 
 export default function DestinationSearch() {
   const [selectedCity, setSelectedCity] = useState<CitySuggestion | null>(null);
-  const [pollenActivity, setPollenActivity] =
-    useState<PollenActivityByAllergen>(emptyPollenActivity);
-  const [pollenStatus, setPollenStatus] = useState<AsyncStatus>("idle");
-  const [pollenMessage, setPollenMessage] = useState("");
+  const [{ pollenActivity, status: pollenStatus, message: pollenMessage }, setPollenState] =
+    useState(idleCurrentPollenState);
 
   const destinationSummaries = useMemo(
     () => summarizeDestinationPollenActivity({ pollenActivity }),
@@ -100,48 +87,20 @@ export default function DestinationSearch() {
   );
 
   useEffect(() => {
-    if (selectedCity === null) {
-      return;
-    }
+    const lookup = createCurrentPollenLookup({
+      fetchCurrentPollen: fetch,
+      onState: setPollenState,
+      unavailableMessage:
+        "Dane o aktywności pyłków dla miejsca docelowego są chwilowo niedostępne.",
+    });
 
-    const controller = new AbortController();
-    setPollenStatus("loading");
-    setPollenMessage("");
-    setPollenActivity(emptyPollenActivity);
+    lookup.setCity(selectedCity);
 
-    fetch("/api/current-pollen", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ placeId: selectedCity.placeId }),
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const payload = (await response.json()) as CurrentPollenResponse;
-        setPollenActivity(payload.pollenActivity);
-        setPollenStatus(payload.status === "ok" ? "idle" : "unavailable");
-        setPollenMessage(payload.message ?? "");
-      })
-      .catch((error: unknown) => {
-        if (!isAbortError(error)) {
-          setPollenActivity(emptyPollenActivity);
-          setPollenStatus("unavailable");
-          setPollenMessage(
-            "Dane o aktywności pyłków dla miejsca docelowego są chwilowo niedostępne.",
-          );
-        }
-      });
-
-    return () => controller.abort();
+    return () => lookup.dispose();
   }, [selectedCity]);
 
   const handleCitySelect = useCallback((city: CitySuggestion | null) => {
     setSelectedCity(city);
-
-    if (city === null) {
-      setPollenActivity(emptyPollenActivity);
-      setPollenStatus("idle");
-      setPollenMessage("");
-    }
   }, []);
 
   return (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Route } from "./+types/home";
 import { AppShell } from "~/components/app-shell";
 import { CityCombobox } from "~/components/city-combobox";
@@ -6,36 +6,33 @@ import { CurrentLocationControl } from "~/components/current-location-control";
 import { EmptyState } from "~/components/empty-state";
 import { ModeSwitch } from "~/components/mode-switch";
 import { Notice } from "~/components/notice";
+import { RankingResultCard } from "~/components/ranking-result-card";
 import { SymptomCheckSave } from "~/components/symptom-check-save";
 import { SymptomIntensitySelector } from "~/components/symptom-intensity-selector";
+import { SymptomSelectionCard } from "~/components/symptom-selection-card";
 import {
   allergenIds,
   assignSymptomIntensity,
   deselectSymptom,
   getCompleteSymptomEntries,
   hasCompleteSymptomSelection,
-  pollenActivityLabels,
   rankCurrentSymptomAllergens,
   selectSymptom,
   symptomCatalog,
 } from "~/domain/allergen-ranking";
 import type {
   CurrentSymptomSelection,
-  PollenActivityByAllergen,
   SymptomId,
   SymptomIntensity,
 } from "~/domain/allergen-ranking";
-import type { CurrentPollenResponse } from "~/domain/current-location/http";
+import {
+  createCurrentPollenLookup,
+  idleCurrentPollenState,
+} from "~/domain/current-location/current-pollen";
 import type { CitySuggestion } from "~/domain/current-location/types";
 import { createProductionSymptomCheckDependencies } from "~/domain/symptom-checks/dependencies.server";
 import { buildCurrentSymptomSnapshot } from "~/domain/symptom-checks/snapshot";
 import { createSaveSymptomCheckAction } from "~/domain/symptom-checks/symptom-check-route-handlers.server";
-
-const emptyPollenActivity = Object.fromEntries(
-  allergenIds.map((allergenId) => [allergenId, "unknown"]),
-) as PollenActivityByAllergen;
-
-type AsyncStatus = "idle" | "loading" | "unavailable";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -62,11 +59,8 @@ export default function Home() {
   const [selectedCity, setSelectedCity] = useState<CitySuggestion | null>(null);
   const [symptomSelection, setSymptomSelection] =
     useState<CurrentSymptomSelection>([]);
-  const [pollenActivity, setPollenActivity] =
-    useState<PollenActivityByAllergen>(emptyPollenActivity);
-  const [pollenStatus, setPollenStatus] = useState<AsyncStatus>("idle");
-  const [pollenMessage, setPollenMessage] = useState("");
-  const activePollenPlaceIdRef = useRef<string | null>(null);
+  const [{ pollenActivity, status: pollenStatus, message: pollenMessage }, setPollenState] =
+    useState(idleCurrentPollenState);
 
   const completeSymptoms = useMemo(
     () => getCompleteSymptomEntries(symptomSelection),
@@ -110,57 +104,19 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    if (selectedCity === null) {
-      return;
-    }
+    const lookup = createCurrentPollenLookup({
+      fetchCurrentPollen: fetch,
+      onState: setPollenState,
+      unavailableMessage: "Aktualne dane pyłkowe są chwilowo niedostępne.",
+    });
 
-    const controller = new AbortController();
-    setPollenStatus("loading");
-    setPollenMessage("");
-    setPollenActivity(emptyPollenActivity);
+    lookup.setCity(selectedCity);
 
-    fetch("/api/current-pollen", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ placeId: selectedCity.placeId }),
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const payload = (await response.json()) as CurrentPollenResponse;
-
-        if (activePollenPlaceIdRef.current !== selectedCity.placeId) {
-          return;
-        }
-
-        setPollenActivity(payload.pollenActivity);
-        setPollenStatus(payload.status === "ok" ? "idle" : "unavailable");
-        setPollenMessage(payload.message ?? "");
-      })
-      .catch((error: unknown) => {
-        if (
-          !isAbortError(error) &&
-          activePollenPlaceIdRef.current === selectedCity.placeId
-        ) {
-          setPollenActivity(emptyPollenActivity);
-          setPollenStatus("unavailable");
-          setPollenMessage("Aktualne dane pyłkowe są chwilowo niedostępne.");
-        }
-      });
-
-    return () => controller.abort();
+    return () => lookup.dispose();
   }, [selectedCity]);
 
   const handleCitySelect = useCallback((city: CitySuggestion | null) => {
-    activePollenPlaceIdRef.current = city?.placeId ?? null;
     setSelectedCity(city);
-    setPollenActivity(emptyPollenActivity);
-    setPollenMessage("");
-
-    if (city === null) {
-      setPollenStatus("idle");
-    } else {
-      setPollenStatus("loading");
-    }
   }, []);
 
   function toggleSymptom(symptomId: SymptomId) {
@@ -224,24 +180,12 @@ export default function Home() {
                   const isSelected = selectedSymptom !== undefined;
 
                   return (
-                    <div
+                    <SymptomSelectionCard
                       key={symptom.id}
-                      className={`overflow-hidden rounded-md border text-sm transition ${
-                        isSelected
-                          ? "border-emerald-600 bg-white text-slate-950"
-                          : "border-slate-300 bg-white text-slate-800 hover:border-slate-400"
-                      }`}
+                      label={symptom.label}
+                      selected={isSelected}
+                      onChange={() => toggleSymptom(symptom.id)}
                     >
-                      <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleSymptom(symptom.id)}
-                          className="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
-                        />
-                        <span className="font-medium">{symptom.label}</span>
-                      </label>
-
                       {selectedSymptom ? (
                         <SymptomIntensitySelector
                           symptomId={selectedSymptom.symptomId}
@@ -250,7 +194,7 @@ export default function Home() {
                           onAssign={handleIntensityAssign}
                         />
                       ) : null}
-                    </div>
+                    </SymptomSelectionCard>
                   );
                 })}
               </div>
@@ -289,70 +233,13 @@ export default function Home() {
                 ) : null}
 
                 <div className="grid gap-3">
-                  {rankedResults.map((result, index) => {
-                    const isTopResult = index === 0;
-
-                    return (
-                      <article
-                        key={result.allergenId}
-                        className={`rounded-md border p-4 shadow-sm ${
-                          isTopResult
-                            ? "border-emerald-500 bg-emerald-50 shadow-emerald-100"
-                            : "border-slate-200 bg-white"
-                        }`}
-                      >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            {isTopResult ? (
-                              <p className="text-sm font-semibold uppercase tracking-normal text-emerald-800">
-                                Najbardziej prawdopodobne
-                              </p>
-                            ) : null}
-                            <h3 className="mt-1 text-lg font-semibold text-slate-950">
-                              {result.allergenLabel}
-                            </h3>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-sm font-medium text-emerald-950">
-                              Prawdopodobieństwo: {result.likelihoodLabel}
-                            </span>
-                            <span
-                              className={`rounded-md px-2.5 py-1 text-sm font-medium ${
-                                result.pollenActivity === "unknown"
-                                  ? "bg-amber-100 text-amber-950"
-                                  : "bg-slate-100 text-slate-800"
-                              }`}
-                            >
-                              Aktywność pyłków: {result.pollenActivityLabel}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 grid gap-2">
-                          <p className="text-sm font-medium text-slate-700">
-                            Pasujące objawy
-                          </p>
-                          {result.matchedSymptoms.length > 0 ? (
-                            <ul className="flex flex-wrap gap-2 text-sm text-slate-700">
-                              {result.matchedSymptoms.map((symptom) => (
-                                <li
-                                  key={symptom.symptomId}
-                                  className="rounded-md bg-slate-100 px-2.5 py-1"
-                                >
-                                  {symptom.label}: {symptom.intensityLabel}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm leading-6 text-slate-600">
-                              Brak silnego dopasowania do wybranych objawów.
-                            </p>
-                          )}
-                        </div>
-
-                      </article>
-                    );
-                  })}
+                  {rankedResults.map((result, index) => (
+                    <RankingResultCard
+                      key={result.allergenId}
+                      result={result}
+                      isTopResult={index === 0}
+                    />
+                  ))}
                 </div>
               </div>
             )}
