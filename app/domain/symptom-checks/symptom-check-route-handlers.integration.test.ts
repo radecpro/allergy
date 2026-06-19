@@ -2,13 +2,21 @@ import { randomUUID } from "node:crypto";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import * as schema from "~/db/schema.server";
+import type { LocalUser } from "~/domain/auth/types";
 
+import { buildCurrentSymptomSnapshot } from "./snapshot";
 import { createSymptomCheckRepository } from "./symptom-check-repository.server";
+import {
+  createSymptomCheckDetailAction,
+  createSymptomCheckDetailLoader,
+  createSymptomCheckListLoader,
+} from "./symptom-check-route-handlers.server";
+import type { SymptomCheckListLoaderData } from "./symptom-check-route-handlers.server";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
@@ -26,6 +34,58 @@ const pool = new Pool({
 const database = drizzle(pool, { schema });
 const repository = createSymptomCheckRepository(database);
 const ownerIds: string[] = [];
+const appOrigin = "https://allergen.example";
+
+function localUser(id: string, label: string): LocalUser {
+  return {
+    id,
+    providerUid: `provider-${label}`,
+    email: `${label}@example.test`,
+    normalizedEmail: `${label}@example.test`,
+  };
+}
+
+function snapshot(cityLabel: string, completedAt: string) {
+  return buildCurrentSymptomSnapshot({
+    city: {
+      placeId: `place-${cityLabel.toLowerCase()}`,
+      label: cityLabel,
+    },
+    symptoms: [
+      { symptomId: "sneezing", intensity: "high" },
+      { symptomId: "itchy-eyes", intensity: "high" },
+    ],
+    pollenActivity: {
+      "grass-pollen": "high",
+      "tree-pollen": "moderate",
+    },
+    completedAt: new Date(completedAt),
+  });
+}
+
+function detailRequest(body: URLSearchParams) {
+  return new Request(`${appOrigin}/history/foreign-check`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Origin: appOrigin,
+    },
+    body,
+  });
+}
+
+async function expectPrivateNotFound(operation: Promise<Response>) {
+  try {
+    await operation;
+    throw new Error("Expected a private not-found response.");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Response);
+    expect((error as Response).status).toBe(404);
+    expect((error as Response).headers.get("Cache-Control")).toBe(
+      "private, no-store",
+    );
+  }
+}
 
 beforeAll(async () => {
   await migrate(database, { migrationsFolder: "drizzle" });
@@ -64,5 +124,76 @@ describe("PostgreSQL symptom-check route handlers", () => {
   it("runs with disposable database fixtures for two authenticated owners", () => {
     expect(ownerIds).toHaveLength(2);
     expect(repository).toBeDefined();
+  });
+
+  it("keeps User A's saved check private from User B list, read, update, and delete attempts", async () => {
+    const [ownerA, ownerB] = ownerIds;
+    const userB = localUser(ownerB, "route-handlers-b");
+    const ownerRecord = await repository.createForOwner(
+      ownerA,
+      randomUUID(),
+      snapshot("Warszawa", "2026-06-18T12:00:00.000Z"),
+    );
+    const before = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, ownerRecord.id),
+    });
+    const dependencies = {
+      appOrigin,
+      sessions: { requireUser: async () => userB },
+      repository,
+      originValidator: () => true,
+    };
+    const listLoader = createSymptomCheckListLoader(dependencies);
+    const detailLoader = createSymptomCheckDetailLoader(dependencies);
+    const detailAction = createSymptomCheckDetailAction(dependencies);
+
+    const listResponse = await listLoader(new Request(`${appOrigin}/history`));
+    const listPayload =
+      (await listResponse.json()) as SymptomCheckListLoaderData;
+
+    expect(listResponse.headers.get("Cache-Control")).toBe(
+      "private, no-store",
+    );
+    expect(listPayload.records.map((record) => record.id)).not.toContain(
+      ownerRecord.id,
+    );
+
+    await expectPrivateNotFound(
+      detailLoader(
+        new Request(`${appOrigin}/history/${ownerRecord.id}`),
+        ownerRecord.id,
+      ),
+    );
+    await expectPrivateNotFound(
+      detailAction(
+        detailRequest(
+          new URLSearchParams({
+            intent: "update",
+            symptoms: JSON.stringify([
+              { symptomId: "blocked-nose", intensity: "low" },
+            ]),
+          }),
+        ),
+        ownerRecord.id,
+      ),
+    );
+    await expectPrivateNotFound(
+      detailAction(
+        detailRequest(new URLSearchParams({ intent: "delete" })),
+        ownerRecord.id,
+      ),
+    );
+
+    const after = await database.query.symptomChecks.findFirst({
+      where: eq(schema.symptomChecks.id, ownerRecord.id),
+    });
+
+    expect(before).toBeDefined();
+    expect(after).toEqual(before);
+    expect(after).toMatchObject({
+      id: ownerRecord.id,
+      ownerId: ownerA,
+      symptoms: ownerRecord.snapshot.symptoms,
+    });
   });
 });

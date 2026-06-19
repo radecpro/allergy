@@ -266,9 +266,9 @@ No production schema migration is expected. Tests should run existing Drizzle mi
 
 #### Automated
 
-- [x] 1.1 Focused DB test discovery runs the new file
-- [x] 1.2 Existing repository DB integration file remains discoverable
-- [x] 1.3 Type checking passes
+- [x] 1.1 Focused DB test discovery runs the new file — f727307
+- [x] 1.2 Existing repository DB integration file remains discoverable — f727307
+- [x] 1.3 Type checking passes — f727307
 
 #### Manual
 
@@ -278,10 +278,10 @@ No production schema migration is expected. Tests should run existing Drizzle mi
 
 #### Automated
 
-- [ ] 2.1 Route-handler ownership integration passes
-- [ ] 2.2 Full DB suite passes
-- [ ] 2.3 Fast suite passes
-- [ ] 2.4 Type checking passes
+- [x] 2.1 Route-handler ownership integration passes
+- [x] 2.2 Full DB suite passes
+- [x] 2.3 Fast suite passes
+- [x] 2.4 Type checking passes
 
 #### Manual
 
