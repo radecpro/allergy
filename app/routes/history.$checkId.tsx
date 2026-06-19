@@ -189,7 +189,11 @@ export default function SavedSymptomCheck() {
     <AppShell
       title="Zapisane sprawdzenie"
       description="Przeglądaj zapisany ranking albo popraw objawy i ich nasilenie."
-      maxWidth="5xl"
+      headerAction={
+        <TextLink to="/history" className="w-fit">
+          Wróć do historii
+        </TextLink>
+      }
     >
 
         {flashMessage ? (

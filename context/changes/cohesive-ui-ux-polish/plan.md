@@ -300,7 +300,7 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [ ] 1.3 Current, destination, history, and detail pages share the same visual rhythm while auth stays separate
+- [x] 1.3 Current, destination, history, and detail pages share the same visual rhythm while auth stays separate
 
 ### Phase 2: Shared Result And Async Logic
 

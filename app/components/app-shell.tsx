@@ -10,13 +10,6 @@ type AppShellProps = {
   eyebrow?: string;
   headerAction?: ReactNode;
   notice?: ReactNode;
-  maxWidth?: "4xl" | "5xl" | "6xl";
-};
-
-const maxWidthClasses = {
-  "4xl": "max-w-4xl",
-  "5xl": "max-w-5xl",
-  "6xl": "max-w-6xl",
 };
 
 export function AppShell({
@@ -26,12 +19,11 @@ export function AppShell({
   eyebrow = "Allergen Finder",
   headerAction,
   notice,
-  maxWidth = "6xl",
 }: AppShellProps) {
   return (
     <main className="min-h-screen bg-stone-50 text-slate-950">
       <div
-        className={`mx-auto flex w-full ${maxWidthClasses[maxWidth]} flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8`}
+        className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8"
       >
         <header className="grid gap-3 border-b border-slate-200 pb-5 transition-colors duration-150">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -40,10 +32,12 @@ export function AppShell({
             </p>
             <AccountNav />
           </div>
-          {headerAction}
+          {headerAction ? (
+            <div className="flex min-h-10 items-center">{headerAction}</div>
+          ) : null}
           <div className="grid gap-3 lg:grid-cols-[1fr_22rem] lg:items-end">
             <div>
-              <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
+              <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-slate-950 sm:min-h-24 sm:text-4xl">
                 {title}
               </h1>
               {description ? (

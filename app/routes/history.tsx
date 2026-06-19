@@ -78,7 +78,6 @@ export default function SymptomCheckHistory() {
     <AppShell
       title="Historia sprawdzeń"
       description="Widzisz tylko sprawdzenia zapisane na tym koncie."
-      maxWidth="4xl"
       headerAction={
         <TextLink to="/" className="w-fit">
             Wróć do strony głównej
