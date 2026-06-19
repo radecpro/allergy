@@ -146,12 +146,12 @@ Foundations below assume these are present and do not recreate them.
 
 | Roadmap ID | Change ID | Suggested issue title | Ready for `/10x-plan` | Notes |
 |---|---|---|---|---|
-| F-01 | risk-based-test-foundation | Establish risk-based automated test foundation | yes | Run `/10x-plan risk-based-test-foundation` |
-| S-01 | email-password-account-access | Add email and password account access | no | Depends on F-01 |
-| S-02 | save-and-view-symptom-check | Let users explicitly save and view private symptom checks | no | Depends on F-01 and S-01 |
-| S-03 | manage-saved-symptom-check | Let users update or delete saved symptom checks | no | Implemented in `manage-saved-symptom-check` |
-| S-04 | per-symptom-intensity-ranking | Rank with intensity selected per symptom | no | Depends on F-01 |
-| S-05 | device-location-current-check | Add device location with manual fallback | no | Depends on F-01 |
+| F-01 | risk-based-test-foundation | Establish risk-based automated test foundation | no | Done; archived at `context/archive/2026-06-10-risk-based-test-foundation/` |
+| S-01 | email-password-account-access | Add email and password account access | no | Done; archived at `context/archive/2026-06-10-email-password-account-access/` |
+| S-02 | save-and-view-symptom-check | Let users explicitly save and view private symptom checks | no | Done; archived at `context/archive/2026-06-11-save-and-view-symptom-check/` |
+| S-03 | manage-saved-symptom-check | Let users update or delete saved symptom checks | no | Done; archived at `context/archive/2026-06-15-manage-saved-symptom-check/` |
+| S-04 | per-symptom-intensity-ranking | Rank with intensity selected per symptom | no | Done; archived at `context/archive/2026-06-14-per-symptom-intensity-ranking/` |
+| S-05 | device-location-current-check | Add device location with manual fallback | no | Done; archived at `context/archive/2026-06-18-device-location-current-check/` |
 | S-06 | cohesive-ui-ux-polish | Polish UI consistency, interaction feedback, and duplicated UI logic | yes | Run `/10x-plan cohesive-ui-ux-polish` |
 
 ## Open Roadmap Questions
@@ -173,7 +173,7 @@ No open roadmap questions.
 
 ## Done
 
-(Empty. `/10x-archive` appends entries here when roadmap items are archived.)
+Archived roadmap slices found in `context/archive/`.
 - **F-01: (foundation) A standard test command, focused test runner, and `test-plan.md` risk inventory are available before authentication or persistence behavior is added.** — Archived 2026-06-15 → `context/archive/2026-06-10-risk-based-test-foundation/`. Lesson: —.
 - **S-01: User can register, sign in with email and password, and sign out while both existing allergen checks remain fully usable as a guest.** — Archived 2026-06-15 → `context/archive/2026-06-10-email-password-account-access/`. Lesson: —.
 - **S-02: Authenticated user can explicitly save a completed current-symptoms check and view it in a history list and detail view that contains only their records.** — Archived 2026-06-15 → `context/archive/2026-06-11-save-and-view-symptom-check/`. Lesson: —.
