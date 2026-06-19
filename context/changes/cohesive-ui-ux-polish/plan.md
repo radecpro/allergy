@@ -328,9 +328,9 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [x] 4.1 Focused unit tests for shared primitives and current-pollen behavior pass
-- [x] 4.2 `npm test` passes
-- [x] 4.3 `npm run typecheck` passes
+- [x] 4.1 Focused unit tests for shared primitives and current-pollen behavior pass — 4781ea8
+- [x] 4.2 `npm test` passes — 4781ea8
+- [x] 4.3 `npm run typecheck` passes — 4781ea8
 
 #### Manual
 
