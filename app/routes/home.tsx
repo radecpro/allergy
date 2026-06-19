@@ -244,13 +244,12 @@ export default function Home() {
               </div>
             )}
 
+            <SymptomCheckSave
+              snapshot={saveSnapshot}
+              disabled={pollenStatus === "loading"}
+            />
           </section>
         </div>
-
-        <SymptomCheckSave
-          snapshot={saveSnapshot}
-          disabled={pollenStatus === "loading"}
-        />
     </AppShell>
   );
 }

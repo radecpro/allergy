@@ -1,5 +1,9 @@
 import { Form, Link, useActionData, useLoaderData } from "react-router";
 
+import { Button } from "./button";
+import { Notice } from "./notice";
+import { Panel } from "./panel";
+import { TextLink } from "./text-link";
 import type { AuthActionData } from "~/domain/auth/auth-route-handlers.server";
 
 type AuthFormProps = {
@@ -17,7 +21,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   return (
     <main className="min-h-screen bg-stone-50 px-4 py-12 text-slate-950">
-      <div className="mx-auto grid w-full max-w-md gap-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <Panel className="mx-auto grid w-full max-w-md gap-6 p-6 sm:p-8">
         <div>
           <p className="text-sm font-semibold uppercase text-emerald-700">
             Allergen Finder
@@ -86,34 +90,28 @@ export function AuthForm({ mode }: AuthFormProps) {
           </label>
 
           {actionData?.formError ? (
-            <p
-              role="alert"
-              className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900"
-            >
-              {actionData.formError}
-            </p>
+            <Notice role="alert" tone="error">{actionData.formError}</Notice>
           ) : null}
 
-          <button
+          <Button
             type="submit"
-            className="h-11 rounded-md bg-emerald-800 px-4 text-sm font-semibold text-white hover:bg-emerald-900"
+            className="h-11"
           >
             {isRegister ? "Utwórz konto" : "Zaloguj się"}
-          </button>
+          </Button>
         </Form>
 
-        <Link
+        <TextLink
           to={`${alternativePath}?returnTo=${encodeURIComponent(
             actionData?.values?.returnTo ?? loaderData.returnTo,
           )}`}
-          className="text-sm font-medium text-emerald-800 underline decoration-emerald-300 underline-offset-4"
         >
           {alternativeLabel}
-        </Link>
+        </TextLink>
         <Link to="/" className="text-sm text-slate-600 hover:text-slate-950">
           Wróć do testu gościnnego
         </Link>
-      </div>
+      </Panel>
     </main>
   );
 }

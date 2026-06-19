@@ -221,14 +221,6 @@ export default function SavedSymptomCheck() {
                 >
                   Edytuj
                 </Button>
-                <Button
-                  type="button"
-                  onClick={handleOpenDeletePrompt}
-                  disabled={isSubmitting}
-                  tone="ghost-danger"
-                >
-                  Usuń zapis
-                </Button>
               </div>
             </div>
             {reconstructSymptomCheck(data.record.snapshot).rankedResults.map(
@@ -355,7 +347,7 @@ export default function SavedSymptomCheck() {
 
         <Panel tone="danger" className="p-4">
           {!deletePromptOpen ? (
-            <div className="grid gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-rose-950">
                   Usuń zapis

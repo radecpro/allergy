@@ -306,8 +306,8 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [x] 2.1 Shared result-card and selection-card tests pass
-- [x] 2.2 Shared current-pollen behavior tests prove stale responses cannot repaint newer selections
+- [x] 2.1 Shared result-card and selection-card tests pass — b206ea9
+- [x] 2.2 Shared current-pollen behavior tests prove stale responses cannot repaint newer selections — b206ea9
 
 #### Manual
 
@@ -317,8 +317,8 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [ ] 3.1 Save, history, and detail route tests still pass after the layout changes
-- [ ] 3.2 Type checking confirms the updated component composition is valid
+- [x] 3.1 Save, history, and detail route tests still pass after the layout changes
+- [x] 3.2 Type checking confirms the updated component composition is valid
 
 #### Manual
 
