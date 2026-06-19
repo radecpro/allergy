@@ -1,0 +1,228 @@
+name: Deploy to Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      promote_traffic:
+        description: Move 100% traffic to the verified revision after jobs pass.
+        required: true
+        default: false
+        type: boolean
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cloud-run-deploy
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: gcp-10xdev-bara-lab-3t60
+  GCP_REGION: europe-central2
+  CLOUD_RUN_SERVICE: allergen-finder
+  ARTIFACT_REPOSITORY: allergen-finder
+  MIGRATION_JOB: allergen-finder-migrate
+  AUTH_PREFLIGHT_JOB: allergen-finder-auth-preflight
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Dependency audit
+        run: npm audit --json --audit-level=critical
+
+  deploy:
+    name: Deploy no-traffic revision
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      REVISION: ${{ github.sha }}
+      REVISION_TAG: release-${{ github.run_id }}
+      RUNTIME_SERVICE_ACCOUNT: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+      INSTANCE_CONNECTION_NAME: ${{ vars.GCP_CLOUD_SQL_INSTANCE_CONNECTION_NAME }}
+      SERVICE_ORIGIN: ${{ vars.CLOUD_RUN_SERVICE_ORIGIN }}
+      WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Validate deployment configuration
+        run: |
+          test -n "$RUNTIME_SERVICE_ACCOUNT"
+          test -n "$INSTANCE_CONNECTION_NAME"
+          test -n "$SERVICE_ORIGIN"
+          test -n "$WORKLOAD_IDENTITY_PROVIDER"
+          test -n "$DEPLOY_SERVICE_ACCOUNT"
+
+      - name: Build application image
+        env:
+          APPLICATION_IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/app:${{ env.REVISION }}
+        run: |
+          gcloud builds submit \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --gcs-source-staging-dir "gs://run-sources-${GCP_PROJECT_ID}-${GCP_REGION}/cloud-build/source" \
+            --tag "$APPLICATION_IMAGE" \
+            .
+
+      - name: Deploy no-traffic Cloud Run revision
+        id: deploy
+        env:
+          APPLICATION_IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/app:${{ env.REVISION }}
+        run: |
+          gcloud run deploy "$CLOUD_RUN_SERVICE" \
+            --image "$APPLICATION_IMAGE" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+            --add-cloudsql-instances "$INSTANCE_CONNECTION_NAME" \
+            --set-secrets "DATABASE_URL=allergen-database-url:latest,IDENTITY_PLATFORM_API_KEY=allergen-identity-api-key:latest,GOOGLE_MAPS_API_KEY=allergen-google-maps-api-key:latest" \
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${GCP_PROJECT_ID},APP_ORIGIN=${SERVICE_ORIGIN}" \
+            --max-instances 3 \
+            --min-instances 0 \
+            --cpu 1 \
+            --memory 512Mi \
+            --labels app=allergen-finder,env=mvp \
+            --allow-unauthenticated \
+            --ingress all \
+            --port 8080 \
+            --no-traffic \
+            --tag "$REVISION_TAG" \
+            --quiet
+
+          revision_name="$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --format "value(status.latestCreatedRevisionName)")"
+
+          service_url="$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --format "value(status.url)")"
+
+          tagged_url="$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --format json \
+            | jq -r --arg tag "$REVISION_TAG" '.status.traffic[] | select(.tag == $tag) | .url')"
+
+          echo "revision_name=${revision_name}" >> "$GITHUB_OUTPUT"
+          echo "service_url=${service_url}" >> "$GITHUB_OUTPUT"
+          echo "tagged_url=${tagged_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Build migration image
+        env:
+          MIGRATION_IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/migrate:${{ env.REVISION }}
+        run: |
+          gcloud builds submit \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --gcs-source-staging-dir "gs://run-sources-${GCP_PROJECT_ID}-${GCP_REGION}/cloud-build/source" \
+            --config cloudbuild.migrate.yaml \
+            --substitutions "_IMAGE=$MIGRATION_IMAGE" \
+            .
+
+      - name: Deploy migration job
+        env:
+          MIGRATION_IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/migrate:${{ env.REVISION }}
+        run: |
+          gcloud run jobs deploy "$MIGRATION_JOB" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --image "$MIGRATION_IMAGE" \
+            --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+            --set-cloudsql-instances "$INSTANCE_CONNECTION_NAME" \
+            --set-secrets "DATABASE_URL=allergen-database-url:latest"
+
+      - name: Execute migration job
+        run: |
+          gcloud run jobs execute "$MIGRATION_JOB" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --wait
+
+      - name: Build live-auth preflight image
+        env:
+          PREFLIGHT_IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/auth-preflight:${{ env.REVISION }}
+        run: |
+          gcloud builds submit \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --gcs-source-staging-dir "gs://run-sources-${GCP_PROJECT_ID}-${GCP_REGION}/cloud-build/source" \
+            --config cloudbuild.auth-live.yaml \
+            --substitutions "_IMAGE=$PREFLIGHT_IMAGE" \
+            .
+
+      - name: Deploy live-auth preflight job
+        env:
+          PREFLIGHT_IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/auth-preflight:${{ env.REVISION }}
+        run: |
+          gcloud run jobs deploy "$AUTH_PREFLIGHT_JOB" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --image "$PREFLIGHT_IMAGE" \
+            --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+            --set-secrets "IDENTITY_PLATFORM_API_KEY=allergen-identity-api-key:latest,AUTH_LIVE_EMAIL=allergen-smoke-email:latest,AUTH_LIVE_PASSWORD=allergen-smoke-password:latest" \
+            --set-env-vars "AUTH_LIVE_OPT_IN=1,AUTH_LIVE_TARGET=final-pre-traffic,AUTH_LIVE_FINAL_PROJECT_ID=${GCP_PROJECT_ID},AUTH_LIVE_ALLOW_FINAL_TARGET=1,GOOGLE_CLOUD_PROJECT=${GCP_PROJECT_ID}"
+
+      - name: Execute live-auth preflight job
+        run: |
+          gcloud run jobs execute "$AUTH_PREFLIGHT_JOB" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --wait
+
+      - name: Smoke tagged no-traffic revision
+        run: curl -fsS "${{ steps.deploy.outputs.tagged_url }}" > /dev/null
+
+      - name: Inspect recent service logs
+        run: |
+          gcloud run services logs read "$CLOUD_RUN_SERVICE" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --limit 50
+
+      - name: Promote verified revision
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.promote_traffic }}
+        run: |
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE" \
+            --project "$GCP_PROJECT_ID" \
+            --region "$GCP_REGION" \
+            --to-revisions "${{ steps.deploy.outputs.revision_name }}=100"

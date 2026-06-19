@@ -93,6 +93,44 @@ Kit and committed SQL migrations but not the application server. Run it as an
 explicit approved Cloud Run Job before moving traffic; migrations never run
 from application startup.
 
+## GitHub Actions Deployment
+
+The repository includes a manual Cloud Run deployment workflow at
+`.github/workflows/deploy-gcp.yml`. It is configured for the final GCP project
+and deploys only when triggered from `workflow_dispatch`.
+
+Set these GitHub environment variables in the `production` environment:
+
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`
+- `GCP_DEPLOY_SERVICE_ACCOUNT`
+- `GCP_RUNTIME_SERVICE_ACCOUNT`
+- `GCP_CLOUD_SQL_INSTANCE_CONNECTION_NAME`
+- `CLOUD_RUN_SERVICE_ORIGIN`
+
+Use the exact values from the target GCP project:
+
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`: the full Workload Identity Provider
+  resource name
+- `GCP_DEPLOY_SERVICE_ACCOUNT`: the GitHub deployer service account email
+- `GCP_RUNTIME_SERVICE_ACCOUNT`: the Cloud Run runtime service account email
+- `GCP_CLOUD_SQL_INSTANCE_CONNECTION_NAME`: the Cloud SQL connection name in
+  `project:region:instance` form
+- `CLOUD_RUN_SERVICE_ORIGIN`: the exact public Cloud Run origin, without a
+  path
+
+The workflow expects the following Secret Manager secret names to exist in the
+GCP project:
+
+- `allergen-database-url`
+- `allergen-identity-api-key`
+- `allergen-google-maps-api-key`
+- `allergen-smoke-email`
+- `allergen-smoke-password`
+
+If your organization policy blocks IAM, Secret Manager, Cloud SQL, or Workload
+Identity changes in the project, those values must be provisioned by an
+organization administrator before the workflow can be used.
+
 ## Google Maps Platform
 
 Live city search and pollen lookup require `GOOGLE_MAPS_API_KEY`. Enable:
