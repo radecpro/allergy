@@ -1,10 +1,10 @@
 ---
 change_id: testing-ownership-and-explicit-consent-isolation
 title: Test ownership and explicit-consent isolation
-status: implemented
+status: archived
 created: 2026-06-18
 updated: 2026-06-19
-archived_at: null
+archived_at: 2026-06-19T04:32:42Z
 ---
 
 ## Notes
