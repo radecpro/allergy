@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781118441526,
+      "tag": "0000_material_unicorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781179314230,
+      "tag": "0001_gifted_darwin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781426527540,
+      "tag": "0002_reset_symptom_checks_for_current_v2",
+      "breakpoints": true
+    }
+  ]
+}

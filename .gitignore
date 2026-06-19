@@ -1,2 +1,27 @@
 .DS_Store
 
+
+# from react-router
+.env
+.env.local
+.env.*.local
+*credentials*.json
+*service-account*.json
+/node_modules/
+# React Router
+/.react-router/
+/build/
+
+# Playwright CLI artifacts
+/.playwright-cli/
+
+# Screenshots
+/screenshots/
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

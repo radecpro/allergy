@@ -1,0 +1,197 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Route } from "./+types/destination-search";
+import { AppShell } from "~/components/app-shell";
+import { CityCombobox } from "~/components/city-combobox";
+import { EmptyState } from "~/components/empty-state";
+import { ModeSwitch } from "~/components/mode-switch";
+import { Notice } from "~/components/notice";
+import { Panel } from "~/components/panel";
+import { Pill } from "~/components/pill";
+import { summarizeDestinationPollenActivity } from "~/domain/allergen-ranking";
+import type {
+  DestinationPollenActivitySummary,
+} from "~/domain/allergen-ranking";
+import {
+  createCurrentPollenLookup,
+  idleCurrentPollenState,
+} from "~/domain/current-location/current-pollen";
+import type { CitySuggestion } from "~/domain/current-location/types";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Allergen Finder | Podróż" },
+    {
+      name: "description",
+      content:
+        "Sprawdź aktualną aktywność pyłków i kontekst środowiskowy dla miasta docelowego.",
+    },
+  ];
+}
+
+function activityBadgeClass(
+  activity: DestinationPollenActivitySummary["pollenActivity"],
+): "danger" | "warning" | "success" | "neutral" {
+  if (activity === "high" || activity === "very-high") {
+    return "danger";
+  }
+
+  if (activity === "moderate") {
+    return "warning";
+  }
+
+  if (activity === "low") {
+    return "success";
+  }
+
+  return "neutral";
+}
+
+function DestinationCard({
+  summary,
+}: {
+  summary: DestinationPollenActivitySummary;
+}) {
+  return (
+    <Panel as="article" className="p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <h3 className="text-lg font-semibold text-slate-950">
+          {summary.allergenLabel}
+        </h3>
+        <Pill tone={activityBadgeClass(summary.pollenActivity)}>
+          Aktywność pyłków: {summary.pollenActivityLabel}
+        </Pill>
+      </div>
+      <div className="mt-3 grid gap-1">
+        <p className="text-sm font-medium text-slate-700">
+          Możliwe objawy przy ekspozycji
+        </p>
+        <p className="text-sm leading-6 text-slate-600">
+          {summary.possibleSymptomLabels.join(", ")}
+        </p>
+      </div>
+    </Panel>
+  );
+}
+
+export default function DestinationSearch() {
+  const [selectedCity, setSelectedCity] = useState<CitySuggestion | null>(null);
+  const [{ pollenActivity, status: pollenStatus, message: pollenMessage }, setPollenState] =
+    useState(idleCurrentPollenState);
+
+  const destinationSummaries = useMemo(
+    () => summarizeDestinationPollenActivity({ pollenActivity }),
+    [pollenActivity],
+  );
+  const hasUnknownPollen = destinationSummaries.some(
+    (summary) => summary.pollenActivity === "unknown",
+  );
+
+  useEffect(() => {
+    const lookup = createCurrentPollenLookup({
+      fetchCurrentPollen: fetch,
+      onState: setPollenState,
+      unavailableMessage:
+        "Dane o aktywności pyłków dla miejsca docelowego są chwilowo niedostępne.",
+    });
+
+    lookup.setCity(selectedCity);
+
+    return () => lookup.dispose();
+  }, [selectedCity]);
+
+  const handleCitySelect = useCallback((city: CitySuggestion | null) => {
+    setSelectedCity(city);
+  }, []);
+
+  return (
+    <AppShell
+      title="Sprawdź aktywność pyłków przed podróżą"
+      description="Wybierz miasto docelowe, aby zobaczyć aktualny kontekst środowiskowy dla wszystkich grup alergenów w aplikacji."
+      headerAction={<ModeSwitch />}
+      notice="Wyniki opisują środowisko w miejscu docelowym. Nie są diagnozą ani oceną osobistego ryzyka objawów."
+    >
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,25rem)_1fr]">
+          <section
+            aria-labelledby="destination-form-heading"
+            className="grid content-start gap-5"
+          >
+            <div>
+              <h2 id="destination-form-heading" className="text-xl font-semibold">
+                Miejsce docelowe
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Wyszukaj miasto, do którego planujesz podróż.
+              </p>
+            </div>
+
+            <CityCombobox
+              selectedCity={selectedCity}
+              onSelect={handleCitySelect}
+              inputId="destination-city-search"
+              listboxId="destination-city-suggestions"
+              label="Miasto docelowe"
+              helperText="Wpisz minimum 2 znaki, aby zobaczyć sugestie."
+              placeholder="np. Barcelona"
+            />
+          </section>
+
+          <section
+            aria-labelledby="destination-results-heading"
+            className="grid content-start gap-4"
+          >
+            <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2
+                  id="destination-results-heading"
+                  className="text-xl font-semibold"
+                >
+                  Aktywność pyłków
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Wszystkie grupy są pokazane bez rankingu osobistego ryzyka.
+                </p>
+              </div>
+              {pollenStatus === "loading" ? (
+                <Notice role="status" tone="info" className="border-sky-100 py-2">
+                  Pobieram dane dla miejsca docelowego...
+                </Notice>
+              ) : null}
+            </div>
+
+            {selectedCity === null ? (
+              <EmptyState title="Wybierz miasto docelowe">
+                  Po wybraniu miasta pokażemy aktywność pyłków i krótki kontekst
+                  środowiskowy. Nie musisz podawać objawów.
+              </EmptyState>
+            ) : pollenStatus === "loading" ? (
+              <Notice tone="passive" className="px-5 py-8">
+                Przygotowuję informacje o aktywności pyłków dla miasta{" "}
+                <span className="font-medium text-slate-900">
+                  {selectedCity.label}
+                </span>
+                .
+              </Notice>
+            ) : (
+              <div className="grid gap-4">
+                {pollenStatus === "unavailable" || hasUnknownPollen ? (
+                  <Notice tone="warning">
+                    {pollenMessage ||
+                      "Część danych o aktywności pyłków dla miejsca docelowego jest niedostępna. Wszystkie grupy pozostają widoczne jako kontekst środowiskowy."}
+                  </Notice>
+                ) : null}
+
+                <div className="grid gap-3">
+                  {destinationSummaries.map((summary) => (
+                    <DestinationCard
+                      key={summary.allergenId}
+                      summary={summary}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+    </AppShell>
+  );
+}
