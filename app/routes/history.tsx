@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Form,
-  Link,
   useLoaderData,
   useNavigation,
   useSearchParams,
 } from "react-router";
 
-import { AccountNav } from "~/components/account-nav";
+import { AppShell } from "~/components/app-shell";
+import { Button } from "~/components/button";
+import { EmptyState } from "~/components/empty-state";
+import { Notice } from "~/components/notice";
+import { Panel } from "~/components/panel";
 import { SymptomCheckSummary } from "~/components/symptom-check-summary";
+import { TextLink } from "~/components/text-link";
 import { createProductionSymptomCheckDependencies } from "~/domain/symptom-checks/dependencies.server";
 import { reconstructSymptomCheck } from "~/domain/symptom-checks/snapshot";
 import {
@@ -71,48 +75,28 @@ export default function SymptomCheckHistory() {
   }, [searchParams]);
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-6 text-slate-950">
-      <div className="mx-auto grid w-full max-w-4xl gap-6">
-        <header className="grid gap-4 border-b border-slate-200 pb-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold uppercase text-emerald-700">
-              Allergen Finder
-            </p>
-            <AccountNav />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold">Historia sprawdzeń</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Widzisz tylko sprawdzenia zapisane na tym koncie.
-            </p>
-          </div>
-          <Link
-            to="/"
-            className="inline-flex w-fit text-sm font-medium text-emerald-800 underline underline-offset-4"
-          >
+    <AppShell
+      title="Historia sprawdzeń"
+      description="Widzisz tylko sprawdzenia zapisane na tym koncie."
+      maxWidth="4xl"
+      headerAction={
+        <TextLink to="/" className="w-fit">
             Wróć do strony głównej
-          </Link>
-        </header>
+        </TextLink>
+      }
+    >
 
         {flashMessage ? (
-          <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-            {flashMessage}
-          </p>
+          <Notice tone="success" role="status">{flashMessage}</Notice>
         ) : null}
 
         {data.records.length === 0 ? (
-          <section className="rounded-md border border-dashed border-slate-300 bg-white p-8">
-            <h2 className="text-xl font-semibold">Brak zapisanych sprawdzeń</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+          <EmptyState
+            title="Brak zapisanych sprawdzeń"
+            action={<TextLink to="/">Wykonaj nowe sprawdzenie</TextLink>}
+          >
               Wykonaj aktualne sprawdzenie i wybierz opcję zapisu.
-            </p>
-            <Link
-              to="/"
-              className="mt-4 inline-block text-sm font-medium text-emerald-800 underline underline-offset-4"
-            >
-              Wykonaj nowe sprawdzenie
-            </Link>
-          </section>
+          </EmptyState>
         ) : (
           <div className="grid gap-4">
             {data.records.map((record) => {
@@ -121,9 +105,10 @@ export default function SymptomCheckHistory() {
               const deletePromptOpen = deletePromptRecordId === record.id;
 
               return (
-                <article
+                <Panel
+                  as="article"
                   key={record.id}
-                  className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm"
+                  className="grid gap-4"
                 >
                   <div>
                     <SymptomCheckSummary snapshot={record.snapshot} compact />
@@ -136,12 +121,9 @@ export default function SymptomCheckHistory() {
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <Link
-                      to={`/history/${record.id}`}
-                      className="inline-block text-sm font-semibold text-emerald-800 underline underline-offset-4"
-                    >
+                    <TextLink to={`/history/${record.id}`} className="font-semibold">
                       Otwórz szczegóły
-                    </Link>
+                    </TextLink>
                     <button
                       type="button"
                       onClick={() => setDeletePromptRecordId(record.id)}
@@ -169,32 +151,31 @@ export default function SymptomCheckHistory() {
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-3">
-                        <button
+                        <Button
                           type="button"
                           onClick={() => setDeletePromptRecordId(null)}
                           disabled={isSubmitting}
-                          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          tone="secondary"
                         >
                           Anuluj
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="submit"
                           disabled={isSubmitting}
-                          className="rounded-md bg-rose-700 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+                          tone="danger"
                         >
                           {pendingIntent === "delete"
                             ? "Usuwam..."
                             : "Potwierdź usunięcie"}
-                        </button>
+                        </Button>
                       </div>
                     </Form>
                   ) : null}
-                </article>
+                </Panel>
               );
             })}
           </div>
         )}
-      </div>
-    </main>
+    </AppShell>
   );
 }

@@ -295,8 +295,8 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [ ] 1.1 Shared shell and primitive components typecheck cleanly
-- [ ] 1.2 Route modules compile after switching to the shared shell and primitives
+- [x] 1.1 Shared shell and primitive components typecheck cleanly
+- [x] 1.2 Route modules compile after switching to the shared shell and primitives
 
 #### Manual
 

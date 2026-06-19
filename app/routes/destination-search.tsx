@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Route } from "./+types/destination-search";
-import { AccountNav } from "~/components/account-nav";
+import { AppShell } from "~/components/app-shell";
 import { CityCombobox } from "~/components/city-combobox";
+import { EmptyState } from "~/components/empty-state";
 import { ModeSwitch } from "~/components/mode-switch";
+import { Notice } from "~/components/notice";
 import {
   allergenIds,
   summarizeDestinationPollenActivity,
@@ -143,33 +145,12 @@ export default function DestinationSearch() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-stone-50 text-slate-950">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="grid gap-3 border-b border-slate-200 pb-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold uppercase tracking-normal text-emerald-700">
-              Allergen Finder
-            </p>
-            <AccountNav />
-          </div>
-          <ModeSwitch />
-          <div className="grid gap-3 lg:grid-cols-[1fr_22rem] lg:items-end">
-            <div>
-              <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
-                Sprawdź aktywność pyłków przed podróżą
-              </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-                Wybierz miasto docelowe, aby zobaczyć aktualny kontekst
-                środowiskowy dla wszystkich grup alergenów w aplikacji.
-              </p>
-            </div>
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-              Wyniki opisują środowisko w miejscu docelowym. Nie są diagnozą
-              ani oceną osobistego ryzyka objawów.
-            </div>
-          </div>
-        </header>
-
+    <AppShell
+      title="Sprawdź aktywność pyłków przed podróżą"
+      description="Wybierz miasto docelowe, aby zobaczyć aktualny kontekst środowiskowy dla wszystkich grup alergenów w aplikacji."
+      headerAction={<ModeSwitch />}
+      notice="Wyniki opisują środowisko w miejscu docelowym. Nie są diagnozą ani oceną osobistego ryzyka objawów."
+    >
         <div className="grid gap-6 lg:grid-cols-[minmax(0,25rem)_1fr]">
           <section
             aria-labelledby="destination-form-heading"
@@ -212,40 +193,32 @@ export default function DestinationSearch() {
                 </p>
               </div>
               {pollenStatus === "loading" ? (
-                <p
-                  role="status"
-                  className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900"
-                >
+                <Notice role="status" tone="info" className="border-sky-100 py-2">
                   Pobieram dane dla miejsca docelowego...
-                </p>
+                </Notice>
               ) : null}
             </div>
 
             {selectedCity === null ? (
-              <div className="rounded-md border border-dashed border-slate-300 bg-white px-5 py-8">
-                <h3 className="text-lg font-semibold">
-                  Wybierz miasto docelowe
-                </h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+              <EmptyState title="Wybierz miasto docelowe">
                   Po wybraniu miasta pokażemy aktywność pyłków i krótki kontekst
                   środowiskowy. Nie musisz podawać objawów.
-                </p>
-              </div>
+              </EmptyState>
             ) : pollenStatus === "loading" ? (
-              <div className="rounded-md border border-slate-200 bg-white px-5 py-8 text-sm text-slate-600">
+              <Notice tone="passive" className="px-5 py-8">
                 Przygotowuję informacje o aktywności pyłków dla miasta{" "}
                 <span className="font-medium text-slate-900">
                   {selectedCity.label}
                 </span>
                 .
-              </div>
+              </Notice>
             ) : (
               <div className="grid gap-4">
                 {pollenStatus === "unavailable" || hasUnknownPollen ? (
-                  <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+                  <Notice tone="warning">
                     {pollenMessage ||
                       "Część danych o aktywności pyłków dla miejsca docelowego jest niedostępna. Wszystkie grupy pozostają widoczne jako kontekst środowiskowy."}
-                  </div>
+                  </Notice>
                 ) : null}
 
                 <div className="grid gap-3">
@@ -260,7 +233,6 @@ export default function DestinationSearch() {
             )}
           </section>
         </div>
-      </div>
-    </main>
+    </AppShell>
   );
 }

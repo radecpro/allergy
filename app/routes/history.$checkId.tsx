@@ -9,9 +9,13 @@ import {
   useSearchParams,
 } from "react-router";
 
-import { AccountNav } from "~/components/account-nav";
+import { AppShell } from "~/components/app-shell";
+import { Button } from "~/components/button";
+import { Notice } from "~/components/notice";
+import { Panel } from "~/components/panel";
 import { SymptomCheckSummary } from "~/components/symptom-check-summary";
 import { SymptomIntensitySelector } from "~/components/symptom-intensity-selector";
+import { TextLink } from "~/components/text-link";
 import {
   symptomCatalog,
   type SymptomId,
@@ -180,29 +184,19 @@ export default function SavedSymptomCheck() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-6 text-slate-950">
-      <div className="mx-auto grid w-full max-w-5xl gap-6">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
-          <div>
-            <p className="text-sm font-semibold uppercase text-emerald-700">
-              Allergen Finder
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold">
-              Zapisane sprawdzenie
-            </h1>
-          </div>
-          <AccountNav />
-        </header>
+    <AppShell
+      title="Zapisane sprawdzenie"
+      description="Przeglądaj zapisany ranking albo popraw objawy i ich nasilenie."
+      maxWidth="5xl"
+    >
 
         {flashMessage ? (
-          <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-            {flashMessage}
-          </p>
+          <Notice tone="success" role="status">{flashMessage}</Notice>
         ) : null}
 
-        <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+        <Panel>
           <SymptomCheckSummary snapshot={data.record.snapshot} />
-        </section>
+        </Panel>
 
         {!isEditing ? (
           <section className="grid gap-3" aria-labelledby="saved-results-heading">
@@ -216,22 +210,23 @@ export default function SavedSymptomCheck() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={handleStartEdit}
                   disabled={isSubmitting}
-                  className="rounded-md border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  tone="secondary"
+                  className="border-emerald-300 text-emerald-900 hover:bg-emerald-50"
                 >
                   Edytuj
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleOpenDeletePrompt}
                   disabled={isSubmitting}
-                  className="rounded-md border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-900 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  tone="ghost-danger"
                 >
                   Usuń zapis
-                </button>
+                </Button>
               </div>
             </div>
             {reconstructSymptomCheck(data.record.snapshot).rankedResults.map(
@@ -290,7 +285,7 @@ export default function SavedSymptomCheck() {
             )}
           </section>
         ) : (
-          <section className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <Panel className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold">Edytuj zapis</h2>
@@ -300,29 +295,26 @@ export default function SavedSymptomCheck() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={handleCancelEdit}
                   disabled={isSubmitting}
-                  className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  tone="secondary"
                 >
                   Anuluj
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   form="saved-check-update-form"
                   disabled={!canSave}
-                  className="rounded-md bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {pendingIntent === "update" ? "Zapisuję..." : "Zapisz zmiany"}
-                </button>
+                </Button>
               </div>
             </div>
 
             {errorMessage ? (
-              <p role="alert" className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
-                {errorMessage}
-              </p>
+              <Notice role="alert" tone="error">{errorMessage}</Notice>
             ) : null}
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
@@ -390,7 +382,7 @@ export default function SavedSymptomCheck() {
               </Form>
 
               <div className="grid gap-4">
-                <section className="rounded-md border border-emerald-300 bg-emerald-50 p-4">
+                <Panel tone="highlight" className="p-4">
                   <h3 className="text-lg font-semibold text-emerald-950">
                     Niezapisany podgląd rankingu
                   </h3>
@@ -435,19 +427,19 @@ export default function SavedSymptomCheck() {
                     ))}
                   </div>
                   {draftComplete ? null : (
-                    <p className="mt-3 rounded-md border border-dashed border-emerald-200 bg-white px-4 py-3 text-sm leading-6 text-emerald-950">
+                    <Notice tone="success" className="mt-3 border-dashed bg-white text-emerald-950">
                       Uzupełnij wszystkie wybrane objawy, aby odświeżyć
                       ranking. Ostatni pełny podgląd pozostaje widoczny.
-                    </p>
+                    </Notice>
                   )}
-                </section>
+                </Panel>
 
               </div>
             </div>
-          </section>
+          </Panel>
         )}
 
-        <section className="rounded-md border border-rose-200 bg-rose-50 p-4">
+        <Panel tone="danger" className="p-4">
           {!deletePromptOpen ? (
             <div className="grid gap-3">
               <div>
@@ -458,14 +450,15 @@ export default function SavedSymptomCheck() {
                   Usunięcie jest trwałe i nie można go cofnąć.
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={handleOpenDeletePrompt}
                 disabled={isSubmitting}
-                className="rounded-md border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-900 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                tone="ghost-danger"
+                className="hover:bg-rose-100"
               >
                 Usuń zapis
-              </button>
+              </Button>
             </div>
           ) : (
             <Form method="post" className="grid gap-3">
@@ -480,60 +473,50 @@ export default function SavedSymptomCheck() {
                 </p>
               </div>
               {errorMessage ? (
-                <p role="alert" className="rounded-md border border-rose-200 bg-white px-4 py-3 text-sm text-rose-900">
+                <Notice role="alert" tone="error" className="bg-white">
                   {errorMessage}
-                </p>
+                </Notice>
               ) : null}
               <div className="flex flex-wrap gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={handleCancelDeletePrompt}
                   disabled={isSubmitting}
-                  className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  tone="secondary"
                 >
                   Anuluj
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-md bg-rose-700 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  tone="danger"
                 >
                   {pendingIntent === "delete"
                     ? "Usuwam..."
                     : "Potwierdź usunięcie"}
-                </button>
+                </Button>
               </div>
             </Form>
           )}
-        </section>
+        </Panel>
 
         {!isEditing ? (
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link
-              to="/history"
-              className="font-medium text-emerald-800 underline underline-offset-4"
-            >
+            <TextLink to="/history">
               Wróć do historii
-            </Link>
-            <Link
-              to="/"
-              className="font-medium text-emerald-800 underline underline-offset-4"
-            >
+            </TextLink>
+            <TextLink to="/">
               Wykonaj nowe sprawdzenie
-            </Link>
+            </TextLink>
           </div>
         ) : (
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link
-              to="/history"
-              className="font-medium text-emerald-800 underline underline-offset-4"
-            >
+            <TextLink to="/history">
               Wróć do historii
-            </Link>
+            </TextLink>
           </div>
         )}
-      </div>
-    </main>
+    </AppShell>
   );
 }
 

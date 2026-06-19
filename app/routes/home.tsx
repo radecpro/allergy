@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Route } from "./+types/home";
-import { AccountNav } from "~/components/account-nav";
+import { AppShell } from "~/components/app-shell";
 import { CityCombobox } from "~/components/city-combobox";
 import { CurrentLocationControl } from "~/components/current-location-control";
+import { EmptyState } from "~/components/empty-state";
 import { ModeSwitch } from "~/components/mode-switch";
+import { Notice } from "~/components/notice";
 import { SymptomCheckSave } from "~/components/symptom-check-save";
 import { SymptomIntensitySelector } from "~/components/symptom-intensity-selector";
 import {
@@ -179,34 +181,12 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 text-slate-950">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="grid gap-3 border-b border-slate-200 pb-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold uppercase tracking-normal text-emerald-700">
-              Allergen Finder
-            </p>
-            <AccountNav />
-          </div>
-          <ModeSwitch />
-          <div className="grid gap-3 lg:grid-cols-[1fr_22rem] lg:items-end">
-            <div>
-              <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
-                Sprawdź, które pyłki mogą dziś pasować do Twoich objawów
-              </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-650">
-                Wybierz miasto, zaznacz objawy i poziom nasilenia. Wyniki
-                aktualizują się automatycznie i pokazują kontekst orientacyjny.
-              </p>
-            </div>
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-              To nie jest diagnoza medyczna. Aplikacja nie zapisuje lokalizacji
-              ani objawów automatycznie. Historia powstaje tylko po wybraniu
-              opcji zapisu.
-            </div>
-          </div>
-        </header>
-
+    <AppShell
+      title="Sprawdź, które pyłki mogą dziś pasować do Twoich objawów"
+      description="Wybierz miasto, zaznacz objawy i poziom nasilenia. Wyniki aktualizują się automatycznie i pokazują kontekst orientacyjny."
+      headerAction={<ModeSwitch />}
+      notice="To nie jest diagnoza medyczna. Aplikacja nie zapisuje lokalizacji ani objawów automatycznie. Historia powstaje tylko po wybraniu opcji zapisu."
+    >
         <div className="grid gap-6 lg:grid-cols-[minmax(0,25rem)_1fr]">
           <section
             aria-labelledby="form-heading"
@@ -288,29 +268,24 @@ export default function Home() {
                 </p>
               </div>
               {pollenStatus === "loading" ? (
-                <p className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                <Notice role="status" tone="info" className="border-sky-100 py-2">
                   Pobieram aktualną aktywność pyłków...
-                </p>
+                </Notice>
               ) : null}
             </div>
 
             {!resultsReady ? (
-              <div className="rounded-md border border-dashed border-slate-300 bg-white px-5 py-8">
-                <h3 className="text-lg font-semibold">
-                  Uzupełnij dane, aby zobaczyć ranking
-                </h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+              <EmptyState title="Uzupełnij dane, aby zobaczyć ranking">
                   Ranking pojawi się po wybraniu miasta, co najmniej jednego
                   objawu i jego nasilenia.
-                </p>
-              </div>
+              </EmptyState>
             ) : (
               <div className="grid gap-4">
                 {pollenStatus === "unavailable" || hasUnknownPollen ? (
-                  <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+                  <Notice tone="warning">
                     {pollenMessage ||
                       "Brak pełnych danych o aktualnej aktywności pyłków. Wyniki opierają się na objawach i dostępnych danych pyłkowych."}
-                  </div>
+                  </Notice>
                 ) : null}
 
                 <div className="grid gap-3">
@@ -389,7 +364,6 @@ export default function Home() {
           snapshot={saveSnapshot}
           disabled={pollenStatus === "loading"}
         />
-      </div>
-    </main>
+    </AppShell>
   );
 }

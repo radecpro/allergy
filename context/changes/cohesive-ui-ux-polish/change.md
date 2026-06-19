@@ -1,7 +1,7 @@
 ---
 change_id: cohesive-ui-ux-polish
 title: Cohesive ui ux polish
-status: planned
+status: implementing
 created: 2026-06-19
 updated: 2026-06-19
 archived_at: null
