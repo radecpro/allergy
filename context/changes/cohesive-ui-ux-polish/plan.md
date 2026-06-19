@@ -311,7 +311,7 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [x] 2.3 Rapid city changes do not flash stale pollen data and missing-data warnings still appear
+- [x] 2.3 Rapid city changes do not flash stale pollen data and missing-data warnings still appear — 740c261
 
 ### Phase 3: Screen-Specific Polish
 
@@ -322,7 +322,7 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [x] 3.3 Save feels attached to the current-check workflow and delete remains unambiguous
+- [x] 3.3 Save feels attached to the current-check workflow and delete remains unambiguous — 740c261
 
 ### Phase 4: Motion And Verification
 
@@ -334,4 +334,4 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [x] 4.4 Hover, focus, selection, and status changes feel smoother without layout jank
+- [x] 4.4 Hover, focus, selection, and status changes feel smoother without layout jank — 740c261
