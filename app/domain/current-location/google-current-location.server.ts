@@ -137,10 +137,17 @@ export async function resolveGoogleCurrentLocationCity({
 
     const payload = (await response.json()) as GoogleReverseGeocodingResponse;
 
-    if (payload.status === "ZERO_RESULTS") {
+    if (payload.status !== undefined && payload.status !== "OK") {
+      if (payload.status === "ZERO_RESULTS") {
+        return {
+          status: "not-found",
+          message: "Nie znaleziono miasta dla lokalizacji urządzenia.",
+        };
+      }
+
       return {
-        status: "not-found",
-        message: "Nie znaleziono miasta dla lokalizacji urządzenia.",
+        status: "provider-unavailable",
+        message: "Nie udało się rozpoznać miasta z lokalizacji urządzenia.",
       };
     }
 

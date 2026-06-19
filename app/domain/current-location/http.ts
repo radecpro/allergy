@@ -145,17 +145,25 @@ export function sanitizeCurrentLocationCoordinates(
   latitude: unknown,
   longitude: unknown,
 ): CurrentLocationCoordinates | null {
+  const trimmedLatitude = typeof latitude === "string" ? latitude.trim() : null;
+  const trimmedLongitude =
+    typeof longitude === "string" ? longitude.trim() : null;
+
+  if (trimmedLatitude === "" || trimmedLongitude === "") {
+    return null;
+  }
+
   const parsedLatitude =
     typeof latitude === "number"
       ? latitude
-      : typeof latitude === "string"
-        ? Number(latitude.trim())
+      : trimmedLatitude !== null
+        ? Number(trimmedLatitude)
         : Number.NaN;
   const parsedLongitude =
     typeof longitude === "number"
       ? longitude
-      : typeof longitude === "string"
-        ? Number(longitude.trim())
+      : trimmedLongitude !== null
+        ? Number(trimmedLongitude)
         : Number.NaN;
 
   if (!Number.isFinite(parsedLatitude) || !Number.isFinite(parsedLongitude)) {

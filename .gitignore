@@ -3,6 +3,10 @@
 
 # from react-router
 .env
+.env.local
+.env.*.local
+*credentials*.json
+*service-account*.json
 /node_modules/
 # React Router
 /.react-router/

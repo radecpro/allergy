@@ -10,6 +10,7 @@ import {
   createUnknownPollenActivity,
   normalizeGooglePollenForecast,
 } from "./google-pollen.server";
+import { resolveGoogleCurrentLocationCity } from "./google-current-location.server";
 import type {
   CitySearchResponse,
   CurrentLocationResponse,
@@ -40,6 +41,7 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 describe("Google pollen normalization", () => {
@@ -79,6 +81,54 @@ describe("Google pollen normalization", () => {
     expect(missingIndexes["grass-pollen"]).toBe("unknown");
     expect(missingIndexes["ragweed-pollen"]).toBe("unknown");
     expect(missingForecast["tree-pollen"]).toBe("unknown");
+  });
+});
+
+describe("Google current-location reverse geocoding", () => {
+  test("does not log outbound reverse-geocoding URLs", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "test-api-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          status: "ZERO_RESULTS",
+          results: [],
+        }),
+      ),
+    );
+
+    await resolveGoogleCurrentLocationCity({
+      latitude: 50.06465,
+      longitude: 19.94498,
+    });
+
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  test("reports non-OK provider statuses as provider unavailable", async () => {
+    vi.stubEnv("GOOGLE_MAPS_API_KEY", "test-api-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          status: "REQUEST_DENIED",
+          error_message: "API key not authorized",
+          results: [],
+        }),
+      ),
+    );
+
+    const result = await resolveGoogleCurrentLocationCity({
+      latitude: 50.06465,
+      longitude: 19.94498,
+    });
+
+    expect(result.status).toBe("provider-unavailable");
   });
 });
 
@@ -133,6 +183,14 @@ describe("current-location resource routes", () => {
     const missingResponse = await currentLocationAction(
       routeActionArgs(postJson("/api/current-location", {})),
     );
+    const emptyResponse = await currentLocationAction(
+      routeActionArgs(
+        postJson("/api/current-location", {
+          latitude: " ",
+          longitude: "",
+        }),
+      ),
+    );
 
     expect(malformedResponse.status).toBe(200);
     expect(
@@ -140,6 +198,9 @@ describe("current-location resource routes", () => {
     ).toBe("invalid-input");
     expect(
       (await readJsonResponse<CurrentLocationResponse>(missingResponse)).status,
+    ).toBe("invalid-input");
+    expect(
+      (await readJsonResponse<CurrentLocationResponse>(emptyResponse)).status,
     ).toBe("invalid-input");
   });
 
