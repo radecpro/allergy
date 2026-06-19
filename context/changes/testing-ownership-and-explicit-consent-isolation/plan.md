@@ -278,10 +278,10 @@ No production schema migration is expected. Tests should run existing Drizzle mi
 
 #### Automated
 
-- [x] 2.1 Route-handler ownership integration passes
-- [x] 2.2 Full DB suite passes
-- [x] 2.3 Fast suite passes
-- [x] 2.4 Type checking passes
+- [x] 2.1 Route-handler ownership integration passes — 6f45167
+- [x] 2.2 Full DB suite passes — 6f45167
+- [x] 2.3 Fast suite passes — 6f45167
+- [x] 2.4 Type checking passes — 6f45167
 
 #### Manual
 
@@ -292,10 +292,10 @@ No production schema migration is expected. Tests should run existing Drizzle mi
 
 #### Automated
 
-- [ ] 3.1 Guest/no-write integration passes
-- [ ] 3.2 Full DB suite passes
-- [ ] 3.3 Fast suite passes
-- [ ] 3.4 Type checking passes
+- [x] 3.1 Guest/no-write integration passes
+- [x] 3.2 Full DB suite passes
+- [x] 3.3 Fast suite passes
+- [x] 3.4 Type checking passes
 
 #### Manual
 

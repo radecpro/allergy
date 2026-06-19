@@ -2,16 +2,19 @@ import { randomUUID } from "node:crypto";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { eq, inArray } from "drizzle-orm";
+import { count, eq, inArray } from "drizzle-orm";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import * as schema from "~/db/schema.server";
 import type { LocalUser } from "~/domain/auth/types";
+import { createCurrentLocationAction } from "~/routes/api.current-location";
+import { createCurrentPollenAction } from "~/routes/api.current-pollen";
 
 import { buildCurrentSymptomSnapshot } from "./snapshot";
 import { createSymptomCheckRepository } from "./symptom-check-repository.server";
 import {
+  createSaveSymptomCheckAction,
   createSymptomCheckDetailAction,
   createSymptomCheckDetailLoader,
   createSymptomCheckListLoader,
@@ -72,6 +75,20 @@ function detailRequest(body: URLSearchParams) {
     },
     body,
   });
+}
+
+function postJson(path: string, body: unknown) {
+  return new Request(`http://localhost${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function symptomCheckCount() {
+  const [row] = await database.select({ value: count() }).from(schema.symptomChecks);
+
+  return row?.value ?? 0;
 }
 
 async function expectPrivateNotFound(operation: Promise<Response>) {
@@ -195,5 +212,110 @@ describe("PostgreSQL symptom-check route handlers", () => {
       ownerId: ownerA,
       symptoms: ownerRecord.snapshot.symptoms,
     });
+  });
+
+  it("does not persist public current pollen or device-location lookups before explicit authenticated save", async () => {
+    const ownerId = ownerIds[0];
+    const completedCheck = snapshot(
+      "Wrocław",
+      "2026-06-18T14:00:00.000Z",
+    );
+    const currentPollenAction = createCurrentPollenAction({
+      geocode: async (placeId) => ({
+        status: "ok",
+        city: {
+          placeId,
+          label: "Wrocław, Polska",
+          mainText: "Wrocław",
+          latitude: 51.1079,
+          longitude: 17.0385,
+          country: "Polska",
+          isPolandPriority: true,
+        },
+      }),
+      lookupPollen: async () => ({
+        status: "ok",
+        pollenActivity: {
+          "grass-pollen": "high",
+          "tree-pollen": "moderate",
+          "weed-pollen": "low",
+          "ragweed-pollen": "unknown",
+        },
+      }),
+    });
+    const currentLocationAction = createCurrentLocationAction({
+      resolveCity: async () => ({
+        status: "ok",
+        city: {
+          placeId: "place-wroclaw",
+          label: "Wrocław, Polska",
+          mainText: "Wrocław",
+          latitude: 51.1079,
+          longitude: 17.0385,
+          country: "Polska",
+          isPolandPriority: true,
+        },
+      }),
+    });
+    const beforeCurrentPollen = await symptomCheckCount();
+
+    const currentPollenResponse = await currentPollenAction(
+      postJson("/api/current-pollen", { placeId: "place-wroclaw" }),
+    );
+    const afterCurrentPollen = await symptomCheckCount();
+
+    expect(currentPollenResponse.status).toBe(200);
+    expect(afterCurrentPollen).toBe(beforeCurrentPollen);
+
+    const beforeLocationFlow = await symptomCheckCount();
+    const currentLocationResponse = await currentLocationAction(
+      postJson("/api/current-location", {
+        latitude: 51.1079,
+        longitude: 17.0385,
+      }),
+    );
+    const selectedCity = await currentLocationResponse.json();
+    const selectedPollenResponse = await currentPollenAction(
+      postJson("/api/current-pollen", {
+        placeId: selectedCity.city.placeId,
+      }),
+    );
+    const afterLocationFlow = await symptomCheckCount();
+
+    expect(currentLocationResponse.status).toBe(200);
+    expect(selectedPollenResponse.status).toBe(200);
+    expect(afterLocationFlow).toBe(beforeLocationFlow);
+
+    const saveAction = createSaveSymptomCheckAction({
+      appOrigin,
+      sessions: {
+        requireUser: async () => localUser(ownerId, "route-handlers-save"),
+      },
+      repository,
+      originValidator: () => true,
+      now: () => new Date("2026-06-18T15:00:00.000Z"),
+    });
+    const beforeSave = await symptomCheckCount();
+    const saveResponse = await saveAction(
+      new Request(`${appOrigin}/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Origin: appOrigin,
+        },
+        body: new URLSearchParams({
+          requestId: randomUUID(),
+          source: "direct",
+          snapshot: JSON.stringify(completedCheck),
+        }),
+      }),
+    );
+    const afterSave = await symptomCheckCount();
+
+    expect(saveResponse.status).toBe(302);
+    expect(saveResponse.headers.get("Location")).toMatch(
+      /^\/history\/[0-9a-f-]+\?saved=1&requestId=[0-9a-f-]+$/,
+    );
+    expect(afterSave).toBe(beforeSave + 1);
   });
 });

@@ -8,7 +8,6 @@ import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import * as schema from "~/db/schema.server";
-import { createCurrentPollenAction } from "~/routes/api.current-pollen";
 
 import {
   buildCurrentSymptomSnapshot,
@@ -19,7 +18,6 @@ import {
   fingerprintSymptomCheckSnapshot,
   SymptomCheckRequestConflictError,
 } from "./symptom-check-repository.server";
-import { createSaveSymptomCheckAction } from "./symptom-check-route-handlers.server";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
@@ -411,88 +409,6 @@ describe("PostgreSQL symptom-check repository", () => {
         snapshot("Katowice", "2026-06-10T13:01:00.000Z"),
       ),
     ).rejects.toBeInstanceOf(SymptomCheckRequestConflictError);
-  });
-
-  it("inserts only after the explicit authenticated save action", async () => {
-    const ownerId = ownerIds[0];
-    const [before] = await database
-      .select({ value: count() })
-      .from(schema.symptomChecks)
-      .where(eq(schema.symptomChecks.ownerId, ownerId));
-    const currentPollenAction = createCurrentPollenAction({
-      geocode: async () => ({
-        status: "ok",
-        city: {
-          placeId: "place-wroclaw",
-          label: "Wrocław, Polska",
-          latitude: 51.1079,
-          longitude: 17.0385,
-          country: "Polska",
-        },
-      }),
-      lookupPollen: async () => ({
-        status: "ok",
-        pollenActivity: {
-          "grass-pollen": "high",
-          "tree-pollen": "moderate",
-          "weed-pollen": "low",
-          "ragweed-pollen": "unknown",
-        },
-      }),
-    });
-    const pollenResponse = await currentPollenAction(
-      new Request("http://localhost/api/current-pollen", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ placeId: "place-wroclaw" }),
-      }),
-    );
-    const completedCheck = snapshot(
-      "Wrocław",
-      "2026-06-10T14:00:00.000Z",
-    );
-    const [afterCompletion] = await database
-      .select({ value: count() })
-      .from(schema.symptomChecks)
-      .where(eq(schema.symptomChecks.ownerId, ownerId));
-
-    expect(pollenResponse.status).toBe(200);
-    expect(afterCompletion?.value).toBe(before?.value);
-
-    const action = createSaveSymptomCheckAction({
-      appOrigin: "https://allergen.example",
-      sessions: {
-        requireUser: async () => ({
-          id: ownerId,
-          providerUid: "integration-provider",
-          email: "integration@example.test",
-          normalizedEmail: "integration@example.test",
-        }),
-      },
-      repository,
-      originValidator: () => true,
-      now: () => new Date("2026-06-11T12:00:00.000Z"),
-    });
-    const response = await action(
-      new Request("https://allergen.example/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          requestId: randomUUID(),
-          source: "direct",
-          snapshot: JSON.stringify(completedCheck),
-        }),
-      }),
-    );
-    const [afterSave] = await database
-      .select({ value: count() })
-      .from(schema.symptomChecks)
-      .where(eq(schema.symptomChecks.ownerId, ownerId));
-
-    expect(response.status).toBe(302);
-    expect(afterSave?.value).toBe((before?.value ?? 0) + 1);
   });
 
   it("retries the original explicit save after editing and resolves to the existing record", async () => {
