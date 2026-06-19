@@ -5,6 +5,8 @@ import { CityCombobox } from "~/components/city-combobox";
 import { EmptyState } from "~/components/empty-state";
 import { ModeSwitch } from "~/components/mode-switch";
 import { Notice } from "~/components/notice";
+import { Panel } from "~/components/panel";
+import { Pill } from "~/components/pill";
 import { summarizeDestinationPollenActivity } from "~/domain/allergen-ranking";
 import type {
   DestinationPollenActivitySummary,
@@ -28,20 +30,20 @@ export function meta({}: Route.MetaArgs) {
 
 function activityBadgeClass(
   activity: DestinationPollenActivitySummary["pollenActivity"],
-): string {
+): "danger" | "warning" | "success" | "neutral" {
   if (activity === "high" || activity === "very-high") {
-    return "bg-rose-100 text-rose-950";
+    return "danger";
   }
 
   if (activity === "moderate") {
-    return "bg-amber-100 text-amber-950";
+    return "warning";
   }
 
   if (activity === "low") {
-    return "bg-emerald-100 text-emerald-950";
+    return "success";
   }
 
-  return "bg-slate-100 text-slate-800";
+  return "neutral";
 }
 
 function DestinationCard({
@@ -50,16 +52,14 @@ function DestinationCard({
   summary: DestinationPollenActivitySummary;
 }) {
   return (
-    <article className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <Panel as="article" className="p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <h3 className="text-lg font-semibold text-slate-950">
           {summary.allergenLabel}
         </h3>
-        <span
-          className={`w-fit rounded-md px-2.5 py-1 text-sm font-medium ${activityBadgeClass(summary.pollenActivity)}`}
-        >
+        <Pill tone={activityBadgeClass(summary.pollenActivity)}>
           Aktywność pyłków: {summary.pollenActivityLabel}
-        </span>
+        </Pill>
       </div>
       <div className="mt-3 grid gap-1">
         <p className="text-sm font-medium text-slate-700">
@@ -69,7 +69,7 @@ function DestinationCard({
           {summary.possibleSymptomLabels.join(", ")}
         </p>
       </div>
-    </article>
+    </Panel>
   );
 }
 

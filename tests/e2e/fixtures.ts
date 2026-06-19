@@ -94,8 +94,7 @@ export async function chooseCity(page: Page, fieldName: string, cityPrefix: stri
     name: new RegExp(cityPrefix, "i"),
   });
 
-  await cityField.click();
-  await cityField.pressSequentially(cityPrefix);
+  await cityField.fill(cityPrefix);
   await expect(cityOption).toBeVisible();
   await cityOption.click();
 }

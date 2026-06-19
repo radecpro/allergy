@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:auth-live": "vitest run --config vitest.auth-live.config.ts",
     "test:db": "node scripts/require-env.mjs TEST_DATABASE_URL && vitest run --config vitest.db.config.ts",
+    "test:e2e": "playwright test",
     "test:watch": "vitest",
     "typecheck": "react-router typegen && tsc"
   },

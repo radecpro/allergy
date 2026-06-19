@@ -274,6 +274,12 @@ Keep the new shared components presentational and thin. The shared ranking/resul
 
 No data migration is required. This is a presentation and local-state refactor only, so rollback is the same as reverting the UI extraction if a regression appears.
 
+## Plan Addendum: Browser Coverage
+
+During implementation, the slice intentionally expanded verification to include Playwright browser coverage for the highest-risk manual polish checks. This adds `@playwright/test`, `playwright.config.ts`, `tests/e2e/*`, and `.github/workflows/playwright.yml` as follow-on verification infrastructure for this change.
+
+The E2E command is exposed as `npm run test:e2e`. The original handoff gates remain `npm test` and `npm run typecheck`; browser coverage is an additional guard for cohesive shell behavior, missing-pollen visibility, explicit guest save handoff, auth-page separation, and transition smoke coverage.
+
 ## References
 
 - Related research: `context/changes/cohesive-ui-ux-polish/research.md`
