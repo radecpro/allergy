@@ -35,7 +35,7 @@ In this roadmap, the north star means the smallest end-to-end capability that pr
 | S-03 | manage-saved-symptom-check | Correct symptoms and per-symptom intensities in a saved check or delete the record | F-01, S-02 | US-02, FR-005, FR-008, FR-009, FR-010 | done |
 | S-04 | per-symptom-intensity-ranking | Assign low/high intensity to each selected symptom and receive the recalculated ranking | F-01 | US-04, FR-001, FR-003, FR-013 | done |
 | S-05 | device-location-current-check | Use current device location for a symptom check with manual city selection preserved as fallback | F-01 | US-03, FR-001, FR-003, FR-011, FR-012 | done |
-| S-06 | cohesive-ui-ux-polish | Use a consistent, polished interface across pages with clearer spacing, aligned controls, smooth feedback animations, and reduced duplicated UI logic | F-01, S-01, S-02, S-03, S-04 | US-01, US-02, US-03, US-04, FR-001, FR-002, FR-003, FR-004, FR-006, FR-007, FR-008, FR-009, FR-011, FR-012, FR-013, FR-014, FR-015 | ready |
+| S-06 | cohesive-ui-ux-polish | Use a consistent, polished interface across pages with clearer spacing, aligned controls, smooth feedback animations, and reduced duplicated UI logic | F-01, S-01, S-02, S-03, S-04 | US-01, US-02, US-03, US-04, FR-001, FR-002, FR-003, FR-004, FR-006, FR-007, FR-008, FR-009, FR-011, FR-012, FR-013, FR-014, FR-015 | done |
 
 ## Baseline
 
@@ -140,7 +140,7 @@ Foundations below assume these are present and do not recreate them.
 - **Unknowns:**
   - Which repeated UI helpers, formatting functions, and interaction-state patterns can be consolidated without changing route behavior? — Owner: team. Block: no.
 - **Risk:** This slice should modernize consistency, motion, and duplicated UI logic after the core flows are stable; polishing too early would churn screens that earlier slices are still changing.
-- **Status:** ready
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -180,3 +180,4 @@ Archived roadmap slices found in `context/archive/`.
 - **S-04: User can assign low/high intensity to each selected symptom and receive an automatically updated allergen ranking that uses those individual intensities.** — Archived 2026-06-15 → `context/archive/2026-06-14-per-symptom-intensity-ranking/`. Lesson: —.
 - **S-03: Authenticated user can update symptoms and per-symptom intensities in a saved check or delete that check, without changing its saved location and pollen context.** — Archived 2026-06-18 → `context/archive/2026-06-15-manage-saved-symptom-check/`. Lesson: —.
 - **S-05: User can use current device location to select the current city and can still complete the check through manual city selection when permission or lookup fails.** — Archived 2026-06-19 → `context/archive/2026-06-18-device-location-current-check/`. Lesson: —.
+- **S-06: User can move through current checks, destination checks, account access, and saved-history screens with consistent element positioning, spacing, button states, message presentation, and smooth feedback animations for selections and status changes.** — Archived 2026-06-19 → `context/archive/2026-06-19-cohesive-ui-ux-polish/`. Lesson: —.
