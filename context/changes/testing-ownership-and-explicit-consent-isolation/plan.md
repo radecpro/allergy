@@ -272,7 +272,7 @@ No production schema migration is expected. Tests should run existing Drizzle mi
 
 #### Manual
 
-- [ ] 1.4 The new integration file name and DB config pattern make the test layer's intent clear to future maintainers
+- [x] 1.4 The new integration file name and DB config pattern make the test layer's intent clear to future maintainers
 
 ### Phase 2: Ownership Isolation Integration
 
@@ -285,32 +285,32 @@ No production schema migration is expected. Tests should run existing Drizzle mi
 
 #### Manual
 
-- [ ] 2.5 The test names clearly map to risk #1 in context/foundation/test-plan.md
-- [ ] 2.6 Foreign and missing record behavior remains indistinguishable in assertions
+- [x] 2.5 The test names clearly map to risk #1 in context/foundation/test-plan.md
+- [x] 2.6 Foreign and missing record behavior remains indistinguishable in assertions
 
 ### Phase 3: Guest Access And Explicit-Consent Integration
 
 #### Automated
 
-- [x] 3.1 Guest/no-write integration passes
-- [x] 3.2 Full DB suite passes
-- [x] 3.3 Fast suite passes
-- [x] 3.4 Type checking passes
+- [x] 3.1 Guest/no-write integration passes — d204734
+- [x] 3.2 Full DB suite passes — d204734
+- [x] 3.3 Fast suite passes — d204734
+- [x] 3.4 Type checking passes — d204734
 
 #### Manual
 
-- [ ] 3.5 The new tests cover current pollen lookup, device-location lookup followed by pollen lookup, and explicit authenticated save
-- [ ] 3.6 No test uses live provider calls or browser session storage
+- [x] 3.5 The new tests cover current pollen lookup, device-location lookup followed by pollen lookup, and explicit authenticated save
+- [x] 3.6 No test uses live provider calls or browser session storage
 
 ### Phase 4: Verification And Test-Plan Cookbook
 
 #### Automated
 
-- [ ] 4.1 Complete fast suite passes
-- [ ] 4.2 Type checking passes
-- [ ] 4.3 Full disposable DB suite passes
+- [x] 4.1 Complete fast suite passes
+- [x] 4.2 Type checking passes
+- [x] 4.3 Full disposable DB suite passes
 
 #### Manual
 
-- [ ] 4.4 context/foundation/test-plan.md section 6.3 accurately describes the new ownership and explicit-save integration pattern
-- [ ] 4.5 Any inability to run npm run test:db is explicitly recorded as unverified rather than checked off
+- [x] 4.4 context/foundation/test-plan.md section 6.3 accurately describes the new ownership and explicit-save integration pattern
+- [x] 4.5 Any inability to run npm run test:db is explicitly recorded as unverified rather than checked off

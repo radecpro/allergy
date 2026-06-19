@@ -58,7 +58,7 @@ combined scenario and fill only material gaps.
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Executable baseline | Standardize deterministic tests and document the risk contract | #4, #5 | unit + route-loader integration | complete | `context/changes/risk-based-test-foundation/` |
-| 2 | Ownership and explicit-consent isolation | After S-01–S-03, prove guest access, explicit saving, and cross-user read/update/delete isolation together | #1, #2, #3 | integration | not started | — |
+| 2 | Ownership and explicit-consent isolation | After S-01–S-03, prove guest access, explicit saving, and cross-user read/update/delete isolation together | #1, #2, #3 | integration | complete | `context/changes/testing-ownership-and-explicit-consent-isolation/` |
 | 3 | Expansion-slice regressions | After S-04–S-06, audit mixed intensity, location fallback, and missing-data warning behavior | #4, #5, #6 | unit + focused integration | not started | — |
 
 Status uses only `not started`, `change opened`, `researched`, `planned`,
@@ -114,9 +114,25 @@ deferred rather than implied by this plan.
 
 ### 6.3 Adding an ownership or explicit-save test
 
-TBD — see §3 Phase 2. Research must first ground the session, repository, and
-persistence boundaries. The rollout must use two-user fixtures and cover
-read, update, and delete, not merely filtered list output.
+- **Location**: use a dedicated DB-backed route-handler integration file under
+  the owning domain, currently
+  `app/domain/symptom-checks/symptom-check-route-handlers.integration.test.ts`.
+- **Pattern**: run Drizzle migrations against `TEST_DATABASE_URL`, create two
+  real local-user fixtures, inject authenticated sessions into route-handler
+  factories, and call loaders/actions in process with the real repository.
+- **Ownership oracle**: assert User B cannot list, read, update, or delete User
+  A's saved check, and compare the persisted owner row before and after foreign
+  mutation attempts.
+- **Explicit-save oracle**: count `symptom_checks` before and after public
+  current-pollen and current-location-plus-pollen requests, then use an
+  authenticated explicit save as the positive control that increments the count
+  by exactly one.
+- **Isolation**: use deterministic provider stubs only; do not call live
+  Google providers, browser session storage, or rendered UI for this risk.
+- **Run locally**:
+  `TEST_DATABASE_URL=<disposable-db> npm run test:db -- app/domain/symptom-checks/symptom-check-route-handlers.integration.test.ts`.
+  The full handoff gate is
+  `TEST_DATABASE_URL=<disposable-db> npm run test:db`.
 
 ### 6.4 Adding an expansion-flow regression test
 
