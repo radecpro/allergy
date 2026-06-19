@@ -300,7 +300,7 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [x] 1.3 Current, destination, history, and detail pages share the same visual rhythm while auth stays separate
+- [x] 1.3 Current, destination, history, and detail pages share the same visual rhythm while auth stays separate — 960e7f7
 
 ### Phase 2: Shared Result And Async Logic
 
@@ -311,7 +311,7 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [ ] 2.3 Rapid city changes do not flash stale pollen data and missing-data warnings still appear
+- [x] 2.3 Rapid city changes do not flash stale pollen data and missing-data warnings still appear
 
 ### Phase 3: Screen-Specific Polish
 
@@ -322,7 +322,7 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [ ] 3.3 Save feels attached to the current-check workflow and delete remains unambiguous
+- [x] 3.3 Save feels attached to the current-check workflow and delete remains unambiguous
 
 ### Phase 4: Motion And Verification
 
@@ -334,4 +334,4 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Manual
 
-- [ ] 4.4 Hover, focus, selection, and status changes feel smoother without layout jank
+- [x] 4.4 Hover, focus, selection, and status changes feel smoother without layout jank
