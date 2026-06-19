@@ -33,7 +33,7 @@ export function AppShell({
       <div
         className={`mx-auto flex w-full ${maxWidthClasses[maxWidth]} flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8`}
       >
-        <header className="grid gap-3 border-b border-slate-200 pb-5">
+        <header className="grid gap-3 border-b border-slate-200 pb-5 transition-colors duration-150">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold uppercase tracking-normal text-emerald-700">
               {eyebrow}

@@ -21,7 +21,7 @@ export function Panel({
 }: PanelProps) {
   return (
     <Component
-      className={`rounded-md border p-5 transition ${toneClasses[tone]} ${className}`}
+      className={`rounded-md border p-5 transition duration-150 ease-out ${toneClasses[tone]} ${className}`}
       {...props}
     >
       {children}

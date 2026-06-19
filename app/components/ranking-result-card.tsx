@@ -24,7 +24,7 @@ export function RankingResultCard({
       className={`p-4 ${
         isTopResult
           ? "border-emerald-500 bg-emerald-50 shadow-emerald-100"
-          : ""
+          : "hover:border-slate-300 hover:shadow"
       }`}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

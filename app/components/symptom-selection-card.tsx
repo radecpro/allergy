@@ -21,8 +21,8 @@ export function SymptomSelectionCard({
     <article
       className={`overflow-hidden rounded-md border text-sm transition ${
         selected
-          ? "border-emerald-600 bg-white text-slate-950 shadow-sm"
-          : "border-slate-300 bg-white text-slate-800 hover:border-slate-400"
+          ? "border-emerald-600 bg-white text-slate-950 shadow-sm ring-1 ring-emerald-100"
+          : "border-slate-300 bg-white text-slate-800 hover:-translate-y-px hover:border-slate-400 hover:shadow-sm"
       }`}
     >
       <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2 font-medium">

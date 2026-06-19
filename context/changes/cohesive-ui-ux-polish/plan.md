@@ -317,8 +317,8 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [x] 3.1 Save, history, and detail route tests still pass after the layout changes
-- [x] 3.2 Type checking confirms the updated component composition is valid
+- [x] 3.1 Save, history, and detail route tests still pass after the layout changes — 83e2478
+- [x] 3.2 Type checking confirms the updated component composition is valid — 83e2478
 
 #### Manual
 
@@ -328,9 +328,9 @@ No data migration is required. This is a presentation and local-state refactor o
 
 #### Automated
 
-- [ ] 4.1 Focused unit tests for shared primitives and current-pollen behavior pass
-- [ ] 4.2 `npm test` passes
-- [ ] 4.3 `npm run typecheck` passes
+- [x] 4.1 Focused unit tests for shared primitives and current-pollen behavior pass
+- [x] 4.2 `npm test` passes
+- [x] 4.3 `npm run typecheck` passes
 
 #### Manual
 
