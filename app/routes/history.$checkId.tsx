@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   isRouteErrorResponse,
   Form,
@@ -80,6 +80,7 @@ export default function SavedSymptomCheck() {
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [deletePromptOpen, setDeletePromptOpen] = useState(false);
+  const viewedRecordId = useRef(data.record.id);
   const [editState, setEditState] = useState(() =>
     initializeSavedCheckEditState(data.record.snapshot.symptoms),
   );
@@ -110,9 +111,17 @@ export default function SavedSymptomCheck() {
     setEditState(initializeSavedCheckEditState(data.record.snapshot.symptoms));
     setIsEditing(false);
     setDeletePromptOpen(false);
-    setFlashMessage(null);
     setPreviewResults(reconstructSymptomCheck(data.record.snapshot).rankedResults);
   }, [data.record.id, data.record.updatedAt, data.record.snapshot.symptoms]);
+
+  useEffect(() => {
+    if (viewedRecordId.current === data.record.id) {
+      return;
+    }
+
+    viewedRecordId.current = data.record.id;
+    setFlashMessage(null);
+  }, [data.record.id]);
 
   useEffect(() => {
     if (draftComplete) {
@@ -147,7 +156,7 @@ export default function SavedSymptomCheck() {
     nextSearchParams.delete("requestId");
     nextSearchParams.delete("updated");
     setSearchParams(nextSearchParams, { replace: true });
-  }, [data.requestId, searchParams]);
+  }, [data.requestId, searchParams, setSearchParams]);
 
   function handleStartEdit() {
     setIsEditing(true);
