@@ -134,6 +134,158 @@ Cloud Run source deploy builds the app with Cloud Build and stores the generated
 
 References: Google Cloud CLI initialization, Cloud Run source deploy, Cloud Build to Cloud Run, Artifact Registry with Cloud Run, and Cloud Run public access docs.
 
+## App-Only Fast Deployment
+
+Use this path only when the change is limited to web application behavior or
+presentation and does not require a database migration, destructive data
+change, secret change, runtime identity change, Cloud SQL change, or provider
+configuration change. This is the normal path for UI polish, copy changes,
+client-side interaction fixes, and route/component changes that keep the
+existing persisted data contract.
+
+Do not use this path if the diff includes `drizzle/`, `app/db/`,
+`drizzle.config.ts`, `Dockerfile.migrate`, `cloudbuild.migrate.yaml`,
+database-backed repository contract changes, session/auth provider changes,
+new required environment variables, Secret Manager changes, IAM changes, or
+any feature that changes the meaning, shape, retention, ownership, or
+compatibility of saved user data.
+
+### App-Only Preflight
+
+Confirm the active GCP target and classify the diff:
+
+```sh
+gcloud config list
+gcloud auth list
+git status --short
+git diff --name-only HEAD
+```
+
+The diff must be app-only by the criteria above. If the classification is
+unclear, use the relevant full rollout section instead.
+
+Run the local checks:
+
+```sh
+npm test
+npm run typecheck
+npm run build
+npm audit --json
+```
+
+`npm run test:db`, migration jobs, Cloud SQL backup verification, restore
+drills, and live-auth preflight jobs are not required for a pure app-only
+release unless the changed code touches database persistence, auth/session
+behavior, or saved-data flows.
+
+### Build And Stage
+
+Use an explicit release tag so the running revision can be traced back to the
+reviewed commit:
+
+```sh
+RELEASE_SEQUENCE="s06" # bump from the latest deployed tag, for example s05 -> s06
+REVISION="$RELEASE_SEQUENCE-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+APPLICATION_IMAGE="europe-central2-docker.pkg.dev/gcp-10xdev-bara-lab-3t60/allergen-finder/app:$REVISION"
+SERVICE_ORIGIN="https://allergen-finder-hwt4hd6s4a-lm.a.run.app"
+INSTANCE_CONNECTION_NAME="gcp-10xdev-bara-lab-3t60:europe-central2:allergen-finder-pg"
+RUNTIME_SERVICE_ACCOUNT="allergen-finder-runtime@gcp-10xdev-bara-lab-3t60.iam.gserviceaccount.com"
+
+gcloud builds submit \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --gcs-source-staging-dir gs://run-sources-gcp-10xdev-bara-lab-3t60-europe-central2/cloud-build/source \
+  --tag "$APPLICATION_IMAGE" \
+  .
+
+gcloud run deploy allergen-finder \
+  --image "$APPLICATION_IMAGE" \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --service-account "$RUNTIME_SERVICE_ACCOUNT" \
+  --set-cloudsql-instances "$INSTANCE_CONNECTION_NAME" \
+  --set-secrets "DATABASE_URL=allergen-database-url:latest,IDENTITY_PLATFORM_API_KEY=allergen-identity-api-key:latest,GOOGLE_MAPS_API_KEY=allergen-google-maps-api-key:latest" \
+  --set-env-vars "GOOGLE_CLOUD_PROJECT=gcp-10xdev-bara-lab-3t60,APP_ORIGIN=$SERVICE_ORIGIN" \
+  --port 8080 \
+  --cpu 1 \
+  --memory 512Mi \
+  --max-instances 3 \
+  --labels app=allergen-finder,env=mvp \
+  --tag "$REVISION" \
+  --no-traffic \
+  --quiet
+```
+
+Capture the staged revision URL:
+
+```sh
+gcloud run services describe allergen-finder \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --format="table(status.traffic.revisionName,status.traffic.tag,status.traffic.percent,status.traffic.url)"
+```
+
+### App-Only Verification
+
+Smoke the tagged no-traffic revision before moving traffic:
+
+```sh
+STAGED_REVISION="allergen-finder-000NN-xxx" # copy from the row tagged $REVISION
+STAGED_URL="https://$REVISION---allergen-finder-hwt4hd6s4a-lm.a.run.app"
+curl -fsS "$STAGED_URL"
+
+gcloud run services logs read allergen-finder \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --limit 80
+```
+
+For UI changes, manually check the affected route or workflow on the staged
+URL. For changes around save/history/login surfaces, also verify the relevant
+signed-in and signed-out flows even if the database contract did not change.
+Inspect logs for errors and confirm they do not contain passwords, ID tokens,
+refresh tokens, session cookies, symptom snapshots, city labels, record
+content, or owner identifiers.
+
+### Move Traffic
+
+Traffic movement still requires explicit human approval. After approval, route
+100% traffic to the staged revision:
+
+```sh
+gcloud run services update-traffic allergen-finder \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --to-revisions "$STAGED_REVISION=100"
+```
+
+Verify production after the cutover:
+
+```sh
+curl -fsS "$SERVICE_ORIGIN"
+
+gcloud run services describe allergen-finder \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --format='value(status.traffic)'
+
+gcloud run services logs read allergen-finder \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --limit 60
+```
+
+Rollback for app-only releases is a Cloud Run traffic rollback to the previous
+revision because no migration or data-contract change was made. Confirm the
+previous revision name from `gcloud run services describe` before executing:
+
+```sh
+gcloud run services update-traffic allergen-finder \
+  --project gcp-10xdev-bara-lab-3t60 \
+  --region europe-central2 \
+  --to-revisions PREVIOUS_REVISION=100
+```
+
 ## Account Access Rollout
 
 The account-enabled revision adds Identity Platform, Firebase Admin sessions,
